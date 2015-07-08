@@ -129,8 +129,8 @@ class PhotonDatabase(object):
         # the last line of this method update the unique photon ID (i.e. the row number)
         self.uid = self.uid + 1
         
-        # Every 100 times write data to dbfile
-        if not self.uid % 1:
+        # Every 50 times write data to dbfile
+        if not self.uid % 50:
             self.connection.commit()
         
     def __del__(self):
@@ -191,7 +191,7 @@ class PhotonDatabase(object):
     def surfaces_with_records(self):
         """Returns surfaces that have been hit by a ray for all exiting objects."""
         keys = self.cursor.execute('SELECT DISTINCT surface_id FROM state WHERE uid IN (SELECT uid FROM surface_normal WHERE uid IN (SELECT MAX(uid) FROM photon GROUP BY pid));').fetchall()
-        keys = itemise(objects_keys)
+        keys = itemise(keys)#FIXME here there was an error!
         filtered_keys = []
         # Surface record will often be None because event occur away from surface (i.e. absorption emission)
         # Here we are remove 'None' from the list, and also converting unicode strings to strings.

@@ -191,11 +191,7 @@ class PhotonDatabase(object):
     def surfaces_with_records(self):
         """Returns surfaces that have been hit by a ray for all exiting objects."""
         keys = self.cursor.execute('SELECT DISTINCT surface_id FROM state WHERE uid IN (SELECT uid FROM surface_normal WHERE uid IN (SELECT MAX(uid) FROM photon GROUP BY pid));').fetchall()
-<<<<<<< HEAD
-        keys = itemise(keys)#FIXME here there was an error!
-=======
         keys = itemise(keys)
->>>>>>> tmp
         filtered_keys = []
         # Surface record will often be None because event occur away from surface (i.e. absorption emission)
         # Here we are remove 'None' from the list, and also converting unicode strings to strings.

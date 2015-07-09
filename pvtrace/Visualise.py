@@ -20,6 +20,7 @@ except:
     print "Python module visual is not installed... telling all Visualiser object to not render."
     VISUAL_INSTALLED = False
 
+from visual import *
 import numpy as np
 import Geometry as geo
 import ConstructiveGeometry as csg
@@ -38,12 +39,19 @@ class Visualiser (object):
             return
         self.display = visual.display(title='PVTrace', x=0, y=0, width=800, height=600, background=(0.957, 0.957, 1), ambient=0.5)
         self.display.exit = False
-        visual.curve(pos=[(0,0,0), (.2,0,0)], radius=0.001, color=visual.color.red)
-        visual.curve(pos=[(0,0,0), (0,.2,0)], radius=0.001, color=visual.color.green)
-        visual.curve(pos=[(0,0,0), (0,0,.2)], radius=0.001, color=visual.color.blue)
-        visual.label(pos=(.22, 0, 0), text='X', linecolor=visual.color.red)
-        visual.label(pos=(0, .22, 0), text='Y', linecolor=visual.color.green)
-        visual.label(pos=(0, 0, .22), text='Z', linecolor=visual.color.blue)
+#        self.display.autocenter = True
+        self.display.forward = vector(0,0.75,-0.5)
+        self.display.center = (0.035,0.03,0)
+        
+        #<0.00112387, 0.895789, -0.444478>
+
+
+        visual.curve(pos=[(0,0,0), (.08,0,0)], radius=0.0005, color=visual.color.red)
+        visual.curve(pos=[(0,0,0), (0,.07,0)], radius=0.0005, color=visual.color.green)
+        visual.curve(pos=[(0,0,0), (0,0,.08)], radius=0.0005, color=visual.color.blue)
+        visual.label(pos=(.09, 0, 0), text='X', linecolor=visual.color.red)
+        visual.label(pos=(0, .08, 0), text='Y', linecolor=visual.color.green)
+        visual.label(pos=(0, 0, .07), text='Z', linecolor=visual.color.blue)
         
     
     def addBox(self, box, colour=None, opacity=1., material=visual.materials.plastic):
@@ -276,7 +284,7 @@ class Visualiser (object):
             self.addConvex(obj, colour=colour, material=material, opacity=opacity)
         if isinstance(obj, geo.Sphere):
             self.addSphere(obj, colour=colour, material=material, opacity=opacity)
-        
+
 
 if False:
     box1 = geo.Box(origin=[0,0,0], extent=[2,2,2])
@@ -286,14 +294,26 @@ if False:
     vis = Visualiser()
     vis.addObject(box1)
     import time
-    time.sleep(1)
     vis.addObject(ray1)
-    time.sleep(1)
     vis.addObject(ray2)
-    time.sleep(1)
     vis.addObject(box2)
-    time.sleep(1)
     vis.addLine([0,0,0],[5,4,5])
+    
+    time.sleep(1)
+    print vis.display.forward
+    time.sleep(1)
+    print vis.display.forward
+    time.sleep(1)
+    print vis.display.forward
+    time.sleep(1)
+    print vis.display.forward
+    time.sleep(1)
+    print vis.display.forward
+    
+    
+#    newforward = vector(vis.display.forward)
+#    newforward = rotate(newforward, angle=0.3, axis=vis.display.up)
+#    vis.display.forward = newforward
 
 """
 # TEST TEST TEST

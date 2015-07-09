@@ -25,7 +25,7 @@ import visual
 from itertools import ifilter
 import subprocess
 import os
-import external.pov
+import external.pov as pov
 import sys
 import PhotonDatabase
 import external.transformations as tf
@@ -343,6 +343,11 @@ class Photon (object):
         if np.random.uniform() < reflection:
             # Reflection occurs
             
+#            if isinstance(intersection_object, Channel):
+#                super().reflected += 1
+#                print "Photon was reflected by channel :("
+#
+            
             # Cache old direction for later use by polarisation code
             old_direction = copy(self.direction)
             
@@ -392,6 +397,14 @@ class Photon (object):
         
         else:
             # photon is refracted through interface
+            
+            # Trasmitted to a channel (supposed to absorb everything not reflected)
+            if isinstance(intersection_object, Channel):
+                self.active = False
+                self.previous_container = self.container
+                self.container = intersection_object
+                return self
+            
             self.propagate = True
             before = copy(self.direction)
             ang = angle(before, self.direction)
@@ -455,11 +468,12 @@ def povObj(obj, colour = None):
    if type(obj) == Coating:
        return povObj(obj.shape)
    if type(obj) == LSC:
-       maxindex = obj.material.emission.y.argmax()
-       wavelength = obj.material.emission.x[maxindex]
-       colour = wav2RGB(wavelength)
-       print colour
-       colour = pov.Pigment(color=(colour[0]/255,colour[1]/255,colour[2]/255))
+#       maxindex = obj.material.emission.y.argmax()
+#       wavelength = obj.material.emission.x[maxindex]
+#       colour = wav2RGB(633)#FIXME since it's just for rendering and I'm having trouble with the two lines above just set lSc color manually
+#       print colour # value is [255, 47, 0]
+       colour=[236,13,36]
+       colour = pov.Pigment(color=(colour[0]/255,colour[1]/255,colour[2]/255,0.85))#0.85 is transparency value
        print "found lsc"
        return povObj(obj.shape, colour = colour)
    if type(obj) == Plane:
@@ -472,14 +486,19 @@ def povObj(obj, colour = None):
        return pov.Union(povObj(obj.ADDone), povObj(obj.ADDtwo))
    if type(obj) == CSGint:
        return pov.Intersection(povObj(obj.INTone), povObj(obj.INTtwo))
-
-
+   if type(obj) == RayBin:
+       colour = pov.Pigment(color=(0,0,0.5,1))#BLUE (rgb/255)
+       return povObj(obj.shape, colour = colour)
+   if type(obj) == Channel:
+       colour = pov.Pigment(color=(0,0,0.5,1))#BLUE (rgb/255)
+       return povObj(obj.shape, colour = colour)
+   print "Uncought object type! TYPE:",type(obj)," VALUE: ",obj
 
 
 class Scene(object):
     """A collection of objects. All intersection points can be found or a ray can be traced through."""
     
-    def pov_render(self, camera_position = (0,0,-10), camera_target = (0,0,0)):
+    def pov_render(self, camera_position = (0,0,-10), camera_target = (0,0,0), height = 2400, width = 3200):
         """Pov thing
         >>> S = Scene()
         >>> L, W, D = 1, 1, 1
@@ -496,8 +515,8 @@ class Scene(object):
         >>> S.pov_render()
         """
 
-        """
-        f=pov.File("demo.pov","colors.inc","stones.inc")
+#        """
+        f = pov.File("demo.pov","colors.inc","stones.inc")
         
         cam = pov.Camera(location=camera_position, sky=(1,0,1),look_at=camera_target)
         light = pov.LightSource( camera_position, color="White")
@@ -513,27 +532,23 @@ class Scene(object):
             # origin,x,y,z = (T*vectors).transpose()
             povObjs.append(povObj(obj))
         
-        #print tuple(povObjs)
+#        print tuple(povObjs)
         f.write(*tuple(povObjs))
         f.close()
         #sphere1 = pov.Sphere( (1,1,2), 2, pov.Texture(pov.Pigment(color="Yellow")))
         #sphere2 = pov.Sphere( (0,1,2), 2, pov.Texture(pov.Pigment(color="Yellow")))
         # composite2 = None#pov.Difference(sphere1, sphere2)
-        # 
-        
-        
-        
-        
-        
+   
         # f.write( cam, composite2, light )
         # f.close()
-        subprocess.call("povray +H2400 +W3200 demo.pov", shell=True)
-        os.system("open demo.png")
-        """
+        # A for antialising, q is quality (1-11)
+        subprocess.call("povray +A +Q10 +H"+str(height)+" +W"+str(width)+" demo.pov", shell=True)
+        os.system("gnome-open demo.png")
+#        """
         
     def __init__(self):
         super(Scene, self).__init__()
-        self.bounds = Bounds()
+        self.bounds = Bounds()  # Create bounderies to world and apply to scene
         self.objects  = [self.bounds]
         
     def add_object(self, object):
@@ -757,6 +772,16 @@ class Tracer(object):
                         material = visual.materials.wood
                         colour = visual.color.blue
                         opacity=1.
+                        
+                    elif isinstance(obj, Channel):
+                        material = visual.materials.wood
+                        colour = visual.color.blue
+                        opacity=1.
+                    # Dario's edit: this is BAD and breaks multiple lSC colours in the same scene. sorry :(
+                    elif isinstance(obj, LSC):
+                        material = visual.materials.plastic
+                        colour = visual.color.red
+                        opacity=0.2
                     
                     elif isinstance(obj, Coating):
                         

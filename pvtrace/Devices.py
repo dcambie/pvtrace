@@ -285,6 +285,16 @@ class LSC(Register):
         """
         self.index_matched_surfaces = []
 
+class Channel(Register):
+    """Liquid in reactor's channel simulation"""
+    def __init__(self, bandgap=555, origin=(0,0,0), size=(1,1,1)):
+        super(Channel, self).__init__()
+        self.origin = np.array(origin)
+        self.size = np.array(size)
+        self.shape = Box(origin=origin, extent=np.array(origin) + np.array(size))
+        self.material = SimpleMaterial(bandgap)
+        self.name = "Channel"
+        
 #class Collector(Register):
 #    """Collector implementation."""
 #    def __init__(self, bandgap=555, origin=(0,0,0), size=(1,1,1)):

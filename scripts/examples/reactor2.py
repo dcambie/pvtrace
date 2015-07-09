@@ -45,8 +45,8 @@ ems = load_spectrum(file)
 
 # 3b) Adjust concenctration
 absorption_data = np.loadtxt(os.path.join(PVTDATA, 'dyes', 'fluro-red.abs.txt'))
-T_need = 0.05 # Want to transmit 5% of the light at the peak absorption wavelength
-t_need = 0.0362
+#T_need = 0.05 # Want to transmit 5% of the light at the peak absorption wavelength
+T_need = 0.0362
 ap = absorption_data[:,1].max()
 phi = -1/(ap*(H)) * np.log(T_need)
 phi=phi*1
@@ -78,20 +78,23 @@ scene.add_object(lsc)
 # 6) Make channel within LSC and try to register to scene
 abs = Spectrum([0,1000], [0.3,0.3])
 ems = Spectrum([0,1000], [0,0])
+#reaction_mixture = Material(absorption_data=abs, emission_data=ems, quantum_efficiency=0.0, refractive_index=1.44)
 reaction_mixture = Material(absorption_data=abs, emission_data=ems, quantum_efficiency=0.0, refractive_index=1.44)
 #channel.material = SimpleMaterial(reaction_mixture)
 
 channels = []
 for i in range(0, cnum-1):
   channels.append(i)
-  channels[i] = RayBin(origin=(0.0064,0.005+((cW+cspacing)*i),cdepth), size=(cL,cW,cH))
+  channels[i] = Channel(origin=(0.0064,0.005+((cW+cspacing)*i),cdepth), size=(cL,cW,cH))
   channels[i].material = reaction_mixture
   channels[i].name = "Channel"+str(i)
 
 for channel in channels:
   scene.add_object(channel)
+ 
 
 #scene.pov_render(camera_position = (0,0,0.1), camera_target = (0.025,0.025,0), height = 2400, width =3200)
+#scene.pov_render(camera_position = (0,0,0.1), camera_target = (0.025,0.025,0), height = 300, width =600)
 
 # Ask python that the directory of this script file is and use it as the location of the database file
 pwd = os.getcwd()

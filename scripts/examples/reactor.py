@@ -40,6 +40,7 @@ ems = load_spectrum(file)
 # 3b) Adjust concenctration
 absorption_data = np.loadtxt(os.path.join(PVTDATA, 'dyes', 'fluro-red.abs.txt'))
 T_need = 0.05 # Want to transmit 5% of the light at the peak absorption wavelength
+t_need = 0.0362
 ap = absorption_data[:,1].max()
 phi = -1/(ap*(H)) * np.log(T_need)
 phi=phi*1
@@ -100,9 +101,12 @@ scene.add_object(channel4)
 scene.add_object(channel5)
 scene.add_object(channel6)
 
+scene.pov_render(camera_position = (0,0,0.1), camera_target = (0.025,0.025,0), height = 400, width = 600)
+
 # Ask python that the directory of this script file is and use it as the location of the database file
 pwd = os.getcwd()
 dbfile = os.path.join(pwd, 'reactor_db.sql') # <--- the name of the database file
+
 
 trace = Tracer(scene=scene, source=source, seed=1, throws=250, database_file=dbfile, use_visualiser=True, show_log=False)
 trace.show_lines = True

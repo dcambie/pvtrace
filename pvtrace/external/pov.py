@@ -18,6 +18,11 @@ class File:
   def __init__(self,fnam="out.pov",*items):
     self.file = open(fnam,"w")
     self.__indent = 0
+# Suppress PovRay 3.7 warning
+    self.writeln("#version 3.7;")
+    self.writeln("global_settings {")
+    self.writeln("  assumed_gamma 1.0")
+    self.writeln("}")
     self.write(*items)
   def include(self,name):
     self.writeln( '#include "%s"'%name )
@@ -37,6 +42,7 @@ class File:
       # blank line if this is a top level end
       self.writeln( )
   def write(self,*items):
+    items = filter(lambda x: x!=None, items)#dunno why i got noneObject in the list
     for item in items:
       if type(item) == str:
         self.include(item)

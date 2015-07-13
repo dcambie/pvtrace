@@ -958,6 +958,8 @@ class Tracer(object):
                     if self.show_log: 
                         print "   * Reached Max Steps *"
 
+    def stop(self):
+        self.database.connection.commit()
 
 if __name__ == "__main__":
     import doctest

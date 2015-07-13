@@ -18,20 +18,23 @@ Steps:
 
 # Parameters
 
-db_file     = 'bilayer_db.sql'  # Database file
+db_file     = 'pvtracedb.sql'   # Database file (with this name forces overwrite....)
 source      = 'LED1.txt'        # Lightsource spectrum file
-T_need      = 0.0362            # Trasmission at absorbance peak, matches experimental (for lsc whose height is H)
+t_need      = 0.0362            # Trasmission at absorbance peak, matches experimental (for lsc whose height is H)
 rmix_re     = 1.33              # Reaction mixture, ACN/H2O 4:1
 
-photons_to_throw = 250          # Number of photons to be simulated
+photons_to_throw = 25          # Number of photons to be simulated
 bilayer     = False             # Simulate bilayer system?
-transparent = False             # Simulate transparent device (negative control)
+transparent = True              # Simulate transparent device (negative control)
 rmix_re     = 1.33              # Reaction mixture's refractive index
 
 informative_output = False      # Print informative outpout
 print_wavelehgt_channels = True # Wavelenght of photons in channels
 debug = False                   # Debug output
 
+visualizer = True               # VPython
+show_lines = True               # Ray lines rendering
+show_path  = True               # Photon path rendering
 
 # 1) Define some sizes (arbitrary used 1=1m)
 # device size
@@ -63,7 +66,7 @@ ems = load_spectrum(file)
 # 3b) Adjust concenctration
 absorption_data = np.loadtxt(os.path.join(PVTDATA, 'dyes', 'fluro-red.abs.txt'))
 ap = absorption_data[:,1].max()
-phi = -1/(ap*(H)) * np.log(T_need)
+phi = -1/(ap*(H)) * np.log(t_need)
 absorption_data[:,1] = absorption_data[:,1]*phi
 
 if informative_output:
@@ -125,12 +128,13 @@ for channel in channels:
 pwd = os.getcwd()
 dbfile = os.path.join(pwd, db_file) # <--- the name of the database file
 
-trace = Tracer(scene=scene, source=source, seed=1, throws=photons_to_throw, database_file=dbfile, use_visualiser=True, show_log=False, show_axis=False)
-trace.show_lines = True
-trace.show_path = True
+trace = Tracer(scene=scene, source=source, seed=1, throws=photons_to_throw, database_file=dbfile, use_visualiser=visualizer, show_log=debug, show_axis=False)
+trace.show_lines = show_lines
+trace.show_path  = show_path
 import time
 tic = time.clock()
 trace.start()
+trace.stop()
 toc = time.clock()
 
 # 6) Statistics
@@ -197,4 +201,4 @@ for channel in channels:
 if informative_output:
     print "Photons in channels (sum)",photons_in_channels/thrown * 100,"% (",photons_in_channels,")"
 
-sys.exit() 
+sys.exit(0)

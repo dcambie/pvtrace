@@ -16,11 +16,27 @@ Steps:
 
 '''
 
-# 1) Define some sizes
+# Parameters
+
+db_file     = 'bilayer_db.sql'  # Database file
+source      = 'LED1.txt'        # Lightsource spectrum file
+T_need      = 0.0362            # Trasmission at absorbance peak, matches experimental (for lsc whose height is H)
+rmix_re     = 1.33              # Reaction mixture, ACN/H2O 4:1
+
+photons_to_throw = 25000          # Number of photons to be simulated
+bilayer     = False             # Simulate bilayer system?
+transparent = False             # Simulate transparent device (negative control)
+rmix_re     = 1.33              # Reaction mixture's refractive index
+
+Informative_Output = False      # Yet to implement
+Print_Wavelehgt_Channels = True # Yet to implement
+
+
+# 1) Define some sizes (arbitrary used 1=1m)
 # device size
-L = 0.07      # 7cm
-W = 0.06      # 6cm
-H = 0.005     # 5mm
+L = 0.07      # 7 cm
+W = 0.06      # 6 cm
+H = 0.005     # 5 mm
 
 # channel size
 cL = 0.05         # 5cm
@@ -32,7 +48,7 @@ cspacing = 0.0012 # spacing between channels
 
 # 2) Create light source from AM1.5 data, truncate to 400 -- 800nm range
 #file = os.path.join(PVTDATA,'sources','AM1.5g-full.txt')
-file = os.path.join(PVTDATA,'sources','LED1.txt')
+file = os.path.join(PVTDATA,'sources',source)
 oriel = load_spectrum(file, xbins=np.arange(400,800))
 source = PlanarSource(direction=(0,0,-1), spectrum=oriel, length=L, width=W) # Incident light AM1.5g spectrum
 source.translate((0,0,0.05))
@@ -45,11 +61,8 @@ ems = load_spectrum(file)
 
 # 3b) Adjust concenctration
 absorption_data = np.loadtxt(os.path.join(PVTDATA, 'dyes', 'fluro-red.abs.txt'))
-#T_need = 0.05 # Want to transmit 5% of the light at the peak absorption wavelength
-T_need = 0.0362
 ap = absorption_data[:,1].max()
 phi = -1/(ap*(H)) * np.log(T_need)
-phi=phi*1
 absorption_data[:,1] = absorption_data[:,1]*phi
 print "Absorption data scaled to peak, ", absorption_data[:,1].max()
 print "Therefore transmission at peak = ", np.exp(-absorption_data[:,1].max() * H)
@@ -69,8 +82,13 @@ pdms = Material(absorption_data=abs, emission_data=ems, quantum_efficiency=0.0, 
 
 # 5) Make the LSC and give it both dye and pmma materials
 lsc = LSC(origin=(0,0,0), size=(L,W,H))
-lsc.material = CompositeMaterial([pdms, fluro_red], refractive_index=1.41)
-#lsc.material = pdms
+
+# Trasparent is used to compare with a non-doped 
+if transparent:
+    lsc.material = pdms
+else:
+    lsc.material = CompositeMaterial([pdms, fluro_red], refractive_index=1.41)
+
 lsc.name = "LSC"
 scene = Scene()
 scene.add_object(lsc)
@@ -79,15 +97,20 @@ scene.add_object(lsc)
 abs = Spectrum([0,1000], [0.3,0.3])
 ems = Spectrum([0,1000], [0,0])
 #reaction_mixture = Material(absorption_data=abs, emission_data=ems, quantum_efficiency=0.0, refractive_index=1.44)
-reaction_mixture = Material(absorption_data=abs, emission_data=ems, quantum_efficiency=0.0, refractive_index=1.44)
+reaction_mixture = Material(absorption_data=abs, emission_data=ems, quantum_efficiency=0.0, refractive_index=rmix_re)
 #channel.material = SimpleMaterial(reaction_mixture)
 
 channels = []
 for i in range(0, cnum-1):
-  channels.append(i)
-  channels[i] = Channel(origin=(0.0064,0.005+((cW+cspacing)*i),cdepth), size=(cL,cW,cH))
-  channels[i].material = reaction_mixture
-  channels[i].name = "Channel"+str(i)
+    channels.append(Channel(origin=(0.0064,0.005+((cW+cspacing)*i),cdepth), size=(cL,cW,cH)))
+    channels[i].material = reaction_mixture
+    channels[i].name = "Channel"+str(i)
+
+if bilayer:
+  for i in range(0, cnum-2):
+    channels.append(Channel(origin=(0.0064,0.005+((cW+cspacing)*i)+(cW+cspacing)/2,cdepth-0.001), size=(cL,cW,cH)))
+    channels[i+cnum-1].material = reaction_mixture
+    channels[i+cnum-1].name = "Channel"+str(i+cnum)
 
 for channel in channels:
   scene.add_object(channel)
@@ -97,9 +120,9 @@ for channel in channels:
 
 # Ask python that the directory of this script file is and use it as the location of the database file
 pwd = os.getcwd()
-dbfile = os.path.join(pwd, 'reactor2_db.sql') # <--- the name of the database file
+dbfile = os.path.join(pwd, db_file) # <--- the name of the database file
 
-trace = Tracer(scene=scene, source=source, seed=1, throws=250, database_file=dbfile, use_visualiser=True, show_log=False, show_axis=False)
+trace = Tracer(scene=scene, source=source, seed=1, throws=photons_to_throw, database_file=dbfile, use_visualiser=True, show_log=False, show_axis=False)
 trace.show_lines = True
 trace.show_path = True
 import time
@@ -167,11 +190,15 @@ print "Reactor's channel photons:"
 
 photons_in_channels = 0
 for channel in channels:
-  photons = len(trace.database.endpoint_uids_for_object(channel.name))
-  print channel.name," photons: ",photons/thrown * 100,"% (",photons,")"
-  photons_in_channels += photons
+    photons = trace.database.endpoint_uids_for_object(channel.name)
+    for photon in photons:
+#        print "Wavelenght: ",trace.database.wavelengthForUid(photon)# Nice output
+        print trace.database.wavelengthForUid(photon) # Clean output (for elaborations)
+    photon_count = len(photons)
+#  print channel.name," photons: ",photons/thrown * 100,"% (",photons,")"
+    photons_in_channels += photon_count
 
-print "Photons in channels (sum)",photons_in_channels/thrown * 100,"% (",photons_in_channels,")"
+#print "Photons in channels (sum)",photons_in_channels/thrown * 100,"% (",photons_in_channels,")"
 
 
 sys.exit()

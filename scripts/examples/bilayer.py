@@ -23,13 +23,14 @@ source      = 'LED1.txt'        # Lightsource spectrum file
 T_need      = 0.0362            # Trasmission at absorbance peak, matches experimental (for lsc whose height is H)
 rmix_re     = 1.33              # Reaction mixture, ACN/H2O 4:1
 
-photons_to_throw = 25000          # Number of photons to be simulated
+photons_to_throw = 250          # Number of photons to be simulated
 bilayer     = False             # Simulate bilayer system?
 transparent = False             # Simulate transparent device (negative control)
 rmix_re     = 1.33              # Reaction mixture's refractive index
 
-Informative_Output = False      # Yet to implement
-Print_Wavelehgt_Channels = True # Yet to implement
+informative_output = False      # Print informative outpout
+print_wavelehgt_channels = True # Wavelenght of photons in channels
+debug = False                   # Debug output
 
 
 # 1) Define some sizes (arbitrary used 1=1m)
@@ -64,8 +65,10 @@ absorption_data = np.loadtxt(os.path.join(PVTDATA, 'dyes', 'fluro-red.abs.txt'))
 ap = absorption_data[:,1].max()
 phi = -1/(ap*(H)) * np.log(T_need)
 absorption_data[:,1] = absorption_data[:,1]*phi
-print "Absorption data scaled to peak, ", absorption_data[:,1].max()
-print "Therefore transmission at peak = ", np.exp(-absorption_data[:,1].max() * H)
+
+if informative_output:
+    print "Absorption data scaled to peak, ", absorption_data[:,1].max()
+    print "Therefore transmission at peak = ", np.exp(-absorption_data[:,1].max() * H)
 
 absorption = Spectrum(x=absorption_data[:,0], y=absorption_data[:,1])
 emission_data = np.loadtxt(os.path.join(PVTDATA,"dyes", 'fluro-red-fit.ems.txt'))
@@ -131,74 +134,67 @@ trace.start()
 toc = time.clock()
 
 # 6) Statistics
-print ""
-print "Run Time: ", toc - tic
-print ""
-
-print "Technical details:"
 generated = len(trace.database.uids_generated_photons())
 killed = len(trace.database.killed())
 thrown = generated - killed
-print "\t Generated \t", generated
-print "\t Killed \t", killed
-print "\t Thrown \t", thrown
 
-print "Summary:"
-print "\t Optical efficiency \t", (len(trace.database.uids_out_bound_on_surface('left', luminescent=True)) + len(trace.database.uids_out_bound_on_surface('right', luminescent=True)) + len(trace.database.uids_out_bound_on_surface('near', luminescent=True)) + len(trace.database.uids_out_bound_on_surface('far', luminescent=True))) * 100 / thrown, "%"
-print "\t Photon efficiency \t", (len(trace.database.uids_out_bound_on_surface('left')) + len(trace.database.uids_out_bound_on_surface('right')) + len(trace.database.uids_out_bound_on_surface('near')) + len(trace.database.uids_out_bound_on_surface('far')) + len(trace.database.uids_out_bound_on_surface('top')) + len(trace.database.uids_out_bound_on_surface('bottom'))) * 100 / thrown, "%"
+if informative_output:
+    print ""
+    print "Run Time: ", toc - tic
+    print ""
+    
+    print "Technical details:"
+    print "\t Generated \t", generated
+    print "\t Killed \t", killed
+    print "\t Thrown \t", thrown
+    
+    print "Summary:"
+    print "\t Optical efficiency \t", (len(trace.database.uids_out_bound_on_surface('left', luminescent=True)) + len(trace.database.uids_out_bound_on_surface('right', luminescent=True)) + len(trace.database.uids_out_bound_on_surface('near', luminescent=True)) + len(trace.database.uids_out_bound_on_surface('far', luminescent=True))) * 100 / thrown, "%"
+    print "\t Photon efficiency \t", (len(trace.database.uids_out_bound_on_surface('left')) + len(trace.database.uids_out_bound_on_surface('right')) + len(trace.database.uids_out_bound_on_surface('near')) + len(trace.database.uids_out_bound_on_surface('far')) + len(trace.database.uids_out_bound_on_surface('top')) + len(trace.database.uids_out_bound_on_surface('bottom'))) * 100 / thrown, "%"
+    
+    print "Luminescent photons:"
 
-print "Luminescent photons:"
-edges = ['left', 'near', 'far', 'right']
-apertures = ['top', 'bottom']
-r_edges = ['r_left', 'r_near', 'r_far', 'r_right']
-r_apertures = ['r_top', 'r_bottom']
+    edges = ['left', 'near', 'far', 'right']
+    apertures = ['top', 'bottom']
 
-for surface in edges:
-    print "\t", surface, "\t", len(trace.database.uids_out_bound_on_surface(surface, luminescent=True))/thrown * 100, "%"
+    for surface in edges:
+        print "\t", surface, "\t", len(trace.database.uids_out_bound_on_surface(surface, luminescent=True))/thrown * 100, "%"
 
-for surface in apertures:
-    print "\t", surface, "\t", len(trace.database.uids_out_bound_on_surface(surface, luminescent=True))/thrown * 100, "%"
+    for surface in apertures:
+        print "\t", surface, "\t", len(trace.database.uids_out_bound_on_surface(surface, luminescent=True))/thrown * 100, "%"
 
+    print "Non radiative losses\t", len(trace.database.uids_nonradiative_losses())/thrown * 100, "%"
 
-#print "Reactor's luminescent photons:"
-#for surface in r_edges:
-#    print "\t", surface, "\t", len(trace.database.uids_out_bound_on_surface(surface, luminescent=True))/thrown * 100, "%"
+    print "Solar photons (transmitted/reflected):"
+    for surface in edges:
+        print "\t", surface, "\t", len(trace.database.uids_out_bound_on_surface(surface, solar=True))/thrown * 100, "%"
 
-#for surface in r_apertures:
-#    print "\t", surface, "\t", len(trace.database.uids_out_bound_on_surface(surface, luminescent=True))/thrown * 100, "%"
+    for surface in apertures:
+        print "\t", surface, "\t", len(trace.database.uids_out_bound_on_surface(surface, solar=True))/thrown * 100, "%"
 
-
-print "Non radiative losses\t", len(trace.database.uids_nonradiative_losses())/thrown * 100, "%"
-
-print "Solar photons (transmitted/reflected):"
-for surface in edges:
-    print "\t", surface, "\t", len(trace.database.uids_out_bound_on_surface(surface, solar=True))/thrown * 100, "%"
-
-for surface in apertures:
-    print "\t", surface, "\t", len(trace.database.uids_out_bound_on_surface(surface, solar=True))/thrown * 100, "%"
-
-print "Reactor's channel photons:"
-#for surface in r_edges:
-#    print "\t", surface, "\t", len(trace.database.uids_out_bound_on_surface(surface, solar=True))/thrown * 100, "%"
-
-#for surface in r_apertures:
-#    print "\t", surface, "\t", len(trace.database.uids_out_bound_on_surface(surface, solar=True))/thrown * 100, "%"
+    print "Reactor's channel photons:"
 
 # LOG
-#print "objects with record", trace.database.objects_with_records()
-#print "surface with records", trace.database.surfaces_with_records()
+if debug:
+    print "objects with record", trace.database.objects_with_records()
+    print "surface with records", trace.database.surfaces_with_records()
 
 photons_in_channels = 0
 for channel in channels:
     photons = trace.database.endpoint_uids_for_object(channel.name)
+    
     for photon in photons:
-#        print "Wavelenght: ",trace.database.wavelengthForUid(photon)# Nice output
-        print trace.database.wavelengthForUid(photon) # Clean output (for elaborations)
+        if debug:
+            print "Wavelenght: ",trace.database.wavelengthForUid(photon)# Nice output
+        elif print_wavelehgt_channels:
+            print trace.database.wavelengthForUid(photon) # Clean output (for elaborations)
+    
     photon_count = len(photons)
-#  print channel.name," photons: ",photons/thrown * 100,"% (",photons,")"
+    if debug:
+        print channel.name," photons: ",photons/thrown * 100,"% (",photons,")"
     photons_in_channels += photon_count
 
-#print "Photons in channels (sum)",photons_in_channels/thrown * 100,"% (",photons_in_channels,")"
+if informative_output:
+    print "Photons in channels (sum)",photons_in_channels/thrown * 100,"% (",photons_in_channels,")"
 
-
-sys.exit()
+sys.exit() 

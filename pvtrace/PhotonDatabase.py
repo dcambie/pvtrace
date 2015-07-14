@@ -123,14 +123,14 @@ class PhotonDatabase(object):
         else:
             on_surface_obj = photon.on_surface_object.name
         
-        values = (photon.absorption_counter, photon.intersection_counter, photon.active, photon.killed, photon.source, emitter_material, absorber_material, container_obj, str(on_surface_obj), str(surface_id), str(ray_direction_bound), self.uid)
-        self.cursor.execute('INSERT INTO state VALUES (?,?,?,?,?,?,?,?,?,?,?,?)', values)
+        values = (photon.absorption_counter, photon.intersection_counter, photon.active, photon.killed, photon.source, emitter_material, absorber_material, container_obj, str(on_surface_obj), str(surface_id), str(ray_direction_bound), photon.reaction, self.uid)
+        self.cursor.execute('INSERT INTO state VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)', values)
         
         # the last line of this method update the unique photon ID (i.e. the row number)
         self.uid = self.uid + 1
         
         # Every 50 times write data to dbfile
-        if not self.uid % 50:
+        if not self.uid % 1:
             self.connection.commit()
         
     def __del__(self):
@@ -303,29 +303,40 @@ class PhotonDatabase(object):
 if __name__ == "__main__":
     import PhotonDatabase
     import os
-    drive = os.path.splitdrive(os.path.expanduser("~"))[0]
-    database_file = os.path.join(drive, "tmp", "pvtracedb.sql")
-    if not os.path.exists(os.path.split(database_file)[0]): 
-        os.makedirs(os.path.split(database_file)[0])
-    db = PhotonDatabase.PhotonDatabase(database_file)
-    uid = db.uids_nonradiative_losses()
-    print uid
-    print db.wavelengthForUid(uid)
-    print ""
-    print db.positionForUid(uid)
-    print ""
-    print db.directionForUid(uid)
-    print ""
-    print db.polarisationForUid(uid)
-    
-    print "Plotting Test"
     import numpy as np
     import pylab
-    data = db.wavelengthForUid(uid)
-    hist = np.histogram(data, bins=np.linspace(300,800,num=100))
-    pylab.hist(data, bins=np.linspace(300,800,num=100), histtype='stepfilled')
-    pylab.savefig(os.path.join(drive,"tmp","plot-test.pdf"))
-    pylab.clf()
+    
+    # DRIVE juST exists on Windows, using user data folder is more interoperable
+#    drive = os.path.splitdrive(os.path.expanduser("~"))[0]
+    drive = os.path.expanduser("~")
+    database_file = os.path.join(drive, "tmp", "pvtracedb.sql")
+    
+    if not os.path.exists(os.path.split(database_file)[0]): 
+        os.makedirs(os.path.split(database_file)[0])
+    db = PhotonDatabase.PhotonDatabase()
+    db.load(database_file)
+    
+    uid = db.uids_nonradiative_losses()
+    if len(uid) == 0:
+        print 'No photons lost! :)'
+        print type(db)
+        print db.objects_with_records()
+    else :
+        print uid
+        print db.wavelengthForUid(uid)
+        print ""
+        print db.positionForUid(uid)
+        print ""
+        print db.directionForUid(uid)
+        print ""
+        print db.polarisationForUid(uid)
+        
+        print "Plotting Test"
+        data = db.wavelengthForUid(uid)
+        hist = np.histogram(data, bins=np.linspace(300,800,num=100))
+        pylab.hist(data, bins=np.linspace(300,800,num=100), histtype='stepfilled')
+        pylab.savefig(os.path.join(drive,"tmp","plot-test.pdf"))
+        pylab.clf()
     
     print "Plotting edge"
     uid = db.uids_out_bound_on_surface('left', luminescent=True) + db.uids_out_bound_on_surface('right', luminescent=True) + db.uids_out_bound_on_surface('near', luminescent=True) + db.uids_out_bound_on_surface('far', luminescent=True)
@@ -378,8 +389,4 @@ if __name__ == "__main__":
     pylab.hist(data, len(bin_edges), histtype='stepfilled')
     pylab.savefig(os.path.join(drive,"tmp",'plot-transmitted.pdf'))
     pylab.clf()
-    
-    
-    
-    
     

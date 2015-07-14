@@ -19,18 +19,19 @@ Steps:
 # Parameters
 
 db_file     = 'pvtracedb.sql'   # Database file (with this name forces overwrite....)
+photon_file = 'data.photons'    # Stores wavelenght of photons in channels
 source      = 'LED1.txt'        # Lightsource spectrum file
 t_need      = 0.0362            # Trasmission at absorbance peak, matches experimental (for lsc whose height is H)
 rmix_re     = 1.33              # Reaction mixture, ACN/H2O 4:1
 
-photons_to_throw = 25          # Number of photons to be simulated
+photons_to_throw = 25           # Number of photons to be simulated
 bilayer     = False             # Simulate bilayer system?
 transparent = True              # Simulate transparent device (negative control)
 rmix_re     = 1.33              # Reaction mixture's refractive index
 
 informative_output = False      # Print informative outpout
 print_wavelehgt_channels = True # Wavelenght of photons in channels
-debug = False                   # Debug output
+debug = True                    # Debug output
 
 visualizer = True               # VPython
 show_lines = True               # Ray lines rendering
@@ -134,7 +135,7 @@ trace.show_path  = show_path
 import time
 tic = time.clock()
 trace.start()
-trace.stop()
+#trace.stop()
 toc = time.clock()
 
 # 6) Statistics
@@ -195,7 +196,7 @@ for channel in channels:
     
     photon_count = len(photons)
     if debug:
-        print channel.name," photons: ",photons/thrown * 100,"% (",photons,")"
+        print channel.name," photons: ",photon_count/thrown * 100,"% (",photon_count,")"
     photons_in_channels += photon_count
 
 if informative_output:

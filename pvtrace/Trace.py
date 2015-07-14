@@ -74,6 +74,7 @@ class Photon (object):
         self.source = None
         self.absorption_counter = 0
         self.intersection_counter = 0
+        self.reaction = False
         
         
     def __copy__(self):
@@ -97,6 +98,7 @@ class Photon (object):
         copy.absorber_material = self.absorber_material
         copy.emitter_material = self.emitter_material
         copy.on_surface_object = self.on_surface_object
+        copy.reaction = self.reaction
         return copy
     
     def __deepcopy__(self):
@@ -113,6 +115,10 @@ class Photon (object):
     def getPosition(self):
         """Returns the position of the photons rays"""
         return self.ray.position
+    
+    def isReaction(self):
+        """True wheter the photon ends in the reaction mixture"""
+        return self.reaction
         
     def getDirection(self):
         """Returns the direction of the photons rays"""
@@ -403,6 +409,7 @@ class Photon (object):
                 self.active = False
                 self.previous_container = self.container
                 self.container = intersection_object
+                self.reaction = True
                 return self
             
             self.propagate = True
@@ -958,8 +965,8 @@ class Tracer(object):
                     if self.show_log: 
                         print "   * Reached Max Steps *"
 
-    def stop(self):
-        self.database.connection.commit()
+#    def stop(self):
+#        self.database.connection.commit()
 
 if __name__ == "__main__":
     import doctest

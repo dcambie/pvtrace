@@ -236,6 +236,14 @@ class PhotonDatabase(object):
             print "Cannot return any uids for this question. Are you using the function uids_in_bound_on_surface correctly?"
             return []
     
+    def uids_in_reactor(self):
+        """Returns photons in reactor"""
+        return itemise(self.cursor.execute("SELECT MAX(uid) FROM photon GROUP BY pid INTERSECT SELECT uid FROM state WHERE reaction = 1"))
+    
+    def uids_in_reactor_and_luminescent(self):
+        """Returns photons in reactor"""
+        return itemise(self.cursor.execute("SELECT MAX(uid) FROM photon GROUP BY pid INTERSECT SELECT uid FROM state WHERE reaction = 1 AND absorption_counter > 0"))
+    
     def uids_first_intersection(self):
         """Returns the unique identifier of the first intersection for all photons"""
         return self.cursor.execute('SELECT uid FROM state WHERE intersection_counter = 1;').fetchall()
@@ -338,7 +346,28 @@ if __name__ == "__main__":
         pylab.savefig(os.path.join(drive,"tmp","plot-test.pdf"))
         pylab.clf()
     
-    print "Plotting edge"
+    print "Plotting reactor..."
+    uid = db.uids_in_reactor()
+    #print "Photons in channels array is: ",uid
+    data = db.wavelengthForUid(uid)
+    hist = np.histogram(data, bins=np.linspace(300,800,num=100))
+    pylab.hist(data, 100, histtype='stepfilled')
+    pylab.savefig(os.path.join(drive,"tmp","plot-reactor.png"))
+    pylab.clf()
+    
+    print "Plotting reactor luminescent..."
+    uid = db.uids_in_reactor_and_luminescent()
+    #print "Photons in channels array is: ",uid
+    data = db.wavelengthForUid(uid)
+    hist = np.histogram(data, bins=np.linspace(300,800,num=100))
+    pylab.hist(data, 100, histtype='stepfilled')
+    pylab.savefig(os.path.join(drive,"tmp","plot-reactor-luminescent.png"))
+    pylab.clf()
+    
+    print(data)
+    
+    
+    '''print "Plotting edge"
     uid = db.uids_out_bound_on_surface('left', luminescent=True) + db.uids_out_bound_on_surface('right', luminescent=True) + db.uids_out_bound_on_surface('near', luminescent=True) + db.uids_out_bound_on_surface('far', luminescent=True)
     print uid
     data = db.wavelengthForUid(uid)
@@ -389,4 +418,4 @@ if __name__ == "__main__":
     pylab.hist(data, len(bin_edges), histtype='stepfilled')
     pylab.savefig(os.path.join(drive,"tmp",'plot-transmitted.pdf'))
     pylab.clf()
-    
+    '''

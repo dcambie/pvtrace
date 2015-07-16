@@ -464,7 +464,7 @@ class Material(object):
 
 class CompositeMaterial(Material):
     """A material that is composed from a homogeneous mix of multiple materials. For example, a plastic plate doped with a blue and red absorbing dyes has the absorption coefficient of plastic as well as the absorption and emission properties of the dyes."""
-    def __init__(self, materials, refractive_index=None):
+    def __init__(self, materials, refractive_index=None, silent=False):
         '''Initalised by a list or array of material objects.'''
         super(CompositeMaterial, self).__init__()
         self.materials = materials
@@ -476,6 +476,7 @@ class CompositeMaterial(Material):
             print ""
             raise ValueError
         self.refractive_index = refractive_index
+        self.silent = silent
     
     def all_absorption_coefficients(self, nanometers):
         '''Returns and array of all the the materials absorption coefficients at the specified wavelength.'''
@@ -520,14 +521,16 @@ class CompositeMaterial(Material):
             
             #Emission occurs.
             if (np.random.uniform() < material.quantum_efficiency):
-                print "   * Re-emitted *"
+                if self.silent == False:
+                    print "   * Re-emitted *"
                 photon.reabs = photon.reabs + 1
                 photon.emitter_material = material
                 photon = material.emission(photon) # Generates a new photon with red-shifted wavelength, new direction and polariation (if included in simulation)
                 return photon
                 
             else:
-                print "   * Photon Lost *"
+                if self.silent == False:
+                    print "   * Photon Lost *"
                 #Emission does not occur. Now set active = False ans return
                 photon.active = False
                 return photon

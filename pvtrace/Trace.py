@@ -856,9 +856,9 @@ class Tracer(object):
                 
             if self.show_log:
                 print "Photon number:", throw
-            else:
-                print "Photon number:", throw, "\r",
-                sys.stdout.flush()
+            #else:
+            #    print "Photon number:", throw, "\r",
+            #    sys.stdout.flush()
             
             photon = self.source.photon()
             photon.visualiser = self.visualiser

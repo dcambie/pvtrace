@@ -255,7 +255,7 @@ class PhotonDatabase(object):
         return self.cursor.execute('SELECT pid FROM photon WHERE uid=?', (uid,)).fetchall()
     
     def uids_nonradiative_losses(self):
-        return itemise(self.cursor.execute("SELECT uid FROM state WHERE surface_id = 'None' AND absorption_counter > 0 AND killed = 0 GROUP BY uid HAVING uid IN (SELECT MAX(uid) FROM photon group BY pid)").fetchall())
+        return itemise(self.cursor.execute("SELECT uid FROM state WHERE reaction = 0 AND surface_id = 'None' AND absorption_counter > 0 AND killed = 0 GROUP BY uid HAVING uid IN (SELECT MAX(uid) FROM photon group BY pid)").fetchall())
     
     def value_for_table_column_uid(self, table, column, uid):
         """Returns values from the database index my table, column and row, where the row is uniquely defined using the photon uid. 

@@ -1,74 +1,91 @@
 from __future__ import division
 import numpy as np
 import sys
+import logging
 from pvtrace.external import transformations as tf
 from pvtrace import *
 
 ''' Simulation of a rectangular homogeneously doped LSC
-
 Steps:
-1) Define sizes
-2) Create a light source
+1) Define parameters
+2) Create light source
 3) Load absorption and emission data for orgnaic dye
-4) Load linear background absorption for PMMA
+4) Load linear background absorption for PDMS
 5) Create LSC object and start tracer
-6) Calculate statistics.
-
+6) Calculate statistics
 '''
 
-# Parameters
-
-db_file     = 'pvtracedb.sql'   # Database file (with this name forces overwrite....)
-photon_file = 'data.photons'    # Stores wavelenght of photons in channels
-source      = 'LED1.txt'        # Lightsource spectrum file
-t_need      = 0.0362            # Trasmission at absorbance peak, matches experimental (for lsc whose height is H)
-rmix_re     = 1.33              # Reaction mixture, ACN/H2O 4:1
-
-photons_to_throw = 10000        # Number of photons to be simulated
-bilayer     = False             # Simulate bilayer system?
-transparent = False             # Simulate transparent device (negative control)
-rmix_re     = 1.33              # Reaction mixture's refractive index
-
-informative_output = True       # Print informative outpout
-print_wavelehgt_channels = False# Wavelenght of photons in channels
-debug = False                   # Debug output
-
+# Simulation
+log_file    = 'simulation.log'  # Location of log file
+db_file     = 'pvtracedb.sql'   # Database file (with pvtracedb.sql overwriting is forced)
+source      = 'LED1.txt'        # Lightsource spectrum file (AM1.5g-full.txt for sun)
+photons_to_throw = 10           # Number of photons to be simulated
+# Logging
+debug                   = False # Debug output (implies informative output)
+informative_output      = False # Print informative outpout (implies print summary)
+print_wavelehgt_channels= False # Wavelenght of photons in channels
+print_summary           = True  # tsv summary data
+# Visualizer parameters
 visualizer = False              # VPython
 show_lines = False              # Ray lines rendering
 show_path  = False              # Photon path rendering
+# Device Data
+L = 0.07                        # Length    (7 cm)
+W = 0.06                        # Width     (6 cm)
+H = 0.005                       # Thickness (5 mm)
+# Channels
+cL = 0.05                       # Length    (5 cm)
+cW = 0.0008                     # Width     (.8mm)
+cH = 0.0001                     # Heigth    (.1mm)
+cdepth   = 0.004                # Depth of channels in waveguide (from bottom) [MUST be lower than H+cH
+cnum     = 26                   # Number of channels
+cspacing = 0.0012               # Spacing between channels
+rmix_re  = 1.33                 # Reaction mixture's refractive index
+t_need      = 0.0362            # Trasmission at absorbance peak, matches experimental (for lsc whose height is H)
+# Device Parameters
+bilayer     = False             # Simulate bilayer system?
+transparent = False             # Simulate transparent device (negative control)
+# PovRay rendering
+render_hi_quality  = False      # Hi-quality PovRay Render of the scene
+render_low_quality = False      # Fast PovRay Render of the scene
 
-render_hi_quality = False
-render_low_quality = False
+logging.basicConfig(filename=log_file,level=logging.DEBUG)
 
-# 1) Define some sizes (arbitrary used 1=1m)
-# device size
-L = 0.07      # 7 cm
-W = 0.06      # 6 cm
-H = 0.005     # 5 mm
+import time
+random_seed = int(time.time())# Random seed (with the same seed same random photons will be generated, this can be usefull in some comparisons)
 
-# channel size
-cL = 0.05         # 5cm
-cW = 0.0008       # 800um
-cH = 0.0001       # 100um
-cdepth = 0.004    # depth of channels in waveguide
-cnum = 26         # number of channels
-cspacing = 0.0012 # spacing between channels
+if debug:
+    informative_output = true
+if informative_output:
+    print_summary = True
 
-# 2) Create light source from AM1.5 data, truncate to 400 -- 800nm range
+# 2) Create light source, truncate to 400 -- 800nm range
 #file = os.path.join(PVTDATA,'sources','AM1.5g-full.txt')
 file = os.path.join(PVTDATA,'sources',source)
 oriel = load_spectrum(file, xbins=np.arange(400,800))
-source = PlanarSource(direction=(0,0,-1), spectrum=oriel, length=L, width=W) # Incident light AM1.5g spectrum
-source.translate((0,0,0.05))
+source = PlanarSource(direction=(0,0,-1), spectrum=oriel, length=L, width=W) # Incident light (perpendicular to device)
+source.translate((0,0,0.05)) # Distance from device is z-H
 
-# 3a) Load dye absorption and emission data
+# 3a) Load dye absorption and emission data (Red305)
 file = os.path.join(PVTDATA, 'dyes', 'fluro-red.abs.txt')
 abs = load_spectrum(file)
 file = os.path.join(PVTDATA, 'dyes', 'fluro-red-fit.ems.txt')
 ems = load_spectrum(file)
 
-for i in range(1,10):
-    t_need = 0.01-(0.001*i)
+# Put header here just if needed (other output on top)
+header = "Thrown\tReflected (top)\tLost bottom\tLuminescent out at edges\tLuminescent out top/bottom\tChannels_direct\tChannels_luminescent\tNonRadiative"
+if print_summary == True and informative_output == False :
+    print header
+
+# start main cycle for batch simulations
+for i in range(16,30):
+    if (i<10):
+        t_need = 1-(0.1*i)
+    elif (i<20):
+        t_need = 0.1-(0.01*(i-10))
+    else:
+        t_need = 0.01-(0.001*(i-20))
+    
     print "******************************\n *** TRASMITTANCE *** ",t_need
     
     
@@ -88,29 +105,27 @@ for i in range(1,10):
 
     # 3c) Create material
     fluro_red = Material(absorption_data=absorption, emission_data=emission, quantum_efficiency=0.95, refractive_index=1.5)
-    #fluro_red = Material(absorption_data=absorption, emission_data=emission, quantum_efficiency=0.0, refractive_index=1.5)
-
     # 4) Give the material a linear background absorption (pmma)
     abs = Spectrum([0,1000], [2,2])
-    ems = Spectrum([0,1000], [0,0])
+    ems = Spectrum([0,1000], [1,1]) # Giving emission suppress error. It's btw not used due to quantum_efficiency=0 :)
     pdms = Material(absorption_data=abs, emission_data=ems, quantum_efficiency=0.0, refractive_index=1.41)
-
+    
     # 5) Make the LSC and give it both dye and pmma materials
     lsc = LSC(origin=(0,0,0), size=(L,W,H))
-
+    
     # Trasparent is used to compare with a non-doped 
     if transparent:
         lsc.material = pdms
     else:
         lsc.material = CompositeMaterial([pdms, fluro_red], refractive_index=1.41, silent=True)
-
+    
     lsc.name = "LSC"
     scene = Scene()
     scene.add_object(lsc)
 
     # 6) Make channel within LSC and try to register to scene
     abs = Spectrum([0,1000], [0.3,0.3])
-    ems = Spectrum([0,1000], [0,0])
+    ems = Spectrum([0,1000], [1,1])
     #reaction_mixture = Material(absorption_data=abs, emission_data=ems, quantum_efficiency=0.0, refractive_index=1.44)
     reaction_mixture = Material(absorption_data=abs, emission_data=ems, quantum_efficiency=0.0, refractive_index=rmix_re)
     #channel.material = SimpleMaterial(reaction_mixture)
@@ -139,7 +154,7 @@ for i in range(1,10):
     pwd = os.getcwd()
     dbfile = os.path.join(pwd, db_file) # <--- the name of the database file
 
-    trace = Tracer(scene=scene, source=source, seed=1, throws=photons_to_throw, database_file=dbfile, use_visualiser=visualizer, show_log=debug, show_axis=False)
+    trace = Tracer(scene=scene, source=source, seed=random_seed, throws=photons_to_throw, database_file=dbfile, use_visualiser=visualizer, show_log=debug, show_axis=False)
     trace.show_lines = show_lines
     trace.show_path  = show_path
     import time
@@ -153,6 +168,10 @@ for i in range(1,10):
     killed = len(trace.database.killed())
     thrown = generated - killed
 
+    luminescent_edges = len(trace.database.uids_out_bound_on_surface('left', luminescent=True)) + len(trace.database.uids_out_bound_on_surface('right', luminescent=True)) + len(trace.database.uids_out_bound_on_surface('near', luminescent=True)) + len(trace.database.uids_out_bound_on_surface('far', luminescent=True)) # Photons on edges are only luminescent with planarsource perpendicular to device, so luminescent=true not really needed in *THIS* case
+    luminescent_apertures = len(trace.database.uids_out_bound_on_surface('top', luminescent=True)) + len(trace.database.uids_out_bound_on_surface('bottom', luminescent=True))
+    non_radiative_photons = len(trace.database.uids_nonradiative_losses())
+    
     if informative_output:
         print ""
         print "Run Time: ", toc - tic
@@ -164,8 +183,8 @@ for i in range(1,10):
         print "\t Thrown \t", thrown
         
         print "Summary:"
-        print "\t Optical efficiency \t", (len(trace.database.uids_out_bound_on_surface('left', luminescent=True)) + len(trace.database.uids_out_bound_on_surface('right', luminescent=True)) + len(trace.database.uids_out_bound_on_surface('near', luminescent=True)) + len(trace.database.uids_out_bound_on_surface('far', luminescent=True))) * 100 / thrown, "%"
-        print "\t Photon efficiency \t", (len(trace.database.uids_out_bound_on_surface('left')) + len(trace.database.uids_out_bound_on_surface('right')) + len(trace.database.uids_out_bound_on_surface('near')) + len(trace.database.uids_out_bound_on_surface('far')) + len(trace.database.uids_out_bound_on_surface('top')) + len(trace.database.uids_out_bound_on_surface('bottom'))) * 100 / thrown, "%"
+        print "\t Optical efficiency \t", luminescent_edges * 100 / thrown, "%"
+        print "\t Photon efficiency \t", (luminescent_edges + luminescent_apertures) * 100 / thrown, "%"
         
         print "Luminescent photons:"
 
@@ -178,7 +197,7 @@ for i in range(1,10):
         for surface in apertures:
             print "\t", surface, "\t", len(trace.database.uids_out_bound_on_surface(surface, luminescent=True))/thrown * 100, "%"
 
-        print "Non radiative losses\t", len(trace.database.uids_nonradiative_losses())/thrown * 100, "%"
+        print "Non radiative losses\t", non_radiative_photons/thrown * 100, "%"
 
         print "Solar photons (transmitted/reflected):"
         for surface in edges:
@@ -195,18 +214,33 @@ for i in range(1,10):
         print "surface with records", trace.database.surfaces_with_records()
 
     photons = trace.database.uids_in_reactor()
-
+    photons_in_channels_tot = len(photons)
+    luminescent_photons_in_channels = len(trace.database.uids_in_reactor_and_luminescent())
     for photon in photons:
         if debug:
             print "Wavelenght: ",trace.database.wavelengthForUid(photon)# Nice output
         elif print_wavelehgt_channels:
             print trace.database.wavelengthForUid(photon) # Clean output (for elaborations)
 
-    photon_count = len(photons)
     if debug:
-        print channel.name," photons: ",photon_count/thrown * 100,"% (",photon_count,")"
+        print channel.name," photons: ",photons_in_channels_tot/thrown * 100,"% (",photons_in_channels_tot,")"
 
     if informative_output:
-        print "Photons in channels (sum)",photon_count/thrown * 100,"% (",photon_count,")"
-        
+        print "Photons in channels (sum)",photons_in_channels_tot/thrown * 100,"% (",photons_in_channels_tot,")"
+    
+    # Put header here just if needed (other output on top)
+    # FIX LOSS-FLUORESCENT AND ADD TOP ADN BOTTOM
+    if print_summary == True and informative_output == True :
+        print header
+    if print_summary:
+        top_reflected = len(trace.database.uids_out_bound_on_surface("top", solar=True))
+        bottom_lost = len(trace.database.uids_out_bound_on_surface("bottom", solar=True))
+        print thrown,"\t",top_reflected,"\t",bottom_lost,"\t",luminescent_edges,"\t",luminescent_apertures,"\t",(photons_in_channels_tot-luminescent_photons_in_channels),"\t",luminescent_photons_in_channels,"\t",non_radiative_photons
+    
+    if debug:#Check coherence of results
+        if top_reflected+bottom_lost+luminescent_edges+luminescent_apertures+photons_in_channels_tot+non_radiative_photons == thrown:
+            print "Results validity check OK :)"
+        else:
+            print "!!! ERROR !!! Check results carefully!"
+    
 sys.exit(0)

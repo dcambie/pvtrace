@@ -1824,6 +1824,7 @@ def _import_module(module_name, warn=True, prefix='_py_', ignore='_'):
     Return True on successful import.
 
     """
+    
     sys.path.append(os.path.dirname(__file__))
     try:
         module = __import__(module_name)
@@ -1845,7 +1846,7 @@ def _import_module(module_name, warn=True, prefix='_py_', ignore='_'):
         return True
 
 
-_import_module('_transformations')
+#_import_module('_transformations')
 
 # Documentation in HTML format can be generated with Epydoc
 __docformat__ = "restructuredtext en"

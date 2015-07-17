@@ -220,9 +220,10 @@ class Spectrum(object):
             self.x = np.array(bins, dtype=np.float32)
             self.y = np.zeros(len(self.x), dtype=np.float32)
             self.y[indx] = np.array(yval, dtype=np.float32)
-        
+                
         # Make the 'spectrum'
         self.spectrum = interp1d(self.x, self.y, bounds_error=False, fill_value=0.0)
+        
         
         # Make the pdf for wavelength lookups
         try:
@@ -230,7 +231,7 @@ class Spectrum(object):
             bins = np.hstack([self.x, 2*self.x[-1] - self.x[-2]])
         except IndexError:
             print "Index Error from array, ", self.x
-        
+
         cdf  = np.cumsum(self.y)
         pdf  = cdf/max(cdf)
         pdf  = np.hstack([0,pdf[:]])
@@ -253,7 +254,7 @@ class Spectrum(object):
         return self.spectrum(nanometers)
     
     def probability_at_wavelength(self, nanometers):
-        '''Returns the probability associated with the wavelength. This is found my computing the cumulative probabililty funcion of the spectrum which is unique for each value for each non-zero y values. If the wavelength is below the data range zero is returned, and if above one is returned.'''
+        '''Returns the probability associated with the wavelength. This is found by computing the cumulative probabililty funcion of the spectrum which is unique for each value for each non-zero y values. If the wavelength is below the data range zero is returned, and if above one is returned.'''
         if (nanometers > self.x.max()):
             return 1.0
         else:

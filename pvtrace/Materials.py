@@ -224,7 +224,6 @@ class Spectrum(object):
         # Make the 'spectrum'
         self.spectrum = interp1d(self.x, self.y, bounds_error=False, fill_value=0.0)
         
-        
         # Make the pdf for wavelength lookups
         try:
             # Convert the (x,y) point pairs to a histogram of bins and frequencies
@@ -232,11 +231,13 @@ class Spectrum(object):
         except IndexError:
             print "Index Error from array, ", self.x
 
+        
         cdf  = np.cumsum(self.y)
-        pdf  = cdf/max(cdf)
-        pdf  = np.hstack([0,pdf[:]])
-        self.pdf_lookup = interp1d(bins, pdf, bounds_error=False, fill_value=0.0)
-        self.pdfinv_lookup = interp1d(pdf, bins, bounds_error=False, fill_value=0.0)
+        if not (max(cdf) == 0) :
+            pdf  = cdf/max(cdf)
+            pdf  = np.hstack([0,pdf[:]])
+            self.pdf_lookup = interp1d(bins, pdf, bounds_error=False, fill_value=0.0)
+            self.pdfinv_lookup = interp1d(pdf, bins, bounds_error=False, fill_value=0.0)
     
     def __call__(self, nanometers):
         """Returns the values of the Spectrum at the 'nanometers' value(s). An number is returned if nanometers is a number and numpy array is returned if nanometers if a list of a numpy array."""

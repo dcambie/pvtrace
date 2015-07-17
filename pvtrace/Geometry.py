@@ -1397,4 +1397,3 @@ if __name__ == "__main__":
         V3 = transform_direction(V1, R)
         print R2
         print cmp_points(V2, V3)
-    

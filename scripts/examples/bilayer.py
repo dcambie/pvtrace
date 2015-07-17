@@ -19,7 +19,7 @@ Steps:
 log_file    = 'simulation.log'  # Location of log file
 db_file     = 'pvtracedb.sql'   # Database file (with pvtracedb.sql overwriting is forced)
 source      = 'LED1.txt'        # Lightsource spectrum file (AM1.5g-full.txt for sun)
-photons_to_throw = 10           # Number of photons to be simulated
+photons_to_throw = 1000         # Number of photons to be simulated
 # Logging
 debug                   = False # Debug output (implies informative output)
 informative_output      = False # Print informative outpout (implies print summary)
@@ -43,7 +43,7 @@ cspacing = 0.0012               # Spacing between channels
 rmix_re  = 1.33                 # Reaction mixture's refractive index
 t_need      = 0.0362            # Trasmission at absorbance peak, matches experimental (for lsc whose height is H)
 # Device Parameters
-bilayer     = False             # Simulate bilayer system?
+bilayer     = True             # Simulate bilayer system?
 transparent = False             # Simulate transparent device (negative control)
 # PovRay rendering
 render_hi_quality  = False      # Hi-quality PovRay Render of the scene
@@ -78,16 +78,9 @@ if print_summary == True and informative_output == False :
     print header
 
 # start main cycle for batch simulations
-for i in range(16,30):
-    if (i<10):
-        t_need = 1-(0.1*i)
-    elif (i<20):
-        t_need = 0.1-(0.01*(i-10))
-    else:
-        t_need = 0.01-(0.001*(i-20))
-    
-    print "******************************\n *** TRASMITTANCE *** ",t_need
-    
+for i in range(1,9):
+    cdepth   = 0.0005+0.0005*i 
+    print "******************************\n *** POSITION *** ",cdepth
     
     # 3b) Adjust concenctration
     absorption_data = np.loadtxt(os.path.join(PVTDATA, 'dyes', 'fluro-red.abs.txt'))
@@ -107,7 +100,7 @@ for i in range(16,30):
     fluro_red = Material(absorption_data=absorption, emission_data=emission, quantum_efficiency=0.95, refractive_index=1.5)
     # 4) Give the material a linear background absorption (pmma)
     abs = Spectrum([0,1000], [2,2])
-    ems = Spectrum([0,1000], [1,1]) # Giving emission suppress error. It's btw not used due to quantum_efficiency=0 :)
+    ems = Spectrum([0,1000], [0,0]) # Giving emission suppress error. It's btw not used due to quantum_efficiency=0 :)
     pdms = Material(absorption_data=abs, emission_data=ems, quantum_efficiency=0.0, refractive_index=1.41)
     
     # 5) Make the LSC and give it both dye and pmma materials
@@ -125,7 +118,7 @@ for i in range(16,30):
 
     # 6) Make channel within LSC and try to register to scene
     abs = Spectrum([0,1000], [0.3,0.3])
-    ems = Spectrum([0,1000], [1,1])
+    ems = Spectrum([0,1000], [0,0])
     #reaction_mixture = Material(absorption_data=abs, emission_data=ems, quantum_efficiency=0.0, refractive_index=1.44)
     reaction_mixture = Material(absorption_data=abs, emission_data=ems, quantum_efficiency=0.0, refractive_index=rmix_re)
     #channel.material = SimpleMaterial(reaction_mixture)

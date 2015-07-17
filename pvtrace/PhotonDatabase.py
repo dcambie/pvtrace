@@ -62,7 +62,7 @@ class PhotonDatabase(object):
                     raise ValueError("A database already exist at '%s', please rename your new database to something else." % self.file )
             
             
-            print "Attempting to creating database dbfile...", self.file
+            #print "Attempting to creating database dbfile...", self.file
             try:
                 file(self.file, 'w').close()
             except:
@@ -72,7 +72,7 @@ class PhotonDatabase(object):
             self.cursor = self.connection.cursor()
             
             try:
-                print "Attempting to loading schema into database from dbfile ... ", DB_SCHEMA
+                #print "Attempting to loading schema into database from dbfile ... ", DB_SCHEMA
                 dbfile = open(os.path.abspath(DB_SCHEMA), "r")
                 for line in dbfile:
                     self.cursor.execute(line)

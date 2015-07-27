@@ -324,6 +324,14 @@ class PlanarMirror(Register):
         self.shape = Box(origin=np.array(origin), extent=np.array(origin) + np.array(size))
         self.material = ReflectiveMaterial(reflectivity)
 
+class PlanarReflector(Register):
+    """Planar reflector with variable reflectivity (constant or wavelength dependent but constant in angle). """
+    def __init__(self, reflectivity=1.0, origin=(0,0,0), size=(1,1,0.001) ):
+        super(PlanarMirror, self).__init__()
+        self.reflectivity = reflectivity
+        self.shape = Box(origin=np.array(origin), extent=np.array(origin) + np.array(size))
+        self.material = ReflectiveMaterial(reflectivity=reflectivity, refractive_index=1, lambertian=True)
+
 class Face(Register):
     """General 2D object for ray tracing surfaces."""
     def __init__(self, reflectivity=1.0, transmittance=-1, shape=Polygon([(0,0,0), (1,0,0), (1,1,0), (0,1,0)])):

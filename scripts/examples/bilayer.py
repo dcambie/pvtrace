@@ -19,7 +19,7 @@ Steps:
 log_file    = 'simulation.log'  # Location of log file
 db_file     = 'pvtracedb.sql'   # Database file (with pvtracedb.sql overwriting is forced)
 source      = 'LED1.txt'        # Lightsource spectrum file (AM1.5g-full.txt for sun)
-photons_to_throw = 1000         # Number of photons to be simulated
+photons_to_throw = 10000        # Number of photons to be simulated
 # Logging
 debug                   = False # Debug output (implies informative output)
 informative_output      = False # Print informative outpout (implies print summary)
@@ -43,11 +43,23 @@ cspacing = 0.0012               # Spacing between channels
 rmix_re  = 1.33                 # Reaction mixture's refractive index
 t_need      = 0.0362            # Trasmission at absorbance peak, matches experimental (for lsc whose height is H)
 # Device Parameters
-bilayer     = True             # Simulate bilayer system?
-transparent = False             # Simulate transparent device (negative control)
+bilayer     = False             # Simulate bilayer system?
+transparent = False              # Simulate transparent device (negative control)
 # PovRay rendering
 render_hi_quality  = False      # Hi-quality PovRay Render of the scene
 render_low_quality = False      # Fast PovRay Render of the scene
+
+#  TMP overwrite
+cW = 0.0005
+cH = 0.0005
+H = 0.0025
+#bilayer = True
+cspacing = 0.0005
+#visualizer = true
+#photons_to_throw = 10
+cnum = 50
+cdepth = 0.0015
+transparent = True
 
 logging.basicConfig(filename=log_file,level=logging.DEBUG)
 
@@ -78,9 +90,11 @@ if print_summary == True and informative_output == False :
     print header
 
 # start main cycle for batch simulations
-for i in range(1,9):
-    cdepth   = 0.0005+0.0005*i 
-    print "******************************\n *** POSITION *** ",cdepth
+for i in range(1,10):
+    #t_need = 0.01-0.001*i
+    #H = 0.0055 - 0.0005*i
+    #cdepth = H-0.001
+    #print "******************************\n *** thickness *** ",H
     
     # 3b) Adjust concenctration
     absorption_data = np.loadtxt(os.path.join(PVTDATA, 'dyes', 'fluro-red.abs.txt'))

@@ -327,7 +327,7 @@ class PlanarMirror(Register):
 class PlanarReflector(Register):
     """Planar reflector with variable reflectivity (constant or wavelength dependent but constant in angle). """
     def __init__(self, reflectivity=1.0, origin=(0,0,0), size=(1,1,0.001) ):
-        super(PlanarMirror, self).__init__()
+        super(PlanarReflector, self).__init__()
         self.reflectivity = reflectivity
         self.shape = Box(origin=np.array(origin), extent=np.array(origin) + np.array(size))
         self.material = ReflectiveMaterial(reflectivity=reflectivity, refractive_index=1, lambertian=True)

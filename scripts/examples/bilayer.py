@@ -1,9 +1,11 @@
 from __future__ import division
 import numpy as np
 import sys
-import logging
+#import logging
 from pvtrace.external import transformations as tf
 from pvtrace import *
+import time
+
 
 ''' Simulation of a rectangular homogeneously doped LSC
 Steps:
@@ -16,70 +18,70 @@ Steps:
 '''
 
 # Simulation
-log_file    = 'simulation.log'  # Location of log file
-db_file     = 'pvtracedb.sql'   # Database file (with pvtracedb.sql overwriting is forced)
-source      = 'LED1.txt'        # Lightsource spectrum file (AM1.5g-full.txt for sun)
-photons_to_throw = 10000        # Number of photons to be simulated
+config = {}
+config['log_file']              = 'simulation.log'      # Location of log file
+config['db_file']               = 'pvtracedb.sql'       # Database file (with pvtracedb.sql overwriting is forced)
+config['source']                = 'LED1.txt'            # Lightsource spectrum file (AM1.5g-full.txt for sun)
+config['photons_to_throw']      = 10000                 # Number of photons to be simulated
 # Logging
-debug                   = False # Debug output (implies informative output)
-informative_output      = False # Print informative outpout (implies print summary)
-print_wavelehgt_channels= False # Wavelenght of photons in channels
-print_summary           = True  # tsv summary data
+config['debug']                 = False                 # Debug output (implies informative output)
+config['informative_output']    = False                 # Print informative outpout (implies print summary)
+config['print_waveleghts']      = False                 # Wavelenght of photons in channels
+config['print_summary']         = True                  # tab-separated summary data (For ease Excel import)
 # Visualizer parameters
-visualizer = False              # VPython
-show_lines = False              # Ray lines rendering
-show_path  = False              # Photon path rendering
+config['visualizer']            = False                 # VPython
+config['show_lines']            = False                 # Ray lines rendering
+config['show_path']             = False                 # Photon path rendering
 # Device Data
-L = 0.07                        # Length    (7 cm)
-W = 0.06                        # Width     (6 cm)
-H = 0.005                       # Thickness (5 mm)
+config['L']                     = 0.07                  # Length    (7 cm)
+config['W']                     = 0.06                  # Width     (6 cm)
+config['H']                     = 0.005                 # Thickness (5 mm)
 # Channels
-cL = 0.05                       # Length    (5 cm)
-cW = 0.0008                     # Width     (.8mm)
-cH = 0.0001                     # Heigth    (.1mm)
-cdepth   = 0.004                # Depth of channels in waveguide (from bottom) [MUST be lower than H+cH
-cnum     = 26                   # Number of channels
-cspacing = 0.0012               # Spacing between channels
-rmix_re  = 1.33                 # Reaction mixture's refractive index
-t_need      = 0.0362            # Trasmission at absorbance peak, matches experimental (for lsc whose height is H)
+config['cL']                    = 0.05                  # Length    (5 cm)
+config['cW']                    = 0.0008                # Width     (.8mm)
+config['cH'] = 0.0001                     # Heigth    (.1mm)
+config['cdepth']   = 0.004                # Depth of channels in waveguide (from bottom) [MUST be lower than H+cH
+config['cnum']     = 26                   # Number of channels
+config['cspacing'] = 0.0012               # Spacing between channels
+config['reaction_mixture_re']  = 1.33                 # Reaction mixture's refractive index
+config['transmittance_at_peak']      = 0.0362            # Trasmission at absorbance peak, matches experimental (for lsc whose height is H)
 # Device Parameters
-bilayer     = False             # Simulate bilayer system?
-transparent = False              # Simulate transparent device (negative control)
+config['bilayer']     = False             # Simulate bilayer system?
+config['transparent'] = False              # Simulate transparent device (negative control)
 # PovRay rendering
-render_hi_quality  = False      # Hi-quality PovRay Render of the scene
-render_low_quality = False      # Fast PovRay Render of the scene
+config['render_hi_quality']  = False      # Hi-quality PovRay Render of the scene
+config['render_low_quality'] = False      # Fast PovRay Render of the scene
 
 #  TMP overwrite
-cW = 0.0005
-cH = 0.0005
-H = 0.0025
-cnum = 50
-cdepth = 0.0015
-cspacing = 0.0005
-#bilayer = True
-visualizer = true
-#photons_to_throw = 10
-#photons_to_throw = 100
-#informative_output = True
-#show_lines = True
-#show_path  = True  
-#debug=True
+config['cW'] = 0.0005
+config['cH'] = 0.0005
+config['H'] = 0.0025
+config['cnum'] = 50
+config['cdepth'] = 0.0015
+config['cspacing'] = 0.0005
+#config['bilayer'] = True
+config['visualizer'] = False
+config['photons_to_throw'] = 10
+config['informative_output'] = True
+#config['show_lines'] = True
+#config['show_path']  = True  
+#config['debug'] = True
 
-logging.basicConfig(filename=log_file,level=logging.DEBUG)
+#logging.basicConfig(filename=config['log_file'],level=logging.DEBUG)
+PVTDATA = '/home/dario/pvtrace/data/'
 
-import time
 random_seed = int(time.time())# Random seed (with the same seed same random photons will be generated, this can be usefull in some comparisons)
 
-if debug:
-    informative_output = true
-if informative_output:
-    print_summary = True
+if config['debug']:
+    config['informative_output'] = true
+if config['informative_output']:
+    config['print_summary'] = True
 
 # 2) Create light source, truncate to 400 -- 800nm range
 #file = os.path.join(PVTDATA,'sources','AM1.5g-full.txt')
-file = os.path.join(PVTDATA,'sources',source)
+file = os.path.join(PVTDATA,'sources',config['source'])
 oriel = load_spectrum(file, xbins=np.arange(400,800))
-source = PlanarSource(direction=(0,0,-1), spectrum=oriel, length=L, width=W) # Incident light (perpendicular to device)
+source = PlanarSource(direction=(0,0,-1), spectrum=oriel, length=config['L'], width=config['W']) # Incident light (perpendicular to device)
 source.translate((0,0,0.05)) # Distance from device is z-H
 
 # 3a) Load dye absorption and emission data (Red305)
@@ -90,7 +92,7 @@ ems = load_spectrum(file)
 
 # Put header here just if needed (other output on top)
 header = "Thrown\tReflected (top)\tLost bottom\tLuminescent out at edges\tLuminescent out top/bottom\tChannels_direct\tChannels_luminescent\tNonRadiative"
-if print_summary == True and informative_output == False :
+if config['print_summary'] == True and config['informative_output'] == False :
     print header
 
 # start main cycle for batch simulations
@@ -103,12 +105,12 @@ for i in range(1,2):
     # 3b) Adjust concenctration
     absorption_data = np.loadtxt(os.path.join(PVTDATA, 'dyes', 'fluro-red.abs.txt'))
     ap = absorption_data[:,1].max()
-    phi = -1/(ap*(H)) * np.log(t_need)
+    phi = -1/(ap*(config['H'])) * np.log(config['transmittance_at_peak'])
     absorption_data[:,1] = absorption_data[:,1]*phi
 
-    if informative_output:
+    if config['informative_output']:
         print "Absorption data scaled to peak, ", absorption_data[:,1].max()
-        print "Therefore transmission at peak = ", np.exp(-absorption_data[:,1].max() * H)
+        print "Therefore transmission at peak = ", np.exp(-absorption_data[:,1].max() * config['H'])
 
     absorption = Spectrum(x=absorption_data[:,0], y=absorption_data[:,1])
     emission_data = np.loadtxt(os.path.join(PVTDATA,"dyes", 'fluro-red-fit.ems.txt'))
@@ -122,10 +124,10 @@ for i in range(1,2):
     pdms = Material(absorption_data=abs, emission_data=ems, quantum_efficiency=0.0, refractive_index=1.41)
     
     # 5) Make the LSC and give it both dye and pmma materials
-    lsc = LSC(origin=(0,0,0), size=(L,W,H))
+    lsc = LSC(origin=(0,0,0), size=(config['L'],config['W'],config['H']))
     
     # Trasparent is used to compare with a non-doped 
-    if transparent:
+    if config['transparent']:
         lsc.material = pdms
     else:
         lsc.material = CompositeMaterial([pdms, fluro_red], refractive_index=1.41, silent=True)
@@ -134,46 +136,45 @@ for i in range(1,2):
     scene = Scene()
     scene.add_object(lsc)
     
-    
     # 6) Make channel within LSC and try to register to scene
     abs = Spectrum([0,1000], [2,2])
     ems = Spectrum([0,1000], [0,0])
     #reaction_mixture = Material(absorption_data=abs, emission_data=ems, quantum_efficiency=0.0, refractive_index=1.44)
-    reaction_mixture = Material(absorption_data=abs, emission_data=ems, quantum_efficiency=0.0, refractive_index=rmix_re)
+    reaction_mixture = Material(absorption_data=abs, emission_data=ems, quantum_efficiency=0.0, refractive_index=config['reaction_mixture_re'])
     #reaction_mixture = SimpleMaterial(555)
     #channel.material = SimpleMaterial(reaction_mixture)
 
     channels = []
-    for i in range(0, cnum-1):
-        channels.append(Channel(origin=(0.0064,0.005+((cW+cspacing)*i),cdepth), size=(cL,cW,cH)))
+    for i in range(0, config['cnum']-1):
+        channels.append(Channel(origin=(0.0064,0.005+((config['cW']+config['cspacing'])*i),config['cdepth']), size=(config['cL'],config['cW'],config['cH'])))
         channels[i].material = reaction_mixture
         channels[i].name = "Channel"+str(i)
 
-    if bilayer:
-        for i in range(0, cnum-2):
-            channels.append(Channel(origin=(0.0064,0.005+((cW+cspacing)*i)+(cW+cspacing)/2,cdepth-0.001), size=(cL,cW,cH)))
-            channels[i+cnum-1].material = reaction_mixture
-            channels[i+cnum-1].name = "Channel"+str(i+cnum)
+    if config['bilayer']:
+        for i in range(0, config['cnum']-2):
+            channels.append(Channel(origin=(0.0064,0.005+((config['cW']+config['cspacing'])*i)+(config['cW']+config['cspacing'])/2,config['cdepth']-0.001), size=(config['cL'],config['cW'],config['cH'])))
+            channels[i+config['cnum']-1].material = reaction_mixture
+            channels[i+config['cnum']-1].name = "Channel"+str(i+config['cnum'])
 
     for channel in channels:
         scene.add_object(channel)
     
-    reflector = PlanarReflector(reflectivity=0.8, origin=(0,0,-0.002), size=(L,W,0.001))
+    reflector = PlanarReflector(reflectivity=0.8, origin=(0,0,-0.002), size=(config['L'],config['W'],0.001))
     reflector.name = "White_Paper"
     scene.add_object(reflector)
 
-    if render_hi_quality:
+    if config['render_hi_quality']:
         scene.pov_render(camera_position = (0,0,0.1), camera_target = (0.025,0.025,0), height = 2400, width =3200)
-    if render_low_quality:
+    if config['render_low_quality']:
         scene.pov_render(camera_position = (0,0,0.1), camera_target = (0.025,0.025,0), height = 300, width =600)
 
     # Ask python that the directory of this script file is and use it as the location of the database file
     pwd = os.getcwd()
-    dbfile = os.path.join(pwd, db_file) # <--- the name of the database file
+    dbfile = os.path.join(pwd, config['db_file']) # <--- the name of the database file
 
-    trace = Tracer(scene=scene, source=source, seed=random_seed, throws=photons_to_throw, database_file=dbfile, use_visualiser=visualizer, show_log=debug, show_axis=False)
-    trace.show_lines = show_lines
-    trace.show_path  = show_path
+    trace = Tracer(scene=scene, source=source, seed=random_seed, throws=config['photons_to_throw'], database_file=dbfile, use_visualiser=config['visualizer'], show_log=config['debug'], show_axis=False)
+    trace.show_lines = config['show_lines']
+    trace.show_path  = config['show_path']
     import time
     tic = time.clock()
     trace.start()
@@ -190,9 +191,19 @@ for i in range(1,2):
     non_radiative_photons = len(trace.database.uids_nonradiative_losses())
     sys.stdout.flush()
     
-    if informative_output:
-        print ""
-        print "Run Time: ", toc - tic
+    if config['informative_output']:
+        print "##### PVTRACE CONFIG REPORT #####"
+        for key in sorted(config.iterkeys()):
+            line = '{:>25}  {:>2}  {:>20}'.format(key, "->", config[key])
+            print line
+        print "\n"
+        print "##### PVTRACE LOG RESULTS #####"
+        import subprocess
+        label = subprocess.check_output(["git", "describe"], cwd=PVTDATA)
+        print "PvTrace ",label
+        import time
+        print "Date/Time",time.strftime("%c")
+        print "Run Time: ", toc - tic," sec.(s)"
         print ""
         
         print "Technical details:"
@@ -227,7 +238,7 @@ for i in range(1,2):
         print "Reactor's channel photons:"
 
     # LOG
-    if debug:
+    if config['debug']:
         print "objects with record", trace.database.objects_with_records()
         print "surface with records", trace.database.surfaces_with_records()
 
@@ -235,27 +246,27 @@ for i in range(1,2):
     photons_in_channels_tot = len(photons)
     luminescent_photons_in_channels = len(trace.database.uids_in_reactor_and_luminescent())
     for photon in photons:
-        if debug:
+        if config['debug']:
             print "Wavelenght: ",trace.database.wavelengthForUid(photon)# Nice output
-        elif print_wavelehgt_channels:
+        elif config['print_waveleghts']:
             print trace.database.wavelengthForUid(photon) # Clean output (for elaborations)
 
-    if debug:
+    if config['debug']:
         print channel.name," photons: ",photons_in_channels_tot/thrown * 100,"% (",photons_in_channels_tot,")"
 
-    if informative_output:
+    if config['informative_output']:
         print "Photons in channels (sum)",photons_in_channels_tot/thrown * 100,"% (",photons_in_channels_tot,")"
     
     # Put header here just if needed (other output on top)
     # FIX LOSS-FLUORESCENT AND ADD TOP ADN BOTTOM
-    if print_summary == True and informative_output == True :
+    if config['print_summary'] == True and config['informative_output'] == True :
         print header
-    if print_summary:
+    if config['print_summary']:
         top_reflected = len(trace.database.uids_out_bound_on_surface("top", solar=True))
         bottom_lost = len(trace.database.uids_out_bound_on_surface("bottom", solar=True))
         print thrown,"\t",top_reflected,"\t",bottom_lost,"\t",luminescent_edges,"\t",luminescent_apertures,"\t",(photons_in_channels_tot-luminescent_photons_in_channels),"\t",luminescent_photons_in_channels,"\t",non_radiative_photons
     
-    if debug:#Check coherence of results
+    if config['debug']:#Check coherence of results
         if top_reflected+bottom_lost+luminescent_edges+luminescent_apertures+photons_in_channels_tot+non_radiative_photons == thrown:
             print "Results validity check OK :)"
         else:

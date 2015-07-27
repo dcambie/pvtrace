@@ -357,6 +357,13 @@ class Photon (object):
             # Cache old direction for later use by polarisation code
             old_direction = copy(self.direction)
             
+            # Handle PlanarReflector
+            if isinstance(intersection_object, PlanarReflector)
+                self.direction = intersection_object.reflectivity.reflected_direction(self, normal)
+                self.propagate = False
+                self.exit_device = self.container
+                return self
+            
             if isinstance(intersection_object, Coating):
                 # Coating reflection (can be specular or lambertian)
                 self.direction = intersection_object.reflectivity.reflected_direction(self, normal)

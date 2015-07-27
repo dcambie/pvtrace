@@ -775,12 +775,13 @@ class Box(object):
         Here I am using the the work of Amy Williams, Steve Barrus, R. Keith Morley, and 
         Peter Shirley, "An Efficient and Robust Ray-Box Intersection Algorithm" Journal of 
         graphics tools, 10(1):49-54, 2005'''
-        
         invtrans = tf.inverse_matrix(self.transform)
         rpos = transform_point(ray.position, invtrans)
         rdir = transform_direction(ray.direction, invtrans)
         #pts = [transform_point(self.points[0], self.transform), transform_point(self.points[1], self.transform)]
         pts = [np.array(self.points[0]), np.array(self.points[1])]
+        
+        np.seterr(divide='ignore') # When ray direction components are 0 (e.g. [0,0,1]) then the inverse (1/rdir[x/y]) might result in division by zero. This results into infinity and it's apparently handled correctly, so just ignore the error HERE
         
         rinvd = [1.0/rdir[0], 1.0/rdir[1], 1.0/rdir[2]]
         rsgn = [1.0/rinvd[0] < 0.0, 1.0/rinvd[1] < 0.0, 1.0/rinvd[2] < 0.0]
@@ -788,6 +789,8 @@ class Box(object):
         tmax = (pts[1-rsgn[0]][0] - rpos[0]) * rinvd[0]
         tymin = (pts[rsgn[1]][1] - rpos[1]) * rinvd[1]
         tymax = (pts[1-rsgn[1]][1] - rpos[1]) * rinvd[1]
+        
+        np.seterr(divide='warn')
         
         #Bug here: this is the exit point with bug1.py
         if (tmin > tymax) or (tymin > tmax): 

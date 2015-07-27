@@ -368,8 +368,9 @@ class Material(object):
             self.absorption_data = Spectrum(x=[200,4000], y=[constant_absorption, constant_absorption])
             
         elif absorption_data == None:
-            # No data given -- make transparent material
-            self.absorption_data = Spectrum(x=[0, 4000], y=[0, 0])
+            # No data given -- make if False (used just for BOUNDS)
+            #self.absorption_data = Spectrum(x=[0, 4000], y=[0, 0])
+            self.absorption_data = False
         
         else:
            self.absorption_data = spectrum_from_data_source(absorption_data)
@@ -392,6 +393,8 @@ class Material(object):
     
     def absorption(self, photon):
         """Returns the absorption coefficient experienced by the photon."""
+        if self.absorption_data == False:
+            return False
         return self.absorption_data.value(photon.wavelength)
     
     def emission_direction(self):
@@ -437,6 +440,10 @@ class Material(object):
         photon.absorber_material = None
         photon.emitter_material = None
         
+        # This is True just for BOUNDS and prevent division by zero warning
+        if self.absorption_data == False :
+            photon.position = photon.position + free_pathlength * photon.direction
+            return photon
         # Assuming the material has a uniform absorption coefficient we generated a random path length weigthed by the material absorption coefficient.
         sampled_pathlength = -np.log(1 - np.random.uniform())/self.absorption(photon)
         
@@ -628,6 +635,13 @@ class ReflectiveMaterial(object):
             return transform_direction(lambertian_emission_direction_into_positive_z, rot_matrix)
         
         return reflect_vector(normal, photon.direction)
+    
+    def trace(self, photon, free_pathlength):
+        # Fake trace for ReflectiveMaterial. If not reflected on interface (rare with high reflectivity) just let the photon exit on the other side (that commonly means lost for any purpose)
+        photon.absorber_material = None
+        photon.emitter_material = None
+        photon.position = photon.position + free_pathlength * photon.direction
+        return photon
 
 
 class SimpleMaterial(Material):

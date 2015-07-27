@@ -53,13 +53,17 @@ render_low_quality = False      # Fast PovRay Render of the scene
 cW = 0.0005
 cH = 0.0005
 H = 0.0025
-#bilayer = True
-cspacing = 0.0005
-#visualizer = true
-#photons_to_throw = 10
 cnum = 50
 cdepth = 0.0015
-transparent = True
+cspacing = 0.0005
+#bilayer = True
+visualizer = true
+#photons_to_throw = 10
+#photons_to_throw = 100
+#informative_output = True
+#show_lines = True
+#show_path  = True  
+#debug=True
 
 logging.basicConfig(filename=log_file,level=logging.DEBUG)
 
@@ -90,7 +94,7 @@ if print_summary == True and informative_output == False :
     print header
 
 # start main cycle for batch simulations
-for i in range(1,10):
+for i in range(1,2):
     #t_need = 0.01-0.001*i
     #H = 0.0055 - 0.0005*i
     #cdepth = H-0.001
@@ -114,7 +118,7 @@ for i in range(1,10):
     fluro_red = Material(absorption_data=absorption, emission_data=emission, quantum_efficiency=0.95, refractive_index=1.5)
     # 4) Give the material a linear background absorption (pmma)
     abs = Spectrum([0,1000], [2,2])
-    ems = Spectrum([0,1000], [0,0]) # Giving emission suppress error. It's btw not used due to quantum_efficiency=0 :)
+    ems = Spectrum([0,1000], [0.1,0]) # Giving emission suppress error. It's btw not used due to quantum_efficiency=0 :)
     pdms = Material(absorption_data=abs, emission_data=ems, quantum_efficiency=0.0, refractive_index=1.41)
     
     # 5) Make the LSC and give it both dye and pmma materials
@@ -129,12 +133,14 @@ for i in range(1,10):
     lsc.name = "LSC"
     scene = Scene()
     scene.add_object(lsc)
-
+    
+    
     # 6) Make channel within LSC and try to register to scene
-    abs = Spectrum([0,1000], [0.3,0.3])
+    abs = Spectrum([0,1000], [2,2])
     ems = Spectrum([0,1000], [0,0])
     #reaction_mixture = Material(absorption_data=abs, emission_data=ems, quantum_efficiency=0.0, refractive_index=1.44)
     reaction_mixture = Material(absorption_data=abs, emission_data=ems, quantum_efficiency=0.0, refractive_index=rmix_re)
+    #reaction_mixture = SimpleMaterial(555)
     #channel.material = SimpleMaterial(reaction_mixture)
 
     channels = []
@@ -151,6 +157,10 @@ for i in range(1,10):
 
     for channel in channels:
         scene.add_object(channel)
+    
+    reflector = PlanarReflector(reflectivity=0.8, origin=(0,0,-0.002), size=(L,W,0.001))
+    reflector.name = "White_Paper"
+    scene.add_object(reflector)
 
     if render_hi_quality:
         scene.pov_render(camera_position = (0,0,0.1), camera_target = (0.025,0.025,0), height = 2400, width =3200)
@@ -178,6 +188,7 @@ for i in range(1,10):
     luminescent_edges = len(trace.database.uids_out_bound_on_surface('left', luminescent=True)) + len(trace.database.uids_out_bound_on_surface('right', luminescent=True)) + len(trace.database.uids_out_bound_on_surface('near', luminescent=True)) + len(trace.database.uids_out_bound_on_surface('far', luminescent=True)) # Photons on edges are only luminescent with planarsource perpendicular to device, so luminescent=true not really needed in *THIS* case
     luminescent_apertures = len(trace.database.uids_out_bound_on_surface('top', luminescent=True)) + len(trace.database.uids_out_bound_on_surface('bottom', luminescent=True))
     non_radiative_photons = len(trace.database.uids_nonradiative_losses())
+    sys.stdout.flush()
     
     if informative_output:
         print ""

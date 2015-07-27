@@ -160,15 +160,13 @@ class Photon (object):
         intersection_object = intersection_objects[index]
         assert intersection_object != None, "No intersection points can be found with the scene."
         
-        
-        
+
         # Reached scene boundaries?
         if intersection_object is self.scene.bounds:
             self.active = False
             self.previous_container = self.container
             self.container = intersection_object
-            return self
-        
+            return self    
         
         # Reached a RayBin (kind of perfect absorber)?
         if isinstance(intersection_object, RayBin):
@@ -176,7 +174,6 @@ class Photon (object):
             self.previous_container = self.container
             self.container = intersection_object
             return self
-        
         
         # Here we trace the ray through a Coating
         #if isinstance(self.container, Coating):
@@ -267,13 +264,11 @@ class Photon (object):
         if len(same_pt_indices) == 2:
             intersection_object = self.container
         
-        
         #
         #
         # Calculate the reflectivity of surface
         #
         #
-        
         
         # Reflection and refraction require the surface normal
         normal = intersection_object.shape.surface_normal(self.ray)
@@ -294,15 +289,15 @@ class Photon (object):
                 # hitting internal interface -- for the case where the boundary materials are NOT touching (i.e. we are leaving an material embedded in another)
                 next_containing_object = self.scene.container(self)
             
-            
             assert self.container != next_containing_object, "The current container cannot also be the next containing object after the ray is propagated."
-            
             
             # Calculate interface reflectivity
             if isinstance(intersection_object, Coating):
                 # CONVENTION: The internal reflectivity of Coating objects is zero. 
                 # This avoids multiple reflections within these structures.
                 # reflection = intersection_object.reflectivity(self)
+                reflection = 0.
+            elif isinstance(intersection_object, PlanarReflector):
                 reflection = 0.
             elif not isinstance(intersection_object, Coating) and isinstance(next_containing_object, Coating):
                 # Catches the case when a Coating is touching an interface, forcing it to use the Coatings 
@@ -333,6 +328,8 @@ class Photon (object):
             if isinstance(intersection_object, Coating):
                 # Coating has special reflectivity
                 reflection = intersection_object.reflectivity(self)
+            elif isinstance(intersection_object, PlanarReflector):
+                reflection = intersection_object.material(self)
             else:
                 # Fresnel reflection
                 if self.polarisation is None:
@@ -358,8 +355,8 @@ class Photon (object):
             old_direction = copy(self.direction)
             
             # Handle PlanarReflector
-            if isinstance(intersection_object, PlanarReflector)
-                self.direction = intersection_object.reflectivity.reflected_direction(self, normal)
+            if isinstance(intersection_object, PlanarReflector):
+                self.direction = intersection_object.material.reflected_direction(self, normal)
                 self.propagate = False
                 self.exit_device = self.container
                 return self
@@ -583,7 +580,6 @@ class Scene(object):
     
     def intersection(self, ray):
         """Returns a ray of intersection points and associated objects in no particular order."""
-        
         points = []
         intersection_objects = []
         for obj in self.objects:
@@ -592,6 +588,8 @@ class Scene(object):
                 for pt in intersection:
                     points.append(pt)
                     intersection_objects.append(obj)
+            #else:
+                #print obj.name
         
         if len(points) == 0:
             return None, None
@@ -747,7 +745,7 @@ class Scene(object):
             separations = []
             for obj in containers:
                 intersection_point = obj.shape.intersection(photon)
-                assert len(intersection_point) == 1, "A primative containing object can only have one intersection point with a line when the origin of the test ray is contained by the object."
+                assert len(intersection_point) == 1, "A primitive containing object can only have one intersection point with a line when the origin of the test ray is contained by the object."
                 separations.append(separation(photon.position, intersection_point[0]))
             min_index = np.array(separations).argmin()
             return containers[min_index]
@@ -842,7 +840,7 @@ class Tracer(object):
         self.show_lines = True#False
         self.show_exit = True
         self.show_path = True#False
-        self.show_start = True
+        self.show_start = False#Was True
         self.show_normals = False
         
         
@@ -863,9 +861,9 @@ class Tracer(object):
                 
             if self.show_log:
                 print "Photon number:", throw
-            #else:
-            #    print "Photon number:", throw, "\r",
-            #    sys.stdout.flush()
+            else:
+                print "Photon number:", throw, "\r",
+                sys.stdout.flush()
             
             photon = self.source.photon()
             photon.visualiser = self.visualiser
@@ -901,6 +899,8 @@ class Tracer(object):
                 else:
                     self.database.log(photon)
                 
+                #import time;
+                #time.sleep(0.1)
                 #import pdb; pdb.set_trace()
                 wavelength = photon.wavelength
                 #photon.visualiser.addPhoton(photon)
@@ -934,7 +934,7 @@ class Tracer(object):
                     
                     # Record photon that has made it to the bounds
                     if step == 0:
-                        if self.show_log: print "   * Photon hit scene bounds without previous intersections *"
+                        if self.show_log: print "   * Photon hit scene bounds without previous intersections (maybe reconsider light source position?)*"
                     else:
                         if self.show_log: print "   * Reached Bounds *"
                         photon.exit_device.log(photon)
@@ -959,7 +959,6 @@ class Tracer(object):
                         #    entering_photon.container.log_in_volume(entering_photon)
                     #assert logged == throw, "Logged (%s) and thorw (%s) not equal" % (str(logged), str(throw))
                     logged = logged + 1
-                
                 
                 a = b
                 step = step + 1

@@ -155,16 +155,20 @@ class Visualiser (object):
             return
         if colour == None:
             colour = visual.color.blue
+        #FIXME tempora
+        colour = visual.color.blue
         #angle, direction, point = tf.rotation_from_matrix(cylinder.transform)
         #axis = direction * cylinder.length
         position = geo.transform_point([0,0,0], cylinder.transform)
         axis = geo.transform_direction([0,0,1], cylinder.transform)
-        print cylinder.transform, "Cylinder:transform"
-        print position, "Cylinder:position"
-        print axis, "Cylinder:axis"
-        print colour, "Cylinder:colour"
-        print cylinder.radius, "Cylinder:radius"
+        #print cylinder.transform, "Cylinder:transform"
+        #print position, "Cylinder:position"
+        #print axis, "Cylinder:axis"
+        #print colour, "Cylinder:colour"
+        #print cylinder.radius, "Cylinder:radius"
         visual.cylinder(pos=position, axis=axis, color=colour, radius=cylinder.radius, opacity=opacity, length = cylinder.length, material=material)
+        #import time
+        #time.sleep(1)
 
 
     def addCSG(self, CSGobj, res,origin,extent, colour=None, opacity=1., material=None):

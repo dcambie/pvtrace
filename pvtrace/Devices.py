@@ -287,11 +287,28 @@ class LSC(Register):
 
 class Channel(Register):
     """Liquid in reactor's channel simulation"""
-    def __init__(self, bandgap=555, origin=(0,0,0), size=(1,1,1)):
+    def __init__(self, bandgap=555, origin=(0,0,0), size=(1,1,1), shape="box"):
         super(Channel, self).__init__()
         self.origin = np.array(origin)
         self.size = np.array(size)
-        self.shape = Box(origin=origin, extent=np.array(origin) + np.array(size))
+        if shape == "box":
+            self.shape = Box(origin=origin, extent=np.array(origin) + np.array(size))
+        elif shape == "cylinder":# takes radius, lenght
+            axis = np.argmax(size)
+            length = np.amax(size)
+            radius = np.average(np.delete(size,axis))/2 # Div. by 2 cause what's given it's the diameter
+            
+            self.shape = Cylinder(radius=radius, length=length)
+            
+            import math
+            if axis == 0 : # Z to X Rotation needed
+                self.shape.append_transform(tf.rotation_matrix(math.pi/2.0, [0, 1, 0]))
+            elif axis == 1 : # Z to Y Rotation needed
+                self.shape.append_transform(tf.rotation_matrix(-math.pi/2.0, [1, 0, 0]))
+            
+            self.shape.append_transform(tf.translation_matrix(origin))
+        else:
+            raise Exception("Channel has invalid shape")
         self.material = SimpleMaterial(bandgap)
         self.name = "Channel"
         
@@ -347,3 +364,12 @@ class Face(Register):
         self.material = None
         self.name = "FACE"
 
+if False:
+    origin=(0,0,0)
+    size=(10,2,3)
+    axis = np.argmax(size)
+    lenght = np.amax(size)
+    radius = np.average(np.delete(size,axis))
+    print "asse",axis,"lenght",lenght,"radius",radius
+    # Z TO Y
+    append_transform(tf.rotation_matrix(math.pi/2.0, [0, 0, 1]))

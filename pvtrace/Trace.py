@@ -795,6 +795,11 @@ class Tracer(object):
                         colour = visual.color.red
                         opacity=0.2
                     
+                    elif isinstance(obj, PlanarReflector):
+                        colour = visual.color.white
+                        opacity = 1.
+                        material = visual.materials.plastic
+                    
                     elif isinstance(obj, Coating):
                         
                         colour = visual.color.white
@@ -853,11 +858,12 @@ class Tracer(object):
             #import pdb; pdb.set_trace()
             
             # Delete last ray from visualiser
-            if Visualiser.VISUALISER_ON:
-                for obj in self.visualiser.display.objects:
-                    if obj.__class__ is visual.cylinder: # can say either box or 'box'
-                        if obj.radius < 0.001:
-                            obj.visible = False
+            #FIXME introduce a config for this
+            #if Visualiser.VISUALISER_ON:
+                #for obj in self.visualiser.display.objects:
+                    #if obj.__class__ is visual.cylinder: # can say either box or 'box'
+                        #if obj.radius < 0.001:
+                            #obj.visible = False
                 
             if self.show_log:
                 print "Photon number:", throw

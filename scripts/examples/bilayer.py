@@ -39,15 +39,15 @@ config['H']                     = 0.005                 # Thickness (5 mm)
 # Channels
 config['cL']                    = 0.05                  # Length    (5 cm)
 config['cW']                    = 0.0008                # Width     (.8mm)
-config['cH'] = 0.0001                     # Heigth    (.1mm)
-config['cdepth']   = 0.004                # Depth of channels in waveguide (from bottom) [MUST be lower than H+cH
-config['cnum']     = 26                   # Number of channels
-config['cspacing'] = 0.0012               # Spacing between channels
-config['reaction_mixture_re']  = 1.33                 # Reaction mixture's refractive index
-config['transmittance_at_peak']      = 0.0362            # Trasmission at absorbance peak, matches experimental (for lsc whose height is H)
+config['cH']                    = 0.0001                # Heigth    (.1mm)
+config['cdepth']                = 0.004                 # Depth of channels in waveguide (from bottom) [MUST be lower than H+cH
+config['cnum']                  = 26                    # Number of channels
+config['cspacing']              = 0.0012                # Spacing between channels
+config['reaction_mixture_re']   = 1.33                  # Reaction mixture's refractive index
+config['transmittance_at_peak'] = 0.0362                # Trasmission at absorbance peak, matches experimental (for lsc whose height is H)
 # Device Parameters
-config['bilayer']     = False             # Simulate bilayer system?
-config['transparent'] = False              # Simulate transparent device (negative control)
+config['bilayer']               = False                 # Simulate bilayer system?
+config['transparent']           = False                 # Simulate transparent device (negative control)
 # PovRay rendering
 config['render_hi_quality']  = False      # Hi-quality PovRay Render of the scene
 config['render_low_quality'] = False      # Fast PovRay Render of the scene
@@ -60,12 +60,14 @@ config['cnum'] = 50
 config['cdepth'] = 0.0015
 config['cspacing'] = 0.0005
 #config['bilayer'] = True
-config['visualizer'] = False
-config['photons_to_throw'] = 10
+config['visualizer'] = True
+config['photons_to_throw'] = 1000
 config['informative_output'] = True
-#config['show_lines'] = True
-#config['show_path']  = True  
+config['show_lines'] = True
+config['show_path']  = True  
 #config['debug'] = True
+config['source'] = 'AM1.5g-full.txt'
+
 
 #logging.basicConfig(filename=config['log_file'],level=logging.DEBUG)
 PVTDATA = '/home/dario/pvtrace/data/'
@@ -76,9 +78,14 @@ if config['debug']:
     config['informative_output'] = true
 if config['informative_output']:
     config['print_summary'] = True
+    
+if config['informative_output']:
+    print "##### PVTRACE CONFIG REPORT #####"
+    for key in sorted(config.iterkeys()):
+        line = '{:>25}  {:>2}  {:>20}'.format(key, "->", config[key])
+        print line
+    print "\n"
 
-# 2) Create light source, truncate to 400 -- 800nm range
-#file = os.path.join(PVTDATA,'sources','AM1.5g-full.txt')
 file = os.path.join(PVTDATA,'sources',config['source'])
 oriel = load_spectrum(file, xbins=np.arange(400,800))
 source = PlanarSource(direction=(0,0,-1), spectrum=oriel, length=config['L'], width=config['W']) # Incident light (perpendicular to device)
@@ -146,7 +153,7 @@ for i in range(1,2):
 
     channels = []
     for i in range(0, config['cnum']-1):
-        channels.append(Channel(origin=(0.0064,0.005+((config['cW']+config['cspacing'])*i),config['cdepth']), size=(config['cL'],config['cW'],config['cH'])))
+        channels.append(Channel(origin=(0.0064,0.005+((config['cW']+config['cspacing'])*i),config['cdepth']), size=(config['cL'],config['cW'],config['cH']),shape="cylinder"))
         channels[i].material = reaction_mixture
         channels[i].name = "Channel"+str(i)
 
@@ -172,7 +179,7 @@ for i in range(1,2):
     pwd = os.getcwd()
     dbfile = os.path.join(pwd, config['db_file']) # <--- the name of the database file
 
-    trace = Tracer(scene=scene, source=source, seed=random_seed, throws=config['photons_to_throw'], database_file=dbfile, use_visualiser=config['visualizer'], show_log=config['debug'], show_axis=False)
+    trace = Tracer(scene=scene, source=source, seed=random_seed, throws=config['photons_to_throw'], database_file=dbfile, use_visualiser=config['visualizer'], show_log=config['debug'], show_axis=True)
     trace.show_lines = config['show_lines']
     trace.show_path  = config['show_path']
     import time
@@ -192,11 +199,6 @@ for i in range(1,2):
     sys.stdout.flush()
     
     if config['informative_output']:
-        print "##### PVTRACE CONFIG REPORT #####"
-        for key in sorted(config.iterkeys()):
-            line = '{:>25}  {:>2}  {:>20}'.format(key, "->", config[key])
-            print line
-        print "\n"
         print "##### PVTRACE LOG RESULTS #####"
         import subprocess
         label = subprocess.check_output(["git", "describe"], cwd=PVTDATA)

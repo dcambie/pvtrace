@@ -41,6 +41,7 @@ config['cL']                    = 0.05                  # Length    (5 cm)
 config['cW']                    = 0.0008                # Width     (.8mm)
 config['cH']                    = 0.0001                # Heigth    (.1mm)
 config['cdepth']                = 0.004                 # Depth of channels in waveguide (from bottom) [MUST be lower than H+cH
+config['shape']                 = "cylinder"            # Either box or cylinder
 config['cnum']                  = 26                    # Number of channels
 config['cspacing']              = 0.0012                # Spacing between channels
 config['reaction_mixture_re']   = 1.33                  # Reaction mixture's refractive index
@@ -55,19 +56,19 @@ config['render_low_quality'] = False      # Fast PovRay Render of the scene
 #  TMP overwrite
 config['cW'] = 0.0005
 config['cH'] = 0.0005
-config['H'] = 0.0025
+config['H'] = 0.005
 config['cnum'] = 50
-config['cdepth'] = 0.0015
+config['cdepth'] = 0.0025
 config['cspacing'] = 0.0005
 #config['bilayer'] = True
-config['visualizer'] = True
-config['photons_to_throw'] = 1000
+#config['visualizer'] = True
+#config['photons_to_throw'] = 1000
 config['informative_output'] = True
 config['show_lines'] = True
 config['show_path']  = True  
 #config['debug'] = True
 config['source'] = 'AM1.5g-full.txt'
-
+config['shape']  = "box"
 
 #logging.basicConfig(filename=config['log_file'],level=logging.DEBUG)
 PVTDATA = '/home/dario/pvtrace/data/'
@@ -103,7 +104,10 @@ if config['print_summary'] == True and config['informative_output'] == False :
     print header
 
 # start main cycle for batch simulations
-for i in range(1,2):
+for i in range(1,10):
+    # Variable distance
+    config['cspacing'] = 0.0005*i
+    config['cnum'] = math.floor(50/0.0005+config['cspacing'])
     #t_need = 0.01-0.001*i
     #H = 0.0055 - 0.0005*i
     #cdepth = H-0.001
@@ -153,7 +157,8 @@ for i in range(1,2):
 
     channels = []
     for i in range(0, config['cnum']-1):
-        channels.append(Channel(origin=(0.0064,0.005+((config['cW']+config['cspacing'])*i),config['cdepth']), size=(config['cL'],config['cW'],config['cH']),shape="cylinder"))
+        #shape is cylinder or box
+        channels.append(Channel(origin=(0.0064,0.005+((config['cW']+config['cspacing'])*i),config['cdepth']), size=(config['cL'],config['cW'],config['cH']),shape=config['shape']))
         channels[i].material = reaction_mixture
         channels[i].name = "Channel"+str(i)
 

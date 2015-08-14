@@ -80,12 +80,12 @@ if config['debug']:
 if config['informative_output']:
     config['print_summary'] = True
     
-if config['informative_output']:
-    print "##### PVTRACE CONFIG REPORT #####"
-    for key in sorted(config.iterkeys()):
-        line = '{:>25}  {:>2}  {:>20}'.format(key, "->", config[key])
-        print line
-    print "\n"
+#if config['informative_output']:
+    #print "##### PVTRACE CONFIG REPORT #####"
+    #for key in sorted(config.iterkeys()):
+        #line = '{:>25}  {:>2}  {:>20}'.format(key, "->", config[key])
+        #print line
+    #print "\n"
 
 file = os.path.join(PVTDATA,'sources',config['source'])
 oriel = load_spectrum(file, xbins=np.arange(400,800))
@@ -105,9 +105,16 @@ if config['print_summary'] == True and config['informative_output'] == False :
 
 # start main cycle for batch simulations
 for i in range(1,10):
+    if config['informative_output']:
+        print "##### PVTRACE CONFIG REPORT #####"
+        for key in sorted(config.iterkeys()):
+            line = '{:>25}  {:>2}  {:>20}'.format(key, "->", config[key])
+            print line
+        print "\n"
+    
     # Variable distance
     config['cspacing'] = 0.0005*i
-    config['cnum'] = math.floor(50/0.0005+config['cspacing'])
+    config['cnum'] = int(math.floor(0.050/(config['cH']+config['cspacing'])))
     #t_need = 0.01-0.001*i
     #H = 0.0055 - 0.0005*i
     #cdepth = H-0.001

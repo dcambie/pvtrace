@@ -211,6 +211,9 @@ class Photon (object):
             self.exit_device = self.container
             self.exit_material = self.container.material
             self.on_surface_object = None # Impossible to be non-radiatively lost by a surface
+            # Extreamly hackish way to determinate whether the container is a channel, but the device type is lost in the conversion to costructive geometry box, so...
+            if self.container.name.find("Channel") != -1:
+                self.reaction = True
             return self
                 
         # Reaches interface
@@ -409,12 +412,13 @@ class Photon (object):
             # photon is refracted through interface
             
             # Trasmitted to a channel (supposed to absorb everything not reflected)
-            if isinstance(intersection_object, Channel):
-                self.active = False
-                self.previous_container = self.container
-                self.container = intersection_object
-                self.reaction = True
-                return self
+            # WIP: allow ray tracing in reaction mixture
+            #if isinstance(intersection_object, Channel):
+            #    self.active = False
+            #    self.previous_container = self.container
+            #    self.container = intersection_object
+            #    self.reaction = True
+            #    return self
             
             self.propagate = True
             before = copy(self.direction)

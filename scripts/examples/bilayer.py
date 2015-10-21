@@ -22,16 +22,16 @@ config = {}
 config['log_file']              = 'simulation.log'      # Location of log file
 config['db_file']               = 'pvtracedb.sql'       # Database file (with pvtracedb.sql overwriting is forced)
 config['source']                = 'LED1.txt'            # Lightsource spectrum file (AM1.5g-full.txt for sun)
-config['photons_to_throw']      = 100000                 # Number of photons to be simulated
+config['photons_to_throw']      = 100                 # Number of photons to be simulated
 # Logging
 config['debug']                 = False                 # Debug output (implies informative output)
 config['informative_output']    = True                 # Print informative outpout (implies print summary)
 config['print_waveleghts']      = False                  # Wavelenght of photons in channels
 config['print_summary']         = True                  # tab-separated summary data (For ease Excel import)
 # Visualizer parameters
-config['visualizer']            = False                 # VPython
-config['show_lines']            = False                 # Ray lines rendering
-config['show_path']             = False                 # Photon path rendering
+config['visualizer']            = True                 # VPython
+config['show_lines']            = True                 # Ray lines rendering
+config['show_path']             = True                 # Photon path rendering
 # Device Data
 config['L']                     = 0.07                  # Length    (7 cm)
 config['W']                     = 0.06                  # Width     (6 cm)
@@ -48,7 +48,8 @@ config['reaction_mixture_re']   = 1.42                  # Reaction mixture's ref
 config['transmittance_at_peak'] = 0.0362                # Trasmission at absorbance peak, matches experimental (for lsc whose height is H)
 # Device Parameters
 config['bilayer']               = False                 # Simulate bilayer system?
-config['transparent']           = True                 # Simulate transparent device (negative control)
+config['transparent']           = False                 # Simulate transparent device (negative control)
+config['bottom_reflector']      = False
 # PovRay rendering
 config['render_hi_quality']  = False      # Hi-quality PovRay Render of the scene
 config['render_low_quality'] = False      # Fast PovRay Render of the scene
@@ -67,6 +68,7 @@ config['render_low_quality'] = False      # Fast PovRay Render of the scene
 #config['show_lines'] = True
 #config['show_path']  = True  
 #config['debug'] = True
+config['transmittance_at_peak'] = 0.001
 config['source'] = 'AM1.5g-full.txt'
 #config['shape']  = "box"
 
@@ -97,8 +99,6 @@ file = os.path.join(PVTDATA, 'dyes', 'fluro-red.abs.txt')
 abs = load_spectrum(file)
 file = os.path.join(PVTDATA, 'dyes', 'fluro-red-fit.ems.txt')
 ems = load_spectrum(file)
-file = os.path.join(PVTDATA, 'dyes', 'MB_abs.txt')
-MB_abs = load_spectrum(file)
 
 
 # Put header here just if needed (other output on top)
@@ -125,9 +125,18 @@ for i in range(1,2):
     
     # 3b) Adjust concenctration
     absorption_data = np.loadtxt(os.path.join(PVTDATA, 'dyes', 'fluro-red.abs.txt'))
+    # Absorption peak
     ap = absorption_data[:,1].max()
+    # Correcting factor to adjust absorption at peak to match settings
     phi = -1/(ap*(config['H'])) * np.log(config['transmittance_at_peak'])
     absorption_data[:,1] = absorption_data[:,1]*phi
+    
+    mb_absorption_data = np.loadtxt(os.path.join(PVTDATA, 'dyes', 'MB_abs.txt'))
+    mb_ap = mb_absorption_data[:,1].max()
+    # FIXME: MB concntration hardcoded for now. To be replaced with experimental spectrum of reation mixture at right concentraton
+    mb_phi = -1/(mb_ap*(config['cH'])) * np.log(1)
+    mb_absorption_data[:,1] = mb_absorption_data[:,1]*mb_phi
+    mb_spectrum = Spectrum(x=mb_absorption_data[:,0], y=mb_absorption_data[:,1])
 
     if config['informative_output']:
         print "Absorption data scaled to peak, ", absorption_data[:,1].max()
@@ -161,7 +170,7 @@ for i in range(1,2):
     abs = Spectrum([0,1000], [2,2])
     ems = Spectrum([0,1000], [0,0])
     #reaction_mixture = Material(absorption_data=abs, emission_data=ems, quantum_efficiency=0.0, refractive_index=1.44)
-    reaction_mixture = Material(absorption_data=MB_abs, emission_data=ems, quantum_efficiency=0.0, refractive_index=config['reaction_mixture_re'])
+    reaction_mixture = Material(absorption_data=mb_spectrum, emission_data=ems, quantum_efficiency=0.0, refractive_index=config['reaction_mixture_re'])
     #reaction_mixture = SimpleMaterial(555)
     #channel.material = SimpleMaterial(reaction_mixture)
 
@@ -180,10 +189,10 @@ for i in range(1,2):
 
     for channel in channels:
         scene.add_object(channel)
-    
-    reflector = PlanarReflector(reflectivity=0.8, origin=(0,0,-0.002), size=(config['L'],config['W'],0.001))
-    reflector.name = "White_Paper"
-    scene.add_object(reflector)
+    if config['bottom_reflector']:
+        reflector = PlanarReflector(reflectivity=0.8, origin=(0,0,-0.002), size=(config['L'],config['W'],0.001))
+        reflector.name = "White_Paper"
+        scene.add_object(reflector)
 
     if config['render_hi_quality']:
         scene.pov_render(camera_position = (0,0,0.1), camera_target = (0.025,0.025,0), height = 2400, width =3200)
@@ -276,7 +285,6 @@ for i in range(1,2):
         print "Photons in channels (sum)",photons_in_channels_tot/thrown * 100,"% (",photons_in_channels_tot,")"
     
     # Put header here just if needed (other output on top)
-    # FIX LOSS-FLUORESCENT AND ADD TOP ADN BOTTOM
     if config['print_summary'] == True and config['informative_output'] == True :
         print header
     if config['print_summary']:

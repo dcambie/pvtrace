@@ -865,11 +865,11 @@ class Tracer(object):
                         #if obj.radius < 0.001:
                             #obj.visible = False
                 
-            if self.show_log:
-                print "Photon number:", throw
-            else:
-                print "Photon number:", throw, "\r",
-                sys.stdout.flush()
+            #if self.show_log:
+            #    print "Photon number:", throw
+            #else:
+            #    print "Photon number:", throw, "\r",
+            #    sys.stdout.flush()
             
             photon = self.source.photon()
             photon.visualiser = self.visualiser

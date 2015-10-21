@@ -22,11 +22,11 @@ config = {}
 config['log_file']              = 'simulation.log'      # Location of log file
 config['db_file']               = 'pvtracedb.sql'       # Database file (with pvtracedb.sql overwriting is forced)
 config['source']                = 'LED1.txt'            # Lightsource spectrum file (AM1.5g-full.txt for sun)
-config['photons_to_throw']      = 10000                 # Number of photons to be simulated
+config['photons_to_throw']      = 100000                 # Number of photons to be simulated
 # Logging
 config['debug']                 = False                 # Debug output (implies informative output)
-config['informative_output']    = False                 # Print informative outpout (implies print summary)
-config['print_waveleghts']      = False                 # Wavelenght of photons in channels
+config['informative_output']    = True                 # Print informative outpout (implies print summary)
+config['print_waveleghts']      = False                  # Wavelenght of photons in channels
 config['print_summary']         = True                  # tab-separated summary data (For ease Excel import)
 # Visualizer parameters
 config['visualizer']            = False                 # VPython
@@ -41,34 +41,34 @@ config['cL']                    = 0.05                  # Length    (5 cm)
 config['cW']                    = 0.0008                # Width     (.8mm)
 config['cH']                    = 0.0001                # Heigth    (.1mm)
 config['cdepth']                = 0.004                 # Depth of channels in waveguide (from bottom) [MUST be lower than H+cH
-config['shape']                 = "cylinder"            # Either box or cylinder
-config['cnum']                  = 26                    # Number of channels
-config['cspacing']              = 0.0012                # Spacing between channels
-config['reaction_mixture_re']   = 1.33                  # Reaction mixture's refractive index
+config['shape']                 = "box"                 # Either box or cylinder
+config['cnum']                  = 26                    # Number of channels (26)
+config['cspacing']              = 0.0012                # Spacing between channels (0.0012)
+config['reaction_mixture_re']   = 1.42                  # Reaction mixture's refractive index (1.33)
 config['transmittance_at_peak'] = 0.0362                # Trasmission at absorbance peak, matches experimental (for lsc whose height is H)
 # Device Parameters
 config['bilayer']               = False                 # Simulate bilayer system?
-config['transparent']           = False                 # Simulate transparent device (negative control)
+config['transparent']           = True                 # Simulate transparent device (negative control)
 # PovRay rendering
 config['render_hi_quality']  = False      # Hi-quality PovRay Render of the scene
 config['render_low_quality'] = False      # Fast PovRay Render of the scene
 
 #  TMP overwrite
-config['cW'] = 0.0005
-config['cH'] = 0.0005
-config['H'] = 0.005
-config['cnum'] = 50
-config['cdepth'] = 0.0025
-config['cspacing'] = 0.0005
+#config['cW'] = 0.0005
+#config['cH'] = 0.0005
+#config['H'] = 0.005
+#config['cnum'] = 50
+#config['cdepth'] = 0.0025
+#config['cspacing'] = 0.0005
 #config['bilayer'] = True
 #config['visualizer'] = True
-#config['photons_to_throw'] = 1000
-config['informative_output'] = True
-config['show_lines'] = True
-config['show_path']  = True  
+#config['photons_to_throw'] = 1
+#config['informative_output'] = True
+#config['show_lines'] = True
+#config['show_path']  = True  
 #config['debug'] = True
 config['source'] = 'AM1.5g-full.txt'
-config['shape']  = "box"
+#config['shape']  = "box"
 
 #logging.basicConfig(filename=config['log_file'],level=logging.DEBUG)
 PVTDATA = '/home/dario/pvtrace/data/'
@@ -97,6 +97,9 @@ file = os.path.join(PVTDATA, 'dyes', 'fluro-red.abs.txt')
 abs = load_spectrum(file)
 file = os.path.join(PVTDATA, 'dyes', 'fluro-red-fit.ems.txt')
 ems = load_spectrum(file)
+file = os.path.join(PVTDATA, 'dyes', 'MB_abs.txt')
+MB_abs = load_spectrum(file)
+
 
 # Put header here just if needed (other output on top)
 header = "Thrown\tReflected (top)\tLost bottom\tLuminescent out at edges\tLuminescent out top/bottom\tChannels_direct\tChannels_luminescent\tNonRadiative"
@@ -104,7 +107,7 @@ if config['print_summary'] == True and config['informative_output'] == False :
     print header
 
 # start main cycle for batch simulations
-for i in range(1,10):
+for i in range(1,2):
     if config['informative_output']:
         print "##### PVTRACE CONFIG REPORT #####"
         for key in sorted(config.iterkeys()):
@@ -113,8 +116,8 @@ for i in range(1,10):
         print "\n"
     
     # Variable distance
-    config['cspacing'] = 0.0005*i
-    config['cnum'] = int(math.floor(0.050/(config['cH']+config['cspacing'])))
+    #config['cspacing'] = 0.004+0.001*i
+    #config['cnum'] = int(math.floor(0.050/(config['cH']+config['cspacing'])))
     #t_need = 0.01-0.001*i
     #H = 0.0055 - 0.0005*i
     #cdepth = H-0.001
@@ -158,7 +161,7 @@ for i in range(1,10):
     abs = Spectrum([0,1000], [2,2])
     ems = Spectrum([0,1000], [0,0])
     #reaction_mixture = Material(absorption_data=abs, emission_data=ems, quantum_efficiency=0.0, refractive_index=1.44)
-    reaction_mixture = Material(absorption_data=abs, emission_data=ems, quantum_efficiency=0.0, refractive_index=config['reaction_mixture_re'])
+    reaction_mixture = Material(absorption_data=MB_abs, emission_data=ems, quantum_efficiency=0.0, refractive_index=config['reaction_mixture_re'])
     #reaction_mixture = SimpleMaterial(555)
     #channel.material = SimpleMaterial(reaction_mixture)
 
@@ -259,11 +262,12 @@ for i in range(1,10):
     photons = trace.database.uids_in_reactor()
     photons_in_channels_tot = len(photons)
     luminescent_photons_in_channels = len(trace.database.uids_in_reactor_and_luminescent())
+    # oNLY PHOTONS IN CHANNELS!
     for photon in photons:
         if config['debug']:
             print "Wavelenght: ",trace.database.wavelengthForUid(photon)# Nice output
         elif config['print_waveleghts']:
-            print trace.database.wavelengthForUid(photon) # Clean output (for elaborations)
+            print " ".join(map(str,trace.database.wavelengthForUid(photon) )) # Clean output (for elaborations)
 
     if config['debug']:
         print channel.name," photons: ",photons_in_channels_tot/thrown * 100,"% (",photons_in_channels_tot,")"

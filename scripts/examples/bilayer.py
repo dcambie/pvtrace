@@ -22,16 +22,16 @@ config = {}
 config['log_file']              = 'simulation.log'      # Location of log file
 config['db_file']               = 'pvtracedb.sql'       # Database file (with pvtracedb.sql overwriting is forced)
 config['source']                = 'LED1.txt'            # Lightsource spectrum file (AM1.5g-full.txt for sun)
-config['photons_to_throw']      = 100                 # Number of photons to be simulated
+config['photons_to_throw']      = 30000                 # Number of photons to be simulated
 # Logging
 config['debug']                 = False                 # Debug output (implies informative output)
-config['informative_output']    = True                 # Print informative outpout (implies print summary)
-config['print_waveleghts']      = False                  # Wavelenght of photons in channels
+config['informative_output']    = False                 # Print informative outpout (implies print summary)
+config['print_waveleghts']      = False                 # Wavelenght of photons in channels
 config['print_summary']         = True                  # tab-separated summary data (For ease Excel import)
 # Visualizer parameters
-config['visualizer']            = True                 # VPython
-config['show_lines']            = True                 # Ray lines rendering
-config['show_path']             = True                 # Photon path rendering
+config['visualizer']            = False                 # VPython
+config['show_lines']            = True                  # Ray lines rendering
+config['show_path']             = True                  # Photon path rendering
 # Device Data
 config['L']                     = 0.07                  # Length    (7 cm)
 config['W']                     = 0.06                  # Width     (6 cm)
@@ -46,6 +46,7 @@ config['cnum']                  = 26                    # Number of channels (26
 config['cspacing']              = 0.0012                # Spacing between channels (0.0012)
 config['reaction_mixture_re']   = 1.42                  # Reaction mixture's refractive index (1.33)
 config['transmittance_at_peak'] = 0.0362                # Trasmission at absorbance peak, matches experimental (for lsc whose height is H)
+config['mb_conc']               = 0.0012                # Molar concentratin mb in channels
 # Device Parameters
 config['bilayer']               = False                 # Simulate bilayer system?
 config['transparent']           = False                 # Simulate transparent device (negative control)
@@ -131,13 +132,6 @@ for i in range(1,2):
     phi = -1/(ap*(config['H'])) * np.log(config['transmittance_at_peak'])
     absorption_data[:,1] = absorption_data[:,1]*phi
     
-    mb_absorption_data = np.loadtxt(os.path.join(PVTDATA, 'dyes', 'MB_abs.txt'))
-    mb_ap = mb_absorption_data[:,1].max()
-    # FIXME: MB concntration hardcoded for now. To be replaced with experimental spectrum of reation mixture at right concentraton
-    mb_phi = -1/(mb_ap*(config['cH'])) * np.log(1)
-    mb_absorption_data[:,1] = mb_absorption_data[:,1]*mb_phi
-    mb_spectrum = Spectrum(x=mb_absorption_data[:,0], y=mb_absorption_data[:,1])
-
     if config['informative_output']:
         print "Absorption data scaled to peak, ", absorption_data[:,1].max()
         print "Therefore transmission at peak = ", np.exp(-absorption_data[:,1].max() * config['H'])
@@ -169,10 +163,15 @@ for i in range(1,2):
     # 6) Make channel within LSC and try to register to scene
     abs = Spectrum([0,1000], [2,2])
     ems = Spectrum([0,1000], [0,0])
+    
+    # From http://omlc.org/spectra/mb/mb-water.html
+    mb_absorption_data = np.loadtxt(os.path.join(PVTDATA, 'dyes', 'MB_abs.txt'))
+    # Convert in m-1 (as in Materials.py:185)
+    mb_phi = 100*2.303*config['mb_conc']
+    mb_absorption_data[:,1] = mb_absorption_data[:,1]*mb_phi
+    mb_spectrum = Spectrum(x=mb_absorption_data[:,0], y=mb_absorption_data[:,1])
     #reaction_mixture = Material(absorption_data=abs, emission_data=ems, quantum_efficiency=0.0, refractive_index=1.44)
     reaction_mixture = Material(absorption_data=mb_spectrum, emission_data=ems, quantum_efficiency=0.0, refractive_index=config['reaction_mixture_re'])
-    #reaction_mixture = SimpleMaterial(555)
-    #channel.material = SimpleMaterial(reaction_mixture)
 
     channels = []
     for i in range(0, config['cnum']-1):

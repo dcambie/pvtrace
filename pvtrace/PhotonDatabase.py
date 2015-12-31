@@ -314,8 +314,8 @@ if __name__ == "__main__":
     import numpy as np
     import pylab
     
-    # DRIVE juST exists on Windows, using user data folder is more interoperable
-#    drive = os.path.splitdrive(os.path.expanduser("~"))[0]
+    # DRIVE exists only on Windows, using user data folder is more interoperable (Linux here!) [D.]
+    #drive = os.path.splitdrive(os.path.expanduser("~"))[0]
     drive = os.path.expanduser("~")
     database_file = os.path.join(drive, "tmp", "pvtracedb.sql")
     

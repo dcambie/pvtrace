@@ -22,14 +22,14 @@ config = {}
 config['log_file']              = 'simulation.log'      # Location of log file
 config['db_file']               = 'pvtracedb.sql'       # Database file (with pvtracedb.sql overwriting is forced)
 config['source']                = 'LED1.txt'            # Lightsource spectrum file (AM1.5g-full.txt for sun)
-config['photons_to_throw']      = 100                 # Number of photons to be simulated
+config['photons_to_throw']      = 500                 # Number of photons to be simulated
 # Logging
 config['debug']                 = False                 # Debug output (implies informative output)
 config['informative_output']    = True                 # Print informative outpout (implies print summary)
 config['print_waveleghts']      = False                 # Wavelenght of photons in channels
 config['print_summary']         = False                  # tab-separated summary data (For ease Excel import)
 # Visualizer parameters
-config['visualizer']            = True                 # VPython
+config['visualizer']            = True                  # VPython
 config['show_lines']            = True                  # Ray lines rendering
 config['show_path']             = True                  # Photon path rendering
 # Device Data
@@ -52,10 +52,11 @@ config['mb_conc']               = 0.0012                # Molar concentratin mb 
 # Device Parameters
 config['bilayer']               = False                 # Simulate bilayer system?
 config['transparent']           = False                 # Simulate transparent device (negative control)
-config['bottom_reflector']      = True
+config['bottom_reflector']      = True                  # Use bottom reflector (white paper, scattering only) EXPERIMENTAL
+config['side_reflectors']       = True                  # Use side reflectors on edges (3M reflective adhesive foil) EXPERIMENTAL
 # PovRay rendering
-config['render_hi_quality']  = False      # Hi-quality PovRay Render of the scene
-config['render_low_quality'] = False      # Fast PovRay Render of the scene
+config['render_hi_quality']     = False                 # Hi-quality PovRay Render of the scene
+config['render_low_quality']    = False                 # Fast PovRay Render of the scene
 
 #  TMP overwrite
 #config['cW'] = 0.0005
@@ -78,7 +79,8 @@ config['source'] = 'AM1.5g-full.txt'
 #logging.basicConfig(filename=config['log_file'],level=logging.DEBUG)
 PVTDATA = '/home/dario/pvtrace/data/'
 
-random_seed = int(time.time())# Random seed (with the same seed same random photons will be generated, this can be usefull in some comparisons)
+# Random seed (with the same seed same random photons will be generated, this can be usefull in some comparisons)
+random_seed = int(time.time())
 
 if config['debug']:
     config['informative_output'] = true

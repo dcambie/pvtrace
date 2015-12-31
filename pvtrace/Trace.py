@@ -33,6 +33,8 @@ import pdb
 from copy import copy
 import logging
 
+edges = ['left', 'near', 'far', 'right']
+
 def remove_duplicates(the_list):
     l = list(the_list)
     return [x for x in l if l.count(x)==1]
@@ -145,7 +147,7 @@ class Photon (object):
         if self.container is None:
             self.container = self.scene.container(self)
         assert self.container != None, "Container of ray cannot be found."
-            
+        
         #import pdb; pdb.set_trace()
         intersection_points, intersection_objects = Scene.sort(intersection_points, intersection_objects, self, container=self.container, show_log=self.show_log)
                         
@@ -211,8 +213,9 @@ class Photon (object):
             self.exit_device = self.container
             self.exit_material = self.container.material
             self.on_surface_object = None # Impossible to be non-radiatively lost by a surface
-            # Extreamly hackish way to determinate whether the container is a channel, but the device type is lost in the conversion to costructive geometry box, so...
-            if self.container.name.find("Channel") != -1:
+
+            # If photon ends up in a channel then set reaction to true! [D.]
+            if isinstance(self.container, Channel):
                 self.reaction = True
             return self
                 
@@ -228,6 +231,10 @@ class Photon (object):
         self.on_surface_object = intersection_object
         self.intersection_counter += 1
         
+        edge = False
+        if ray_on_surface and isinstance(intersection_object, LSC) and isinstance(self.container, LSC) and self.container.shape.surface_identifier(self.position) in edges:
+            edge = self.exit_device.shape.surface_identifier(self.position)
+        
         # If we reach an reflective material then we don't need to follow 
         # this logic we can just return
         #if ray_on_surface and isinstance(intersection_object, Coating):
@@ -240,6 +247,7 @@ class Photon (object):
         #import pudb; pudb.set_trace()
         if isinstance(intersection_object, Face):
             self.exit_device = intersection_object
+            print "FACE EXISTS"
             
             # Now change the properties of the photon accoring to what your surface does
             random_number = np.random.random_sample()
@@ -410,16 +418,17 @@ class Photon (object):
         
         else:
             # photon is refracted through interface
-            
-            # Trasmitted to a channel (supposed to absorb everything not reflected)
-            # WIP: allow ray tracing in reaction mixture
-            #if isinstance(intersection_object, Channel):
-            #    self.active = False
-            #    self.previous_container = self.container
-            #    self.container = intersection_object
-            #    self.reaction = True
-            #    return self
-            
+            # TODO WISH: count photons leaving channels without being absorbed (to measure channel absorption efficiency with different concentration)
+
+            # Hackish way to account for LSC edge reflectors (0.95 hardcoded for now)
+            if edge != False and np.random.uniform()<0.95:
+                self.direction = reflect_vector(normal, self.direction)
+                self.propagate = False
+                self.exit_device = self.container
+                print " SUPERFICIE LSC esterna, ovvero: ",edge
+                return self
+
+
             self.propagate = True
             before = copy(self.direction)
             ang = angle(before, self.direction)
@@ -436,10 +445,11 @@ class Photon (object):
                         R = rotation_matrix_from_vector_alignment(before, self.direction)
                         self.polarisation = transform_direction(self.polarisation, R)
                     assert cmp_floats(angle(self.direction, self.polarisation), np.pi/2), "Exit Pt. #3: Angle between photon direction and polarisation must be 90 degrees: theta=%s" % str(angle(self.direction, self.polarisation))
-                    
+
                 self.exit_device = self.container
                 self.previous_container = self.container
                 self.container = next_containing_object
+                
                 return self
                 
             else:

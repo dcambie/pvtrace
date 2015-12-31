@@ -22,27 +22,29 @@ config = {}
 config['log_file']              = 'simulation.log'      # Location of log file
 config['db_file']               = 'pvtracedb.sql'       # Database file (with pvtracedb.sql overwriting is forced)
 config['source']                = 'LED1.txt'            # Lightsource spectrum file (AM1.5g-full.txt for sun)
-config['photons_to_throw']      = 30000                 # Number of photons to be simulated
+config['photons_to_throw']      = 100                 # Number of photons to be simulated
 # Logging
 config['debug']                 = False                 # Debug output (implies informative output)
-config['informative_output']    = False                 # Print informative outpout (implies print summary)
+config['informative_output']    = True                 # Print informative outpout (implies print summary)
 config['print_waveleghts']      = False                 # Wavelenght of photons in channels
-config['print_summary']         = True                  # tab-separated summary data (For ease Excel import)
+config['print_summary']         = False                  # tab-separated summary data (For ease Excel import)
 # Visualizer parameters
-config['visualizer']            = False                 # VPython
+config['visualizer']            = True                 # VPython
 config['show_lines']            = True                  # Ray lines rendering
 config['show_path']             = True                  # Photon path rendering
 # Device Data
-config['L']                     = 0.07                  # Length    (7 cm)
-config['W']                     = 0.06                  # Width     (6 cm)
-config['H']                     = 0.005                 # Thickness (5 mm)
+config['L']                     = 0.05                  # Length    (5 cm)
+config['W']                     = 0.05                  # Width     (5 cm)
+config['H']                     = 0.006                 # Thickness (6 mm 0.2+0.4)
 # Channels
 config['cL']                    = 0.05                  # Length    (5 cm)
-config['cW']                    = 0.0008                # Width     (.8mm)
-config['cH']                    = 0.0001                # Heigth    (.1mm)
-config['cdepth']                = 0.004                 # Depth of channels in waveguide (from bottom) [MUST be lower than H+cH
+config['cW']                    = 0.001                 # Width     (.8mm)
+config['cH']                    = 0.001                 # Heigth    (.1mm)
+config['cdepth']                = 0.002                 # Depth of channels in waveguide (from bottom) [MUST be lower than H+cH
 config['shape']                 = "box"                 # Either box or cylinder
-config['cnum']                  = 26                    # Number of channels (26)
+config['cStartX']               = 0                     # Starting X coord for channels (default 0.0064)
+config['cStartY']               = 0.025                 # Starting Y coord for channels (default 0.005)
+config['cnum']                  = 1                     # Number of channels (26)
 config['cspacing']              = 0.0012                # Spacing between channels (0.0012)
 config['reaction_mixture_re']   = 1.42                  # Reaction mixture's refractive index (1.33)
 config['transmittance_at_peak'] = 0.0362                # Trasmission at absorbance peak, matches experimental (for lsc whose height is H)
@@ -174,22 +176,22 @@ for i in range(1,2):
     reaction_mixture = Material(absorption_data=mb_spectrum, emission_data=ems, quantum_efficiency=0.0, refractive_index=config['reaction_mixture_re'])
 
     channels = []
-    for i in range(0, config['cnum']-1):
+    for i in range(0, config['cnum']):
         #shape is cylinder or box
-        channels.append(Channel(origin=(0.0064,0.005+((config['cW']+config['cspacing'])*i),config['cdepth']), size=(config['cL'],config['cW'],config['cH']),shape=config['shape']))
+        channels.append(Channel(origin=(config['cStartX'],config['cStartY']+((config['cW']+config['cspacing'])*i),config['cdepth']), size=(config['cL'],config['cW'],config['cH']),shape=config['shape']))
         channels[i].material = reaction_mixture
         channels[i].name = "Channel"+str(i)
 
     if config['bilayer']:
-        for i in range(0, config['cnum']-2):
-            channels.append(Channel(origin=(0.0064,0.005+((config['cW']+config['cspacing'])*i)+(config['cW']+config['cspacing'])/2,config['cdepth']-0.001), size=(config['cL'],config['cW'],config['cH'])))
-            channels[i+config['cnum']-1].material = reaction_mixture
-            channels[i+config['cnum']-1].name = "Channel"+str(i+config['cnum'])
+        for i in range(0, config['cnum']-1):
+            channels.append(Channel(origin=(config['cStartX'],config['cStartY']+((config['cW']+config['cspacing'])*i)+(config['cW']+config['cspacing'])/2,config['cdepth']-0.001), size=(config['cL'],config['cW'],config['cH'])))
+            channels[i+config['cnum']].material = reaction_mixture
+            channels[i+config['cnum']].name = "Channel"+str(i+config['cnum'])
 
     for channel in channels:
         scene.add_object(channel)
     if config['bottom_reflector']:
-        reflector = PlanarReflector(reflectivity=0.8, origin=(0,0,-0.002), size=(config['L'],config['W'],0.001))
+        reflector = PlanarReflector(reflectivity=0.8, origin=(0,0,-0.003), size=(config['L'],config['W'],0.002))
         reflector.name = "White_Paper"
         scene.add_object(reflector)
 

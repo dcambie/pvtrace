@@ -204,8 +204,8 @@ class Photon (object):
         
         # Here we trace the ray through a Material
         self = self.container.material.trace(self, separation(self.position, intersection))
-        
-        
+
+
         # Lost in material?
         # Photon has been re-absorbed but NOT re-emitted, i.e. is inactive
         if not self.active:
@@ -233,9 +233,9 @@ class Photon (object):
         
         edge = False
         if ray_on_surface and isinstance(intersection_object, LSC) and isinstance(self.container, LSC) and self.container.shape.surface_identifier(self.position) in edges:
-            edge = self.exit_device.shape.surface_identifier(self.position)
-        
-        # If we reach an reflective material then we don't need to follow 
+            edge = self.container.shape.surface_identifier(self.position)
+
+        # If we reach an reflective material then we don't need to follow
         # this logic we can just return
         #if ray_on_surface and isinstance(intersection_object, Coating):
         #    self.previous_container = self.container
@@ -925,7 +925,7 @@ class Tracer(object):
                 wavelength = photon.wavelength
                 #photon.visualiser.addPhoton(photon)
                 photon = photon.trace()
-                
+
                 if step == 0:
                     # The ray has hit the first object. 
                     # Cache this for later use. If the ray is not 

@@ -30,10 +30,14 @@ from Interpolation import *
 import os
 import sys
 # Module constants -- location of the data folder
+#print sys.path
 for path in sys.path:
     if path.find('pvtrace') != -1:
-        pvtrace_directory = path
+        pvtrace_containing_directory = path
         break
-PVTDATA = os.path.join(pvtrace_directory, 'data')
-print "pvtrace data directory:"
+while pvtrace_containing_directory.find('pvtrace') != -1:
+    pvtrace_containing_directory = os.path.abspath(os.path.join(pvtrace_containing_directory, '..'))
+
+PVTDATA = os.path.join(pvtrace_containing_directory, 'pvtrace', 'data')
+print "Pvtrace data directory:"
 print PVTDATA

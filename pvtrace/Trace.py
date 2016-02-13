@@ -425,7 +425,7 @@ class Photon (object):
                 self.direction = reflect_vector(normal, self.direction)
                 self.propagate = False
                 self.exit_device = self.container
-                print " SUPERFICIE LSC esterna, ovvero: ",edge
+                #print " LSC outer surface, face: ",edge
                 return self
 
 

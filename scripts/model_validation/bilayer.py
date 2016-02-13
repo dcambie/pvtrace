@@ -5,16 +5,7 @@ import sys
 from pvtrace.external import transformations as tf
 from pvtrace import *
 import time
-
-''' Simulation of a rectangular homogeneously doped LSC
-Steps:
-1) Define parameters
-2) Create light source
-3) Load absorption and emission data for orgnaic dye
-4) Load linear background absorption for PDMS
-5) Create LSC object and start tracer
-6) Calculate statistics
-'''
+import Modules
 
 # Simulation
 config = {}
@@ -54,30 +45,10 @@ config['bottom_reflector'] = True
 config['render_hi_quality'] = False  # Hi-quality PovRay Render of the scene
 config['render_low_quality'] = False  # Fast PovRay Render of the scene
 
-#  TMP overwrite
-# config['cW'] = 0.0005
-# config['cH'] = 0.0005
-# config['H'] = 0.005
-# config['cnum'] = 50
-# config['cdepth'] = 0.0025
-# config['cspacing'] = 0.0005
-# config['bilayer'] = True
-# config['visualizer'] = True
-# config['photons_to_throw'] = 1
-# config['informative_output'] = True
-# config['show_lines'] = True
-# config['show_path']  = True
-# config['debug'] = True
-config['transmittance_at_peak'] = 0.001
-config['source'] = 'AM1.5g-full.txt'
-# config['shape']  = "box"
-
-# logging.basicConfig(filename=config['log_file'],level=logging.DEBUG)
-# PVTDATA = '/home/dario/pvtrace/data/'
-
 random_seed = int(
     time.time())  # Random seed (with the same seed same random photons will be generated, this can be usefull in some comparisons)
 
+# Debug and Co
 if config['debug']:
     config['informative_output'] = true
 if config['informative_output']:
@@ -90,6 +61,7 @@ if config['informative_output']:
         print confline
     print "\n"
 
+# Lightsource
 file = os.path.join(PVTDATA, 'sources', config['source'])
 oriel = load_spectrum(file, xbins=np.arange(400, 800))
 source = PlanarSource(direction=(0, 0, -1), spectrum=oriel, length=config['L'],

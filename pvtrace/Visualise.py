@@ -88,6 +88,10 @@ class Visualiser (object):
                 visual.sphere(pos=sphere.centre, radius=sphere.radius, color=geo.norm(colour), opacity=opacity, material=material)
             
     def addFinitePlane(self, plane, colour=None, opacity=1., material=visual.materials.plastic):
+        """
+        :rtype: object
+
+        """
         if not Visualiser.VISUALISER_ON:
             return
         if isinstance(plane, geo.FinitePlane):
@@ -279,7 +283,7 @@ class Visualiser (object):
         if isinstance(obj, geo.Cylinder):
             self.addCylinder(obj, colour=colour, material=material, opacity=opacity)
         if isinstance(obj, geo.FinitePlane):
-            self.addFinitePlane(obj, colour, opacity, material=material, opacity=opacity)
+            self.addFinitePlane(obj, colour, opacity, material=material)
         if isinstance(obj, csg.CSGadd) or isinstance (obj, csg.CSGint) or isinstance (obj, csg.CSGsub):
             self.addCSG(obj, res, origin, extent, colour, material=material, opacity=opacity)
         if isinstance(obj, geo.Polygon):

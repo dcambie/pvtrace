@@ -17,10 +17,8 @@ Steps:
 '''
 
 # Simulation
-config = {
-    'log_file': 'simulation.log'
-}
-#config['log_file']  = 'simulation.log'  # Location of log file
+config = {}
+config['log_file']  = 'simulation.log'  # fixme This is not used yet... Location of log file
 config['db_file']   = 'pvtracedb.sql'  # Database file (with pvtracedb.sql overwriting is forced)
 config['source'] = 'LED1.txt'  # Lightsource spectrum file (AM1.5g-full.txt for sun)
 config['photons_to_throw'] = 30  # Number of photons to be simulated
@@ -46,8 +44,7 @@ config['shape'] = "box"  # Either box or cylinder
 config['cnum'] = 26  # Number of channels (26)
 config['cspacing'] = 0.0012  # Spacing between channels (0.0012)
 config['reaction_mixture_re'] = 1.42  # Reaction mixture's refractive index (1.33)
-config[
-    'transmittance_at_peak'] = 0.0362  # Trasmission at absorbance peak, matches experimental (for lsc whose height is H)
+config['absorbance_at_peak'] = 2.1  # Device trasversal absorbance at dye peak, to be matched with experimental values (lsc whose height is H)
 config['mb_conc'] = 0.0012  # Molar concentratin mb in channels
 # Device Parameters
 config['bilayer'] = False  # Simulate bilayer system?
@@ -86,12 +83,12 @@ if config['debug']:
 if config['informative_output']:
     config['print_summary'] = True
 
-# if config['informative_output']:
-# print "##### PVTRACE CONFIG REPORT #####"
-# for key in sorted(config.iterkeys()):
-# line = '{:>25}  {:>2}  {:>20}'.format(key, "->", config[key])
-# print line
-# print "\n"
+if config['informative_output']:
+    print "##### PVTRACE CONFIG REPORT #####"
+    for key in sorted(config.iterkeys()):
+        confline = '{:>25}  {:>2}  {:>20}'.format(key, "->", config[key])
+        print confline
+    print "\n"
 
 file = os.path.join(PVTDATA, 'sources', config['source'])
 oriel = load_spectrum(file, xbins=np.arange(400, 800))
@@ -132,6 +129,8 @@ for i in range(1, 2):
     # Absorption peak
     ap = absorption_data[:, 1].max()
     # Correcting factor to adjust absorption at peak to match settings
+    config['transmittance_at_peak'] = 10 ** - config['absorbance_at_peak']
+    print 'trasmittance of',config['transmittance_at_peak'],' derived from Abs: ',config['absorbance_at_peak']
     phi = -1 / (ap * (config['H'])) * np.log(config['transmittance_at_peak'])
     absorption_data[:, 1] = absorption_data[:, 1] * phi
 

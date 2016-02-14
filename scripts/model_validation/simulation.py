@@ -10,7 +10,7 @@ from Modules import *
 # 1 unit = 1 mm
 scene = Scene()
 
-reactor = Reactor(name="5x5_8ch", dye="Red305", device_abs_at_peak=2.15, photocatalyst="MB")
+reactor = Reactor(name="5x5_8ch", dye="Red305", dye_concentration=0.15, photocatalyst="MB")
 for obj in reactor.scene_obj:
     scene.add_object(obj)
 

@@ -27,7 +27,7 @@ class LightSource(object):
 class Reactor(object):
     """ Class that models experimental devices """
 
-    def __init__(self, name, dye, device_abs_at_peak, photocatalyst=None):
+    def __init__(self, name, dye, dye_concentration, photocatalyst=None):
         if photocatalyst == None:
             photocatalyst = False
         self.photocatalyst = photocatalyst
@@ -49,6 +49,8 @@ class Reactor(object):
                 absorption_data = np.loadtxt(os.path.join(PVTDATA, 'dyes', 'fluro-red.abs.txt'))
                 # Wavelength at absorption peak
                 ap = absorption_data[:, 1].max()
+                # Linearity measured up to 0.15mg/g, to be measured beyond
+                device_abs_at_peak = 13.023 * dye_concentration
                 # Correcting factor to adjust absorption at peak to match settings
                 device_transmission = 10 ** -device_abs_at_peak
                 phi = -1 / (ap * 3 * np.log(device_transmission))

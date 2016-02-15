@@ -242,7 +242,7 @@ class Bounds(Register):
     """A huge box containing only air with refractive index 1."""
     def __init__(self):
         super(Bounds, self).__init__()
-        self.shape = Box(origin=(-5,-5,-5), extent=(5,5,5))
+        self.shape = Box(origin=(-100,-100,-100), extent=(100,100,100))
         self.material = Material()
         self.name = "BOUNDS"
 

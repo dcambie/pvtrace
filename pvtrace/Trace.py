@@ -884,7 +884,8 @@ class Tracer(object):
             #else:
             #    print "Photon number:", throw, "\r",
             #    sys.stdout.flush()
-            
+
+            # Create random photon from lightsource and set relative variables
             photon = self.source.photon()
             photon.visualiser = self.visualiser
             photon.scene = self.scene

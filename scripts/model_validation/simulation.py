@@ -18,7 +18,7 @@ for obj in reactor.scene_obj:
 pwd = os.getcwd()
 dbfile = os.path.join(pwd, 'pvtracedb.sql')  # <--- the name of the database file, with "pvtracedb" overwrite is implied
 
-trace = Tracer(scene=scene, source=source, seed=None, throws=10, database_file=dbfile, use_visualiser=false, show_log=false, show_axis=True)
+trace = Tracer(scene=scene, source=reactor.source, seed=None, throws=10, database_file=dbfile, use_visualiser=false, show_log=false, show_axis=True)
 trace.show_lines = true
 trace.show_path = true
 
@@ -38,5 +38,6 @@ print ''
 
 stats = Statistics(trace.database)
 stats.print_report()
+stats.print_detailed()
 
 sys.exit(0)

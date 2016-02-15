@@ -67,7 +67,7 @@ class Reactor(object):
                 lsc.material = CompositeMaterial([pdms, fluro_red], refractive_index=1.41, silent=True)
             else:
                 raise Exception('Unknown dye! (',dye,')')
-            lsc.name = "Reactor (5x5cm, 8 channel, Dye: ",dye,")"
+            lsc.name = 'Reactor (5x5cm, 8 channel, Dye: '+dye+')'
             self.scene_obj.append(lsc)
 
             # 2. CHANNELS
@@ -77,6 +77,14 @@ class Reactor(object):
                 channel.material = reaction_mixture
                 channel.name = "Channel" + str(i)
                 self.scene_obj.append(channel)
+
+            # 3. LIGHT (Perpendicular planar source 5x5 (matching device) with sun spectrum)
+            file = os.path.join(PVTDATA, 'sources', 'AM1.5g-full.txt')
+            sun = load_spectrum(file, xbins=np.arange(400, 800))
+            self.source = PlanarSource(direction=(0, 0, -1), spectrum=sun, length=50, width=50)
+            self.source.name = 'Solar simulator Michael (small)'
+            # distance from device in this case is only important for Visualizer :)
+            self.source.translate((0, 0, 25))
         else:
             raise Exception('The reactor requested (',name,') is not known. Check the name ;)')
 
@@ -120,28 +128,6 @@ class Statistics(object):
         self.tot = self.photon_generated-self.photon_killed
         self.non_radiative =  len(self.db.uids_nonradiative_losses())
 
-        edges = ['left', 'right', 'near', 'far']
-        apertures = ['top', 'bottom']
-
-        for surface in edges:
-            self.lsc_luminescent_out[surface] = len(trace.database.uids_out_bound_on_surface(surface, luminescent=True))
-            self.lsc_non_luminescent_out[surface] = len(trace.database.uids_out_bound_on_surface(surface, luminescent=False))
-        self.lsc_luminescent_out_edges = sum(self.lsc_luminescent_out)
-        self.lsc_non_luminescent_out_edges = sum(self.lsc_non_luminescent_out)
-        self.lsc_out_edges = self.lsc_luminescent_out_tot + self.lsc_non_luminescent_out_tot
-
-        for surface in apertures:
-            self.lsc_luminescent_out[surface] = len(trace.database.uids_out_bound_on_surface(surface, luminescent=True))
-            self.lsc_non_luminescent_out[surface] = len(trace.database.uids_out_bound_on_surface(surface, luminescent=False))
-        self.lsc_luminescent_out = sum(self.lsc_luminescent_out)
-        self.lsc_non_luminescent_out = sum(self.lsc_non_luminescent_out)
-        self.lsc_out = self.lsc_luminescent_out_tot + self.lsc_non_luminescent_out_tot
-
-        self.lsc_luminescent_out_apertures = self.lsc_luminescent_out - self.lsc_luminescent_out_edges
-        self.lsc_non_luminescent_out_apertures =
-        self.lsc_out_apertures = self.lsc_out - self.lsc_out_edges
-
-
     def percent(self, num_photons):
         """
         Return the percentage of num_photons with respect to thrown photons as 2 decimal digit string
@@ -152,11 +138,9 @@ class Statistics(object):
         print "##### PVTRACE LOG RESULTS #####"
 
         print "Summary:"
-        print "\t Photon efficiency \t", (luminescent_edges + luminescent_apertures) * 100 / thrown, "%"
+        print self.db.objects_with_records()
+        #print "\t Photon efficiency \t", (luminescent_edges + luminescent_apertures) * 100 / thrown, "%"
         #print "\t Optical efficiency \t", luminescent_edges * 100 / thrown, "%"
-
-
-
 
     def print_detailed(self):
         self.print_report()
@@ -172,57 +156,49 @@ class Statistics(object):
         apertures = ['top', 'bottom']
 
         for surface in edges:
-            print "\t", surface, "\t", len(
-                self.db.uids_out_bound_on_surface(surface, luminescent=True)) / thrown * 100, "%"
+            print "\t", surface, "\t", self.percent(len(
+                self.db.uids_out_bound_on_surface(surface, luminescent=True))), "%"
 
         for surface in apertures:
-            print "\t", surface, "\t", len(
-                self.db.uids_out_bound_on_surface(surface, luminescent=True)) / thrown * 100, "%"
+            print "\t", surface, "\t", self.percent(len(
+                self.db.uids_out_bound_on_surface(surface, luminescent=True))), "%"
 
-        print "Non radiative losses\t", non_radiative_photons / thrown * 100, "%"
+        #print "Non radiative losses\t", self.percent(non_radiative_photons), "%"
 
         print "Solar photons (transmitted/reflected):"
         for surface in edges:
-            print "\t", surface, "\t", len(
-                self.db.uids_out_bound_on_surface(surface, solar=True)) / thrown * 100, "%"
+            print "\t", surface, "\t", self.percent(len(
+                self.db.uids_out_bound_on_surface(surface, solar=True))), "%"
 
         for surface in apertures:
-            print "\t", surface, "\t", len(
-                self.db.uids_out_bound_on_surface(surface, solar=True)) / thrown * 100, "%"
+            print "\t", surface, "\t", self.percent(len(
+                self.db.uids_out_bound_on_surface(surface, solar=True))), "%"
 
         print "Reactor's channel photons:"
 
 
-        photons = trace.database.uids_in_reactor()
+        photons = self.db.uids_in_reactor()
         photons_in_channels_tot = len(photons)
-        luminescent_photons_in_channels = len(trace.database.uids_in_reactor_and_luminescent())
+        luminescent_photons_in_channels = len(self.db.uids_in_reactor_and_luminescent())
         # oNLY PHOTONS IN CHANNELS!
         for photon in photons:
-            if config['debug']:
-                print "Wavelenght: ", trace.database.wavelengthForUid(photon)  # Nice output
-            elif config['print_waveleghts']:
-                print " ".join(map(str, trace.database.wavelengthForUid(photon)))  # Clean output (for elaborations)
+            print "Wavelenght: ", self.db.wavelengthForUid(photon)  # Nice output
+            #print " ".join(map(str, self.db.wavelengthForUid(photon)))  # Clean output (for elaborations)
 
-        if config['debug']:
-            print channel.name, " photons: ", photons_in_channels_tot / thrown * 100, "% (", photons_in_channels_tot, ")"
+        print "Photons in channels (sum)", self.percent(photons_in_channels_tot), "% (", photons_in_channels_tot, ")"
 
-        if config['informative_output']:
-            print "Photons in channels (sum)", photons_in_channels_tot / thrown * 100, "% (", photons_in_channels_tot, ")"
+        top_reflected = len(self.db.uids_out_bound_on_surface("top", solar=True))
+        bottom_lost = len(self.db.uids_out_bound_on_surface("bottom", solar=True))
 
-        # Put header here just if needed (other output on top)
-        if config['print_summary'] == True and config['informative_output'] == True:
-            print header
-        if config['print_summary']:
-            top_reflected = len(trace.database.uids_out_bound_on_surface("top", solar=True))
-            bottom_lost = len(trace.database.uids_out_bound_on_surface("bottom", solar=True))
-            print thrown, "\t", top_reflected, "\t", bottom_lost, "\t", luminescent_edges, "\t", luminescent_apertures, "\t", (
-            photons_in_channels_tot - luminescent_photons_in_channels), "\t", luminescent_photons_in_channels, "\t", non_radiative_photons
+        #print thrown, "\t", top_reflected, "\t", bottom_lost, "\t", luminescent_edges, "\t", luminescent_apertures, "\t", (
+        #photons_in_channels_tot - luminescent_photons_in_channels), "\t", luminescent_photons_in_channels, "\t", non_radiative_photons
 
-        if config['debug']:  # Check coherence of results
-            if top_reflected + bottom_lost + luminescent_edges + luminescent_apertures + photons_in_channels_tot + non_radiative_photons == thrown:
-                print "Results validity check OK :)"
-            else:
-                print "!!! ERROR !!! Check results carefully!"
+
+        # if top_reflected + bottom_lost + luminescent_edges + luminescent_apertures + photons_in_channels_tot + non_radiative_photons == thrown:
+        #     print "Results validity check OK :)"
+        # else:
+        #     print "!!! ERROR !!! Check results carefully!"
+
     def create_graphs(self):
         import os
         import numpy as np

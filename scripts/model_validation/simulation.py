@@ -7,6 +7,8 @@ from pvtrace import *
 import time
 from Modules import *
 
+PVTDATA = '/home/dario/pvtrace' # Hack needed for running simulations on /tmp from VM
+
 # 1 unit = 1 mm
 scene = Scene()
 

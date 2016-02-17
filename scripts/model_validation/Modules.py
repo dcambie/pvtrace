@@ -72,7 +72,7 @@ class Reactor(object):
 
             # 2. CHANNELS
             reaction_mixture = self.getReactionMixture(solvent='acetonitrile')
-            for i in range(1, 8):
+            for i in range(1, 9):
                 channel=Channel(origin=(5, 7 + 5*(i-1), 1), size=(40, 1, 1), shape="box")
                 channel.material = reaction_mixture
                 channel.name = "Channel" + str(i)

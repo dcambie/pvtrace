@@ -42,7 +42,7 @@ class Reactor(object):
 
         if name == '5x5_8ch':
             # 1. LSC DEVICE
-            lsc = LSC(origin=(0,0,0), size=(50,50,3))
+            lsc = LSC(origin=(0,0,0), size=(0.050,0.050,3))
             # Clear reactor (control) is obtained with dye concentration = 0
             if dye == 'Red305':
                 # Red305 absorption spectrum
@@ -73,7 +73,7 @@ class Reactor(object):
             # 2. CHANNELS
             reaction_mixture = self.getReactionMixture(solvent='acetonitrile')
             for i in range(1, 9):
-                channel=Channel(origin=(5, 7 + 5*(i-1), 1), size=(40, 1, 1), shape="box")
+                channel=Channel(origin=(0.005, 0.007 + 0.005*(i-1), 0.001), size=(0.040, 0.001, 0.001), shape="box")
                 channel.material = reaction_mixture
                 channel.name = "Channel" + str(i)
                 self.scene_obj.append(channel)
@@ -81,10 +81,10 @@ class Reactor(object):
             # 3. LIGHT (Perpendicular planar source 5x5 (matching device) with sun spectrum)
             file = os.path.join(PVTDATA, 'sources', 'AM1.5g-full.txt')
             sun = load_spectrum(file, xbins=np.arange(400, 800))
-            self.source = PlanarSource(direction=(0, 0, -1), spectrum=sun, length=50, width=50)
+            self.source = PlanarSource(direction=(0, 0, -1), spectrum=sun, length=0.050, width=0.050)
             self.source.name = 'Solar simulator Michael (small)'
             # distance from device in this case is only important for Visualizer :)
-            self.source.translate((0, 0, 25))
+            self.source.translate((0, 0, 0.025))
         else:
             raise Exception('The reactor requested (',name,') is not known. Check the name ;)')
 

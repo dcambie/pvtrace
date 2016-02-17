@@ -9,7 +9,8 @@ from Modules import *
 
 PVTDATA = '/home/dario/pvtrace' # Hack needed for running simulations on /tmp from VM
 
-# 1 unit = 1 mm
+# 1 unit = 1 m I know it's not convenient but this assumption is deeply bounded in pvtrace's hearth nad there's no safe way to change it without introducing
+
 scene = Scene()
 
 reactor = Reactor(name="5x5_8ch", dye="Red305", dye_concentration=0.15, photocatalyst="MB")

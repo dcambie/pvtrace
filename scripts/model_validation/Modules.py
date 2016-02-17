@@ -47,13 +47,14 @@ class Reactor(object):
             if dye == 'Red305':
                 # Red305 absorption spectrum
                 absorption_data = np.loadtxt(os.path.join(PVTDATA, 'dyes', 'fluro-red.abs.txt'))
-                # Wavelength at absorption peak
+                # Wavelength at absorption peak (ap)
                 ap = absorption_data[:, 1].max()
                 # Linearity measured up to 0.15mg/g, to be measured beyond
                 device_abs_at_peak = 13.023 * dye_concentration
                 # Correcting factor to adjust absorption at peak to match settings
                 device_transmission = 10 ** -device_abs_at_peak
-                phi = -1 / (ap * 3 * np.log(device_transmission))
+                phi = -1 / (ap * 0.003 * np.log(device_transmission))
+                print 'phi equals ',phi
                 # Applying correction to spectrum
                 absorption_data[:, 1] = absorption_data[:, 1] * phi
                 # Create Spectrum elements

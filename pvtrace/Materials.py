@@ -187,7 +187,11 @@ class Spectrum(object):
 
     def __init__(self, x=None, y=None, file=None):
         super(Spectrum, self).__init__()
-        """Initialised with x and y which are array-like data of the same length. x must have units of wavelength (that is in nanometers), y can an arbitrary units. However, if the Spectrum is representing an absorption coefficient y must have units of (1/m)."""
+        """
+        Initialised with x and y which are array-like data of the same length. x must have units of wavelength
+        (that is in nanometers), y can an arbitrary units. However, if the Spectrum is representing an
+        absorption coefficient y must have units of (1/m).
+        """
 
         if file != None:
 
@@ -348,16 +352,16 @@ class Material(object):
                     return Spectrum(x=data[:, 0], y=data[:, 1])
                 else:
                     raise IOError("File '%s' does not exist at this location, '%s' .") % (
-                    os.path.basename(data_source), data_source)
+                        os.path.basename(data_source), data_source)
 
             # Data is 'list-like'
             elif isinstance(data_source, list) or isinstance(data_source, tuple) or isinstance(data_source, np.ndarray):
 
                 rows, cols = np.shape(data_source)
                 assert rows > 1, "Error processing the data file '%s'. PVTrace data files need at least 2 rows and must have 2 columns. This data file has %d rows and %d columns." % (
-                data_source, rows, cols)
+                    data_source, rows, cols)
                 assert cols == 2, "Error processing the data file '%s'. PVTrace data files need at least 2 rows and must have 2 columns. This data file has %d rows and %d columns." % (
-                data_source, rows, cols)
+                    data_source, rows, cols)
                 return Spectrum(x=data_source[:, 0], y=data_source[:, 1])
 
             # Data is already a spectrum

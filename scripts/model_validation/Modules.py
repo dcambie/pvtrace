@@ -42,7 +42,8 @@ class Reactor(object):
 
         if name == '5x5_8ch':
             # 1. LSC DEVICE
-            lsc = LSC(origin=(0,0,0), size=(0.050,0.050,0.003))
+            thickness = 0.003
+            lsc = LSC(origin=(0,0,0), size=(0.050,0.050,thickness))
             # Clear reactor (control) is obtained with dye concentration = 0
             if dye == 'Red305':
                 # Red305 absorption spectrum
@@ -53,7 +54,7 @@ class Reactor(object):
                 device_abs_at_peak = 13.023 * dye_concentration
                 # Correcting factor to adjust absorption at peak to match settings
                 device_transmission = 10 ** -device_abs_at_peak
-                phi = -1 / (ap * 0.003 * np.log(device_transmission))
+                phi = -1 / (ap * thickness) * np.log(device_transmission)
                 print 'phi equals ',phi
                 # Applying correction to spectrum
                 absorption_data[:, 1] = absorption_data[:, 1] * phi

@@ -51,7 +51,7 @@ class Reactor(object):
                 # Wavelength at absorption peak (ap)
                 ap = absorption_data[:, 1].max()
                 # Linearity measured up to 0.15mg/g, to be measured beyond
-                device_abs_at_peak = 13.023 * dye_concentration
+                device_abs_at_peak = 12.35213 * dye_concentration
                 # Correcting factor to adjust absorption at peak to match settings
                 device_transmission = 10 ** -device_abs_at_peak
                 phi = -1 / (ap * thickness) * np.log(device_transmission)

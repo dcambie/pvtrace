@@ -34,7 +34,7 @@ class Red305(object):
     def absorption(self, concentration, thickness):
         # Red305 absorption spectrum
         # fixme replace with normalized spectrum at 0.10 mg/g
-        absorption_data = np.loadtxt(os.path.join(PVTDATA, 'dyes', 'fluro-red.abs.txt'))
+        absorption_data = np.loadtxt(os.path.join(PVTDATA, 'dyes', 'Red305_010mg_g_1m-1.txt'))
         # Wavelength at absorption peak (ap)
         ap = absorption_data[:, 1].max()
         # Linearity measured up to 0.15mg/g, then it bends as bit due to too high Abs values for spectrometer (secondary peak still linear at 0.20mg/g)
@@ -76,7 +76,7 @@ class Reactor(object):
         # Giving emission suppress error. Not used due to quantum_efficiency = 0 :)
         ems = Spectrum([0, 1000], [0.1, 0])
         pdms = Material(absorption_data=abs, emission_data=ems, quantum_efficiency=0.0, refractive_index=1.41)
-
+ls data
         if name == '5x5_8ch':
             # 1. LSC DEVICE
             thickness = 0.003

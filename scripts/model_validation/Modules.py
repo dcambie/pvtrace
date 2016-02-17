@@ -76,7 +76,7 @@ class Reactor(object):
         # Giving emission suppress error. Not used due to quantum_efficiency = 0 :)
         ems = Spectrum([0, 1000], [0.1, 0])
         pdms = Material(absorption_data=abs, emission_data=ems, quantum_efficiency=0.0, refractive_index=1.41)
-ls data
+
         if name == '5x5_8ch':
             # 1. LSC DEVICE
             thickness = 0.003

@@ -46,12 +46,12 @@ class Visualiser (object):
         #<0.00112387, 0.895789, -0.444478>
 
         if show_axis:
-            visual.curve(pos=[(0,0,0), (.08,0,0)], radius=0.0005, color=visual.color.red)
-            visual.curve(pos=[(0,0,0), (0,.07,0)], radius=0.0005, color=visual.color.green)
-            visual.curve(pos=[(0,0,0), (0,0,.08)], radius=0.0005, color=visual.color.blue)
-            visual.label(pos=(.09, 0, 0), text='X', linecolor=visual.color.red)
-            visual.label(pos=(0, .08, 0), text='Y', linecolor=visual.color.green)
-            visual.label(pos=(0, 0, .07), text='Z', linecolor=visual.color.blue)
+            visual.curve(pos=[(0,0,0), (80,0,0)], radius=0.5, color=visual.color.red)
+            visual.curve(pos=[(0,0,0), (0,70,0)], radius=0.5, color=visual.color.green)
+            visual.curve(pos=[(0,0,0), (0,0,80)], radius=0.5, color=visual.color.blue)
+            visual.label(pos=(90, 0, 0), text='X', linecolor=visual.color.red)
+            visual.label(pos=(0, 80, 0), text='Y', linecolor=visual.color.green)
+            visual.label(pos=(0, 0, 70), text='Z', linecolor=visual.color.blue)
         
     
     def addBox(self, box, colour=None, opacity=1., material=visual.materials.plastic):

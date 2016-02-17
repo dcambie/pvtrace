@@ -84,7 +84,7 @@ ls data
             # Clear reactor (control) is obtained with dye concentration = 0
             if dye == 'Red305':
                 dye_material = Red305()
-                Red305.absorption(dye_material, dye_concentration, thickness)
+                dye_material.absorption(dye_concentration, thickness)
             else:
                 raise Exception('Unknown dye! (',dye,')')
             

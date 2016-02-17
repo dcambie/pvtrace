@@ -23,6 +23,43 @@ class LightSource(object):
             pass
         else:
             return
+ 
+class Red305(object):
+    """
+    Class to generate spectra for Red305-based devices
+    """
+    def __init__(self):
+        self.emission()
+    
+    def absorption(self, concentration, thickness):
+        # Red305 absorption spectrum
+        # fixme replace with normalized spectrum at 0.10 mg/g
+        absorption_data = np.loadtxt(os.path.join(PVTDATA, 'dyes', 'fluro-red.abs.txt'))
+        # Wavelength at absorption peak (ap)
+        ap = absorption_data[:, 1].max()
+        # Linearity measured up to 0.15mg/g, then it bends as bit due to too high Abs values for spectrometer (secondary peak still linear at 0.20mg/g)
+        device_abs_at_peak = 13.031 * dye_concentration
+        # Correcting factor to adjust absorption at peak to match settings
+        device_transmission = 10 ** -device_abs_at_peak
+        phi = -1 / (ap * thickness) * np.log(device_transmission)
+        print 'phi equals ',phi
+        # Applying correction to spectrum
+        absorption_data[:, 1] = absorption_data[:, 1] * phi
+        # Create Spectrum elements
+        self.abs =  Spectrum(x=absorption_data[:, 0], y=absorption_data[:, 1])
+    
+    def emission(self):
+        # fixme Add experimental data from pdms low concentration samples (not reabsorption redshifted)
+        emission_data = np.loadtxt(os.path.join(PVTDATA, "dyes", 'fluro-red-fit.ems.txt'))
+        self.ems =  Spectrum(x=emission_data[:, 0], y=emission_data[:, 1])
+        
+    def material(self):
+        # Create Material fixme Quantum Yield needs to be measured!
+        if self.abs==None:
+            return false
+        # fixme measure quantum yield!
+        return Material(absorption_data=self.abs, emission_data=self.ems, quantum_efficiency=0.95, refractive_index=1.41)
+        
 
 class Reactor(object):
     """ Class that models experimental devices """
@@ -46,29 +83,17 @@ class Reactor(object):
             lsc = LSC(origin=(0,0,0), size=(0.050,0.050,thickness))
             # Clear reactor (control) is obtained with dye concentration = 0
             if dye == 'Red305':
-                # Red305 absorption spectrum
-                absorption_data = np.loadtxt(os.path.join(PVTDATA, 'dyes', 'fluro-red.abs.txt'))
-                # Wavelength at absorption peak (ap)
-                ap = absorption_data[:, 1].max()
-                # Linearity measured up to 0.15mg/g, to be measured beyond
-                device_abs_at_peak = 13.023 * dye_concentration
-                # Correcting factor to adjust absorption at peak to match settings
-                device_transmission = 10 ** -device_abs_at_peak
-                phi = -1 / (ap * thickness) * np.log(device_transmission)
-                print 'phi equals ',phi
-                # Applying correction to spectrum
-                absorption_data[:, 1] = absorption_data[:, 1] * phi
-                # Create Spectrum elements
-                absorption = Spectrum(x=absorption_data[:, 0], y=absorption_data[:, 1])
-                # fixme Add experimental data from pdms lo concentration samples (not reabsorption redshifted)
-                emission_data = np.loadtxt(os.path.join(PVTDATA, "dyes", 'fluro-red-fit.ems.txt'))
-                emission = Spectrum(x=emission_data[:, 0], y=emission_data[:, 1])
-                # Create Material fixme Quantum Yield needs to be measured!
-                fluro_red = Material(absorption_data=absorption, emission_data=emission, quantum_efficiency=0.95,
-                                     refractive_index=1.41)
-                lsc.material = CompositeMaterial([pdms, fluro_red], refractive_index=1.41, silent=True)
+                dye_material = Red305()
+                Red305.absorption(dye_concentration, thickness)
             else:
                 raise Exception('Unknown dye! (',dye,')')
+            
+            # PDMS background absorption
+            abs = Spectrum([0, 1000], [2, 2])
+            ems = Spectrum([0, 1000], [0.1, 0])  # Giving emission suppress error. It's not used due to quantum_efficiency=0 :)
+            pdms = Material(absorption_data=abs, emission_data=ems, quantum_efficiency=0.0, refractive_index=1.41)
+            
+            lsc.material = CompositeMaterial([pdms, dye_material.Material()], refractive_index=1.41, silent=True)
             lsc.name = 'Reactor (5x5cm, 8 channel, Dye: '+dye+')'
             self.scene_obj.append(lsc)
 

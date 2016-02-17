@@ -83,8 +83,32 @@ class Reactor(object):
             lsc = LSC(origin=(0,0,0), size=(0.050,0.050,thickness))
             # Clear reactor (control) is obtained with dye concentration = 0
             if dye == 'Red305':
+<<<<<<< HEAD
                 dye_material = Red305()
                 Red305.absorption(dye_concentration, thickness)
+=======
+                # Red305 absorption spectrum
+                absorption_data = np.loadtxt(os.path.join(PVTDATA, 'dyes', 'fluro-red.abs.txt'))
+                # Wavelength at absorption peak (ap)
+                ap = absorption_data[:, 1].max()
+                # Linearity measured up to 0.15mg/g, to be measured beyond
+                device_abs_at_peak = 12.35213 * dye_concentration
+                # Correcting factor to adjust absorption at peak to match settings
+                device_transmission = 10 ** -device_abs_at_peak
+                phi = -1 / (ap * thickness) * np.log(device_transmission)
+                print 'phi equals ',phi
+                # Applying correction to spectrum
+                absorption_data[:, 1] = absorption_data[:, 1] * phi
+                # Create Spectrum elements
+                absorption = Spectrum(x=absorption_data[:, 0], y=absorption_data[:, 1])
+                # fixme Add experimental data from pdms lo concentration samples (not reabsorption redshifted)
+                emission_data = np.loadtxt(os.path.join(PVTDATA, "dyes", 'fluro-red-fit.ems.txt'))
+                emission = Spectrum(x=emission_data[:, 0], y=emission_data[:, 1])
+                # Create Material fixme Quantum Yield needs to be measured!
+                fluro_red = Material(absorption_data=absorption, emission_data=emission, quantum_efficiency=0.95,
+                                     refractive_index=1.41)
+                lsc.material = CompositeMaterial([pdms, fluro_red], refractive_index=1.41, silent=True)
+>>>>>>> 12771ec4d8b88e41fcdade65598e8493cb28f78b
             else:
                 raise Exception('Unknown dye! (',dye,')')
             

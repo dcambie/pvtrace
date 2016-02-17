@@ -42,7 +42,7 @@ class Reactor(object):
 
         if name == '5x5_8ch':
             # 1. LSC DEVICE
-            lsc = LSC(origin=(0,0,0), size=(0.050,0.050,3))
+            lsc = LSC(origin=(0,0,0), size=(0.050,0.050,0.003))
             # Clear reactor (control) is obtained with dye concentration = 0
             if dye == 'Red305':
                 # Red305 absorption spectrum

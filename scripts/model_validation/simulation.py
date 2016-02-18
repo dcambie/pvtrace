@@ -13,7 +13,7 @@ PVTDATA = '/home/dario/pvtrace' # Hack needed for running simulations on /tmp fr
 
 scene = Scene()
 
-reactor = Reactor(name="5x5_8ch", dye="Red305", dye_concentration=0.15, photocatalyst="MB")
+reactor = Reactor(name="5x5_8ch", dye="Red305", dye_concentration=0.15, photocatalyst="MB", photocatalyst_concentration=0.0004)
 for obj in reactor.scene_obj:
     scene.add_object(obj)
 

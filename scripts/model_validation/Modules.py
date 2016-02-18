@@ -14,7 +14,9 @@ from pvtrace import *
 import numpy as np
 
 class LightSource(object):
-    """ Lightsources of lab to match exp. results """
+    """
+    Lightsources
+    """
 
     def __init__(self, name):
         if name == 'SolarSimulator':
@@ -23,53 +25,82 @@ class LightSource(object):
             pass
         else:
             return
- 
+
+class Photocatalyst(object):
+    def __init__(self, compound, concentration):
+        if compound == 'MB'
+            self.compound = MethyleneBlue()
+        else:
+            raise Exception('Unknown photocatalyst! (',compound,')')
+
+    def spectrum(self):
+        # Get spectrum in absorption coefficient (m-1) for 1M compound
+        photocat_abs_data = self.compound.abs()
+        # Then adjust it based on molar concentration
+        photocat_abs_data[:, 1] = photocat_abs_data[:, 1] * concentration
+        return Spectrum(x=photocat_abs_data[:, 0], y=photocat_abs_data[:, 1])
+
+class MethyleneBlue(object):
+    def __init__(self):
+        pass
+    def abs(self):
+        # Load 1M Abs spectrum of MB. Values from http://omlc.org/spectra/mb/mb-water.html
+        # To convert this data to absorption coefficient in (cm-1), multiply by the molar concentration and 2.303.
+        abs_data= np.loadtxt(os.path.join(PVTDATA, "dyes", 'MB_abs.txt'))
+        abs_data[:, 1] = abs_data[:, 1] * 100 * mat.log(10)
+        return abs_data
+
+class DyeMaterial(object):
+    """
+    Abstract class for LSC's dye material
+    """
+    def __init__(self, dye_name):
+        if dye_name == 'Red305':
+            self.dye = Red305()
+        else:
+            raise Exception('Unknown dye! (',dye,')')
+
+    def material(self):
+        # Note that refractive index is not important here since it will be overwritten with CompositeMaterial's one
+        return Material(absorption_data=self.dye.absorption(), emission_data=self.dye.emission(), quantum_efficiency=self.dye.quantum_efficiency, refractive_index=1.41)
+
 class Red305(object):
     """
     Class to generate spectra for Red305-based devices
     """
     def __init__(self):
-        self.emission()
+        self.quantum_efficiency = 0.95
     
-    def absorption(self, concentration, thickness):
-        # Red305 absorption spectrum
-        # fixme replace with normalized spectrum at 0.10 mg/g
+    def absorption(self):
+        if self.thickness == None or self.concentration == None:
+            raise Exception('Missing data for dye absorption. Concentration and/or thickness unknown')
+        # Red305 absorption spectrum (reference at 0.10 mg/g)
         absorption_data = np.loadtxt(os.path.join(PVTDATA, 'dyes', 'Red305_010mg_g_1m-1.txt'))
-        # Wavelength at absorption peak (ap)
+        # Absorbance at peak (ap)
         ap = absorption_data[:, 1].max()
         # Linearity measured up to 0.15mg/g, then it bends as bit due to too high Abs values for spectrometer (secondary peak still linear at 0.20mg/g)
-        device_abs_at_peak = 13.031 * dye_concentration
+        device_abs_at_peak = 13.031 * self.concentration
         # Correcting factor to adjust absorption at peak to match settings
         device_transmission = 10 ** -device_abs_at_peak
-        phi = -1 / (ap * thickness) * np.log(device_transmission)
+        phi = -1 / (ap * self.thickness) * np.log(device_transmission)
         print 'phi equals ',phi
         # Applying correction to spectrum
         absorption_data[:, 1] = absorption_data[:, 1] * phi
         # Create Spectrum elements
-        self.abs =  Spectrum(x=absorption_data[:, 0], y=absorption_data[:, 1])
+        return Spectrum(x=absorption_data[:, 0], y=absorption_data[:, 1])
     
     def emission(self):
         # fixme Add experimental data from pdms low concentration samples (not reabsorption redshifted)
         emission_data = np.loadtxt(os.path.join(PVTDATA, "dyes", 'fluro-red-fit.ems.txt'))
-        self.ems =  Spectrum(x=emission_data[:, 0], y=emission_data[:, 1])
-        
-    def material(self):
-        # Create Material fixme Quantum Yield needs to be measured!
-        if self.abs==None:
-            return false
-        # fixme measure quantum yield!
-        return Material(absorption_data=self.abs, emission_data=self.ems, quantum_efficiency=0.95, refractive_index=1.41)
-        
+        return Spectrum(x=emission_data[:, 0], y=emission_data[:, 1])
 
 class Reactor(object):
     """ Class that models experimental devices """
 
-    def __init__(self, name, dye, dye_concentration, photocatalyst=None):
+    def __init__(self, name, dye, dye_concentration, photocatalyst=None, photocatalyst_concentration = 0.001):
         if photocatalyst == None:
-            photocatalyst = False
-        self.photocatalyst = photocatalyst
-
-        self.scene_obj = []
+            raisephotocatalyst = False
+        self.photocat = Photocatalyst(photocatalyst, photocatalyst_concentration)
 
         # Create a Material for pdms
         abs = Spectrum([0, 1000], [2, 2])
@@ -82,18 +113,17 @@ class Reactor(object):
             thickness = 0.003
             lsc = LSC(origin=(0,0,0), size=(0.050,0.050,thickness))
             # Clear reactor (control) is obtained with dye concentration = 0
-            if dye == 'Red305':
-                dye_material = Red305()
-                dye_material.absorption(dye_concentration, thickness)
-            else:
-                raise Exception('Unknown dye! (',dye,')')
+
+            dye_material = DyeMaterial(dye)
+            dye_material.dye.concentration = dye_concentration
+            dye_material.dye.thickness = thickness
             
             # PDMS background absorption
             abs = Spectrum([0, 1000], [2, 2])
             ems = Spectrum([0, 1000], [0.1, 0])  # Giving emission suppress error. It's not used due to quantum_efficiency=0 :)
             pdms = Material(absorption_data=abs, emission_data=ems, quantum_efficiency=0.0, refractive_index=1.41)
             
-            lsc.material = CompositeMaterial([pdms, dye_material.Material()], refractive_index=1.41, silent=True)
+            lsc.material = CompositeMaterial([pdms, dye_material.material()], refractive_index=1.41, silent=True)
             lsc.name = 'Reactor (5x5cm, 8 channel, Dye: '+dye+')'
             self.scene_obj.append(lsc)
 
@@ -126,21 +156,17 @@ class Reactor(object):
             print "Unknown solvent. Water assumed as worst scenario (n=1.33)"
             n = 1.33
 
-        if self.photocatalyst == "MB":
-            # Open MB absorption
-            mb_absorption_data = np.loadtxt(os.path.join(PVTDATA, "dyes", 'MB_abs.txt'))
-            # Correction factor to adjust absoprtion to concentration, in M ** -1 (as in Materials.py:185)
-            mb_phi = 100 * math.log(10) * 0.0004
-            mb_absorption_data[:, 1] = mb_absorption_data[:, 1] * mb_phi
-            # Giving emission suppress error. Not used due to quantum_efficiency = 0 :)
-            ems = Spectrum([0, 1000], [0.1, 0])
-            # Creates Spectrum
-            mb_spectrum = Spectrum(x=mb_absorption_data[:, 0], y=mb_absorption_data[:, 1])
-            reaction_mixture = Material(absorption_data=mb_spectrum, emission_data=ems, quantum_efficiency=0.0,
+        if self.photocat == False:
+            raise Exception('No Photocatalyst data for reaction mixture')
+
+        # Reaction mixture as abortive medium with no emission
+        ems = Spectrum([0, 1000], [0.1, 0])
+        reaction_mixture = Material(absorption_data=self.photocat.spectrum(), emission_data=ems, quantum_efficiency=0.0,
                                 refractive_index=n)
             return reaction_mixture
         else:
             raise Exception('The photocatalyst (', self.reaction,') is unknown!')
+
 
 class Statistics(object):
     """

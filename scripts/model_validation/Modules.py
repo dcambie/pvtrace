@@ -28,16 +28,17 @@ class LightSource(object):
 
 class Photocatalyst(object):
     def __init__(self, compound, concentration):
-        if compound == 'MB'
+        if compound == 'MB':
             self.compound = MethyleneBlue()
         else:
             raise Exception('Unknown photocatalyst! (',compound,')')
+        self.concentration = concentration
 
     def spectrum(self):
         # Get spectrum in absorption coefficient (m-1) for 1M compound
         photocat_abs_data = self.compound.abs()
         # Then adjust it based on molar concentration
-        photocat_abs_data[:, 1] = photocat_abs_data[:, 1] * concentration
+        photocat_abs_data[:, 1] = photocat_abs_data[:, 1] * self.concentration
         return Spectrum(x=photocat_abs_data[:, 0], y=photocat_abs_data[:, 1])
 
 class MethyleneBlue(object):
@@ -46,9 +47,9 @@ class MethyleneBlue(object):
     def abs(self):
         # Load 1M Abs spectrum of MB. Values from http://omlc.org/spectra/mb/mb-water.html
         # To convert this data to absorption coefficient in (cm-1), multiply by the molar concentration and 2.303.
-        abs_data= np.loadtxt(os.path.join(PVTDATA, "dyes", 'MB_abs.txt'))
-        abs_data[:, 1] = abs_data[:, 1] * 100 * mat.log(10)
-        return abs_data
+        #abs_data= np.loadtxt(os.path.join(PVTDATA, "dyes", 'MB_abs.txt'))
+        #abs_data[:, 1] = abs_data[:, 1] * 100 * mat.log(10)
+        return np.loadtxt(os.path.join(PVTDATA, "photocatalysts", 'MB_1M_1m_ACN.txt'))
 
 class DyeMaterial(object):
     """
@@ -80,10 +81,11 @@ class Red305(object):
         ap = absorption_data[:, 1].max()
         # Linearity measured up to 0.15mg/g, then it bends as bit due to too high Abs values for spectrometer (secondary peak still linear at 0.20mg/g)
         device_abs_at_peak = 13.031 * self.concentration
+        print "with a concentration of ",self.concentration,' and thickness',self.thickness,' this device should have an Abs at peak of',device_abs_at_peak
         # Correcting factor to adjust absorption at peak to match settings
-        device_transmission = 10 ** -device_abs_at_peak
-        phi = -1 / (ap * self.thickness) * np.log(device_transmission)
-        print 'phi equals ',phi
+        # Note that in 'original' pvTrace, thin-film.py file np.log was used incorrectly (log10() intended, got ln())
+        phi = device_abs_at_peak/ (ap * self.thickness)
+        # print 'phi equals ',phi,' (this should approximately be simulation conc/tabulated conc (i.e. 0.10mg/g)'
         # Applying correction to spectrum
         absorption_data[:, 1] = absorption_data[:, 1] * phi
         # Create Spectrum elements
@@ -95,12 +97,16 @@ class Red305(object):
         return Spectrum(x=emission_data[:, 0], y=emission_data[:, 1])
 
 class Reactor(object):
-    """ Class that models experimental devices """
+    """
+    Class that models the experimental device
+    """
 
     def __init__(self, name, dye, dye_concentration, photocatalyst=None, photocatalyst_concentration = 0.001):
         if photocatalyst == None:
-            raisephotocatalyst = False
-        self.photocat = Photocatalyst(photocatalyst, photocatalyst_concentration)
+            self.photocat = False
+        else:
+            self.photocat = Photocatalyst(photocatalyst, photocatalyst_concentration)
+        self.scene_obj = []
 
         # Create a Material for pdms
         abs = Spectrum([0, 1000], [2, 2])
@@ -113,7 +119,6 @@ class Reactor(object):
             thickness = 0.003
             lsc = LSC(origin=(0,0,0), size=(0.050,0.050,thickness))
             # Clear reactor (control) is obtained with dye concentration = 0
-
             dye_material = DyeMaterial(dye)
             dye_material.dye.concentration = dye_concentration
             dye_material.dye.thickness = thickness
@@ -142,6 +147,31 @@ class Reactor(object):
             self.source.name = 'Solar simulator Michael (small)'
             # distance from device in this case is only important for Visualizer :)
             self.source.translate((0, 0, 0.025))
+        elif name == "5x5_0ch":
+            # 1. LSC DEVICE
+            thickness = 0.003
+            lsc = LSC(origin=(0,0,0), size=(0.050,0.050,thickness))
+            # Clear reactor (control) is obtained with dye concentration = 0
+            dye_material = DyeMaterial(dye)
+            dye_material.dye.concentration = dye_concentration
+            dye_material.dye.thickness = thickness
+
+            # PDMS background absorption
+            abs = Spectrum([0, 1000], [2, 2])
+            ems = Spectrum([0, 1000], [0.1, 0])  # Giving emission suppress error. It's not used due to quantum_efficiency=0 :)
+            pdms = Material(absorption_data=abs, emission_data=ems, quantum_efficiency=0.0, refractive_index=1.41)
+
+            lsc.material = CompositeMaterial([pdms, dye_material.material()], refractive_index=1.41, silent=True)
+            lsc.name = 'Reactor (5x5cm, 8 channel, Dye: '+dye+')'
+            self.scene_obj.append(lsc)
+
+            # 2. LIGHT (Perpendicular planar source 5x5 (matching device) with sun spectrum)
+            file = os.path.join(PVTDATA, 'sources', 'AM1.5g-full.txt')
+            sun = load_spectrum(file, xbins=np.arange(400, 800))
+            self.source = PlanarSource(direction=(0, 0, -1), spectrum=sun, length=0.050, width=0.050)
+            self.source.name = 'Solar simulator Michael (small)'
+            # distance from device in this case is only important for Visualizer :)
+            self.source.translate((0, 0, 0.025))
         else:
             raise Exception('The reactor requested (',name,') is not known. Check the name ;)')
 
@@ -163,10 +193,7 @@ class Reactor(object):
         ems = Spectrum([0, 1000], [0.1, 0])
         reaction_mixture = Material(absorption_data=self.photocat.spectrum(), emission_data=ems, quantum_efficiency=0.0,
                                 refractive_index=n)
-            return reaction_mixture
-        else:
-            raise Exception('The photocatalyst (', self.reaction,') is unknown!')
-
+        return reaction_mixture
 
 class Statistics(object):
     """

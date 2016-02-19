@@ -58,7 +58,7 @@ class Visualiser (object):
         if not Visualiser.VISUALISER_ON:
             return
         if isinstance(box, geo.Box):
-            if colour == None:
+            if colour is None:
                 colour = visual.color.red
             org = geo.transform_point(box.origin, box.transform)
             ext = geo.transform_point(box.extent, box.transform)
@@ -80,7 +80,7 @@ class Visualiser (object):
             return
         
         if isinstance(sphere, geo.Sphere):
-            if colour == None:
+            if colour is None:
                 colour = visual.color.red
             if np.allclose(np.array(colour), np.array([0,0,0])):
                 visual.sphere(pos=sphere.centre, radius=sphere.radius, opacity=opacity, material=material)
@@ -91,7 +91,7 @@ class Visualiser (object):
         if not Visualiser.VISUALISER_ON:
             return
         if isinstance(plane, geo.FinitePlane):
-            if colour == None:
+            if colour is None:
                 colour = visual.color.blue
             # visual doesn't support planes, so we draw a very thin box
             H = .001
@@ -105,7 +105,7 @@ class Visualiser (object):
         if not Visualiser.VISUALISER_ON:
             return
         if isinstance(polygon, geo.Polygon):
-            if colour == None:
+            if colour is None:
                 visual.convex(pos=polygon.pts, color=geo.norm([0.1,0.1,0.1]), material=material)
             else:
                 visual.convex(pos=polygon.pts, color=geo.norm(colour), material=material)
@@ -115,7 +115,7 @@ class Visualiser (object):
         if not Visualiser.VISUALISER_ON:
             return
         if isinstance(convex, geo.Convex):
-            if colour == None:
+            if colour is None:
                 print "Color is none"
                 visual.convex(pos=convex.points, color=geo.norm([0.1,0.1,0.1]), material=material)
             else:
@@ -127,7 +127,7 @@ class Visualiser (object):
         if not Visualiser.VISUALISER_ON:
             return
         if isinstance(ray, geo.Ray):
-            if colour == None:
+            if colour is None:
                 colour = visual.color.white
             pos = ray.position
             axis = ray.direction * 5
@@ -136,7 +136,7 @@ class Visualiser (object):
     def addSmallSphere(self, point, colour=None, opacity=1., material=None):
         if not Visualiser.VISUALISER_ON:
             return
-        if colour == None:
+        if colour is None:
             colour = visual.color.blue
         visual.sphere(pos=point, radius=0.00012, color=geo.norm(colour), opacity=opacity, materiall=material)
         #visual.curve(pos=[point], radius=0.0005, color=geo.norm(colour))
@@ -145,7 +145,7 @@ class Visualiser (object):
     def addLine(self, start, stop, colour=None, opacity=1., material=None):
         if not Visualiser.VISUALISER_ON:
             return
-        if colour == None:
+        if colour is None:
             colour = visual.color.white
         axis = np.array(stop) - np.array(start)
         visual.cylinder(pos=start, axis=axis, radius=0.0001, color=geo.norm(colour), opacity=opacity, material=material)
@@ -153,7 +153,7 @@ class Visualiser (object):
     def addCylinder(self, cylinder, colour=None, opacity=1., material=None):
         if not Visualiser.VISUALISER_ON:
             return
-        if colour == None:
+        if colour is None:
             colour = visual.color.blue
         #FIXME tempora
         colour = visual.color.blue
@@ -250,7 +250,7 @@ class Visualiser (object):
         16/03/10: To visualise CSG objects
         """
            
-        if colour == None:         
+        if colour is None:
             colour = visual.color.red
             
         org = box.origin
@@ -266,7 +266,7 @@ class Visualiser (object):
         """Draws a smallSphere with direction arrow and polariation (if data is avaliable)."""
         self.addSmallSphere(photon.position)
         visual.arrow(pos=photon.position, axis=photon.direction * 0.0005, shaftwidth=0.0003, color=visual.color.magenta, opacity=0.8)
-        if photon.polarisation != None:
+        if photon.polarisation is not None:
             visual.arrow(pos=photon.position, axis=photon.polarisation * 0.0005, shaftwidth=0.0003, color=visual.color.white, opacity=0.4 )
         
     def addObject(self, obj, colour=None, opacity=0.5, res=0.05, material=None):
@@ -279,7 +279,7 @@ class Visualiser (object):
         if isinstance(obj, geo.Cylinder):
             self.addCylinder(obj, colour=colour, material=material, opacity=opacity)
         if isinstance(obj, geo.FinitePlane):
-            self.addFinitePlane(obj, colour, opacity, material=material, opacity=opacity)
+            self.addFinitePlane(obj, colour, opacity, material=material)
         if isinstance(obj, csg.CSGadd) or isinstance (obj, csg.CSGint) or isinstance (obj, csg.CSGsub):
             self.addCSG(obj, res, origin, extent, colour, material=material, opacity=opacity)
         if isinstance(obj, geo.Polygon):

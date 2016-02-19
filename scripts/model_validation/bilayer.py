@@ -8,45 +8,21 @@ import time
 import Modules
 
 # Simulation
-config = {}
-config['log_file']  = 'simulation.log'  # fixme This is not used yet... Location of log file
-config['db_file']   = 'pvtracedb.sql'  # Database file (with pvtracedb.sql overwriting is forced)
-config['source'] = 'LED1.txt'  # Lightsource spectrum file (AM1.5g-full.txt for sun)
-config['photons_to_throw'] = 30  # Number of photons to be simulated
+config = {'log_file': 'simulation.log', 'db_file': 'pvtracedb.sql', 'source': 'LED1.txt', 'photons_to_throw': 30,
+          'debug': False, 'informative_output': False, 'print_waveleghts': False, 'print_summary': True,
+          'visualizer': False, 'show_lines': True, 'show_path': True, 'L': 0.07, 'W': 0.06, 'H': 0.005, 'cL': 0.05,
+          'cW': 0.0008, 'cH': 0.0001, 'cdepth': 0.004, 'shape': "box", 'cnum': 26, 'cspacing': 0.0012,
+          'reaction_mixture_re': 1.42, 'absorbance_at_peak': 2.1, 'mb_conc': 0.0012, 'bilayer': False,
+          'transparent': False, 'bottom_reflector': True, 'render_hi_quality': False, 'render_low_quality': False}
 # Logging
-config['debug'] = False  # Debug output (implies informative output)
-config['informative_output'] = False  # Print informative outpout (implies print summary)
-config['print_waveleghts'] = False  # Wavelenght of photons in channels
-config['print_summary'] = True  # tab-separated summary data (For ease Excel import)
 # Visualizer parameters
-config['visualizer'] = False  # VPython
-config['show_lines'] = True  # Ray lines rendering
-config['show_path'] = True  # Photon path rendering
 # Device Data
-config['L'] = 0.07  # Length    (7 cm)
-config['W'] = 0.06  # Width     (6 cm)
-config['H'] = 0.005  # Thickness (5 mm)
 # Channels
-config['cL'] = 0.05  # Length    (5 cm)
-config['cW'] = 0.0008  # Width     (.8mm)
-config['cH'] = 0.0001  # Heigth    (.1mm)
-config['cdepth'] = 0.004  # Depth of channels in waveguide (from bottom) [MUST be lower than H+cH
-config['shape'] = "box"  # Either box or cylinder
-config['cnum'] = 26  # Number of channels (26)
-config['cspacing'] = 0.0012  # Spacing between channels (0.0012)
-config['reaction_mixture_re'] = 1.42  # Reaction mixture's refractive index (1.33)
-config['absorbance_at_peak'] = 2.1  # Device trasversal absorbance at dye peak, to be matched with experimental values (lsc whose height is H)
-config['mb_conc'] = 0.0012  # Molar concentratin mb in channels
 # Device Parameters
-config['bilayer'] = False  # Simulate bilayer system?
-config['transparent'] = False  # Simulate transparent device (negative control)
-config['bottom_reflector'] = True
 # PovRay rendering
-config['render_hi_quality'] = False  # Hi-quality PovRay Render of the scene
-config['render_low_quality'] = False  # Fast PovRay Render of the scene
 
 random_seed = int(
-    time.time())  # Random seed (with the same seed same random photons will be generated, this can be usefull in some comparisons)
+    time.time())  # Random seed (with the same seed same random photons will be generated, this can be useful in some comparisons)
 
 # Debug and Co
 if config['debug']:
@@ -151,20 +127,20 @@ for i in range(1, 2):
                                 refractive_index=config['reaction_mixture_re'])
 
     channels = []
-    for i in range(0, config['cnum'] - 1):
+    for ii in range(0, config['cnum'] - 1):
         # shape is cylinder or box
-        channels.append(Channel(origin=(0.0064, 0.005 + ((config['cW'] + config['cspacing']) * i), config['cdepth']),
+        channels.append(Channel(origin=(0.0064, 0.005 + ((config['cW'] + config['cspacing']) * ii), config['cdepth']),
                                 size=(config['cL'], config['cW'], config['cH']), shape=config['shape']))
-        channels[i].material = reaction_mixture
-        channels[i].name = "Channel" + str(i)
+        channels[ii].material = reaction_mixture
+        channels[ii].name = "Channel" + str(ii)
 
     if config['bilayer']:
-        for i in range(0, config['cnum'] - 2):
+        for j in range(0, config['cnum'] - 2):
             channels.append(Channel(origin=(
-            0.0064, 0.005 + ((config['cW'] + config['cspacing']) * i) + (config['cW'] + config['cspacing']) / 2,
+            0.0064, 0.005 + ((config['cW'] + config['cspacing']) * j) + (config['cW'] + config['cspacing']) / 2,
             config['cdepth'] - 0.001), size=(config['cL'], config['cW'], config['cH'])))
-            channels[i + config['cnum'] - 1].material = reaction_mixture
-            channels[i + config['cnum'] - 1].name = "Channel" + str(i + config['cnum'])
+            channels[j + config['cnum'] - 1].material = reaction_mixture
+            channels[j + config['cnum'] - 1].name = "Channel" + str(j + config['cnum'])
 
     for channel in channels:
         scene.add_object(channel)

@@ -41,10 +41,10 @@ def remove_duplicates(the_list):
 
 
 class Photon (object):
-    '''A generic photon class.'''
+    """A generic photon class."""
     
     def __init__(self, wavelength=555, position=[.0,.0,.0], direction=[.0,.0,1.], active=True, show_log=True):
-        ''' 
+        """
         All arguments are optional because a photon is greated with default values. The possible arguments are:
         wavelength -- The photon wavelength in nanometers (float).
         position   -- The photon position in cartesian coordinates (3 elements) is array-like quantity in units of metres.
@@ -52,7 +52,7 @@ class Photon (object):
         phase      -- This is not yet implemented.
         active   -- Boolean indicating if the ray has or has not been lost (e.g. absorbed in a material)
         container  -- The geometrical object within which the ray is located.
-        '''
+        """
         
         self.wavelength = wavelength
         self.ray = Ray(np.array(position), np.array(direction))
@@ -109,9 +109,9 @@ class Photon (object):
     def __str__(self):
         info = str(self.wavelength) + "nm " + str(self.ray.position) + " " + str(self.ray.direction) + " " + str(type(self.container))
         if self.active:
-            info = info + " active "
+            info += " active "
         else:
-            info = info + " inactive "
+            info += " inactive "
         return info
         
     def getPosition(self):
@@ -138,15 +138,15 @@ class Photon (object):
     def trace(self):
         """The ray can trace its self through the scene."""
         
-        assert self.scene != None, "The photon's scene variable is not set."
+        assert self.scene is not None, "The photon's scene variable is not set."
         
         intersection_points, intersection_objects = self.scene.intersection(self.ray)
         
-        assert intersection_points != None, "The ray must intersect with something in the scene to be traced."
+        assert intersection_points is not None, "The ray must intersect with something in the scene to be traced."
         
         if self.container is None:
             self.container = self.scene.container(self)
-        assert self.container != None, "Container of ray cannot be found."
+        assert self.container is not None, "Container of ray cannot be found."
         
         #import pdb; pdb.set_trace()
         intersection_points, intersection_objects = Scene.sort(intersection_points, intersection_objects, self, container=self.container, show_log=self.show_log)
@@ -160,7 +160,7 @@ class Photon (object):
             
         #import pdb; pdb.set_trace()
         intersection_object = intersection_objects[index]
-        assert intersection_object != None, "No intersection points can be found with the scene."
+        assert intersection_object is not None, "No intersection points can be found with the scene."
         
 
         # Reached scene boundaries?
@@ -399,11 +399,11 @@ class Photon (object):
             # invert polaristaion if n1 < n2
             if self.container.material.refractive_index < next_containing_object.material.refractive_index:
                 
-                if self.polarisation != None:
+                if self.polarisation is not None:
                     
                     if cmp_floats(ang, np.pi):
                         # Anti-parallel
-                        self.polarisation = self.polarisation * -1.
+                        self.polarisation *= -1.
                     else:
                         # apply the rotation transformation the photon polarisation which aligns the before and after directions
                         R = rotation_matrix_from_vector_alignment(old_direction, self.direction)
@@ -411,7 +411,7 @@ class Photon (object):
                     
                     assert cmp_floats(angle(self.direction, self.polarisation), np.pi/2), "Exit Pt. #2: Angle between photon direction and polarisation must be 90 degrees: theta=%s" % str(angle(self.direction, self.polarisation))
                     
-            if self.exit_device == self.scene.bounds or self.exit_device == None:
+            if self.exit_device == self.scene.bounds or self.exit_device is None:
                 self.exit_device = intersection_object
             assert self.exit_device != self.scene.bounds, "The object the ray hit before hitting the bounds is the bounds, this can't be right"
             return self
@@ -436,7 +436,7 @@ class Photon (object):
             if initialised_internally:
                 # Is initialised internally
                 self.direction = fresnel_refraction(normal, self.direction, self.container.material.refractive_index, next_containing_object.material.refractive_index )
-                if self.polarisation != None:
+                if self.polarisation is not None:
                     if cmp_floats(ang, np.pi):
                         # Anti-parallel
                         self.polarisation = self.polarisation
@@ -480,7 +480,7 @@ def povObj(obj, colour = None):
    print type(obj)
    try:
        T = obj.transform
-       white = pov.Texture(pov.Pigment(color="White", transmit = 0.5)) if colour == None else colour
+       white = pov.Texture(pov.Pigment(color="White", transmit = 0.5)) if colour is None else colour
        M = "< %s >"%(", ".join(str(T[:3].transpose().flatten())[1:-1].replace("\n","").split()))    
    except:
        pass
@@ -577,7 +577,7 @@ class Scene(object):
         self.objects  = [self.bounds]
         
     def add_object(self, object):
-        "Adds a new object to the scene. NB the new object must have a unique name otherwise this operation will fail."
+        """Adds a new object to the scene. NB the new object must have a unique name otherwise this operation will fail."""
         if len(object.name) == 0:
             raise ValueError('The name of the object being added to the scene is blanck, please give you scene (i.e. Devices) a name by doing: my_device.name="my unique name".')
             
@@ -598,7 +598,7 @@ class Scene(object):
         intersection_objects = []
         for obj in self.objects:
             intersection = obj.shape.intersection(ray)
-            if intersection != None:
+            if intersection is not None:
                 for pt in intersection:
                     points.append(pt)
                     intersection_objects.append(obj)
@@ -643,7 +643,7 @@ class Scene(object):
         points = []
         
         for i in range(0,len(points_copy)):
-            if points_copy[i] != None:
+            if points_copy[i] is not None:
                 points.append(points_copy[i])
             
         assert len(points) > 0, "No intersection points can be found with the scene."
@@ -672,7 +672,7 @@ class Scene(object):
         objects, points, separations = Scene.order_duplicates(objects, points, separations)
         
         # Now perform container check on ordered duplicates
-        if container != None:
+        if container is not None:
             if objects[0] != container and len(objects)>1:
                 
                 # The first object in the array must be the container so there is an order problem -- assumes container object is an index 1!
@@ -741,7 +741,7 @@ class Scene(object):
     order_duplicates = staticmethod(order_duplicates)
     
     def container(self, photon):
-        '''Returns the inner most object that contains the photon.'''
+        """Returns the inner most object that contains the photon."""
         
         
         # Ask each object if it contains the photon, if multiple object say yes we filter by separation to find the inner container.
@@ -963,9 +963,9 @@ class Tracer(object):
                         
                     #entering_photon.exit_device.log(entering_photon)
                     #assert logged == throw, "Logged (%s) and thorw (%s) not equal" % (str(logged), str(throw))
-                    logged = logged + 1
+                    logged += 1
                     
-                elif photon.active == False:                    
+                elif not photon.active:
                     #print photon.exit_device.name
                     photon.exit_device = photon.container
                     photon.container.log(photon)
@@ -979,14 +979,14 @@ class Tracer(object):
                         #except:
                         #    entering_photon.container.log_in_volume(entering_photon)
                     #assert logged == throw, "Logged (%s) and thorw (%s) not equal" % (str(logged), str(throw))
-                    logged = logged + 1
+                    logged += 1
                 
                 a = b
-                step = step + 1
-                self.totalsteps = self.totalsteps + 1
+                step += 1
+                self.totalsteps += 1
                 if step >= self.steps:
                     # We need to kill the photon because it is bouncing around in a locked path
-                    self.killed = self.killed + 1
+                    self.killed += 1
                     photon.killed = True
                     self.database.log(photon)
                     if self.show_log: 

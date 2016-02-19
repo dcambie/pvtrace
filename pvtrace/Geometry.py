@@ -43,7 +43,7 @@ def intervalcheck(a,b,c):
     """
     if cmp_floats(a,b) == True or cmp_floats(b,c) == True:
         return True
-    if a<b and b<c:
+    if a<b < c:
         return True
     else:
         return False
@@ -52,7 +52,7 @@ def intervalcheckstrict(a,b,c):
     """
     Returns whether a < b < c is True or False
     """
-    if a<b and b<c:
+    if a<b < c:
         return True
     else:
         return False
@@ -61,7 +61,7 @@ def smallerequalto(a,b):
     """
     Returns whether a<=b is True or False
     """
-    if cmp_floats(a,b) == True:
+    if cmp_floats(a, b):
         return True
     if a<b:
         return True
@@ -182,11 +182,11 @@ def rotation_matrix_from_vector_alignment(before, after):
     # The angle between the vectors must not be 0 or 180 (i.e. so we can take a cross product)
     #import pdb; pdb.set_trace()
     thedot = np.dot(before, after)
-    if cmp_floats(thedot, 1.) == True:
+    if cmp_floats(thedot, 1.):
         # Vectors are parallel
         return tf.identity_matrix()
         
-    if cmp_floats(thedot, -1.) == True:
+    if cmp_floats(thedot, -1.):
         # Vectors are anti-parallel
         # print "Vectors are anti-parallel this might crash."
         return tf.identity_matrix() * -1.
@@ -274,11 +274,11 @@ class Intersection(object):
 class Plane(object):
     """A infinite plane going though the origin point along the positive z axis. At 4x4 transformation matrix can be applied to the generated other planes."""
     def __init__(self, transform=None):
-        '''Transform is a 4x4 transformation matrix that rotates and translates the plane into the global frame (a plane in the xy plane point with normal along (+ve) z).'''
+        """Transform is a 4x4 transformation matrix that rotates and translates the plane into the global frame (a plane in the xy plane point with normal along (+ve) z)."""
         super(Plane, self).__init__()
         
         self.transform = transform
-        if self.transform == None:
+        if self.transform is None:
             self.transform = tf.identity_matrix()
     
     def append_transform(self, new_transform):
@@ -296,13 +296,13 @@ class Plane(object):
         return False
     
     def surface_identifier(self, surface_point, assert_on_surface = True):
-        raise 'planarsurf'
+        raise Exception('planarsurf')
     
     def surface_normal(self, ray, acute=True):
         normal = transform_direction((0,0,1), self.transform)
         if acute:
             if angle(normal, rdir) > np.pi/2:
-                normal = normal * -1.0
+                normal *= -1.0
         return normal
     
     def intersection(self, ray):
@@ -595,7 +595,7 @@ class Box(object):
                         surface_id_array[i+3] = 1                        
                         boolarray[j] = True          
                     
-        if assert_on_surface == True:                                        
+        if assert_on_surface:
             assert boolarray[0] == boolarray[1] == boolarray[2] == True 
            
         surface_name = []
@@ -643,7 +643,7 @@ class Box(object):
         True
         """
         
-        if self.contains(point) == True:
+        if self.contains(point):
             return False
         
         # Get an axis-aligned point... then this is really easy.
@@ -711,7 +711,7 @@ class Box(object):
                         break
         
         exit = False
-        if common_index == None:
+        if common_index is None:
             reference_point = list(self.extent)
             for ref in reference_point:
                 if not exit:
@@ -723,7 +723,7 @@ class Box(object):
                             exit = True
                             break
         
-        assert common_index != None, "The intersection point %s doesn't share an element with either the origin %s or extent points %s (all points transformed into local frame)." % (rpos, self.origin, self.extent)
+        assert common_index is not None, "The intersection point %s doesn't share an element with either the origin %s or extent points %s (all points transformed into local frame)." % (rpos, self.origin, self.extent)
         
         normal = np.zeros(3)
         if list(self.origin) == list(reference_point):
@@ -733,7 +733,7 @@ class Box(object):
         
         if acute:
             if angle(normal, rdir) > np.pi/2:
-                normal = normal * -1.0
+                normal *= -1.0
                 assert 0 <= angle(normal, rdir) <= np.pi/2, "The normal vector needs to be pointing in the same direction quadrant as the ray, so the angle between them is between 0 and 90"
             
         # remove signed zeros this just makes the doctest work. Signed zeros shouldn't really effect the maths but makes things neat.
@@ -743,38 +743,38 @@ class Box(object):
         return transform_direction(normal, self.transform)
         
     def intersection(self, ray):
-        '''Returns an array intersection points with the ray and box. If no intersection occurs
+        """Returns an array intersection points with the ray and box. If no intersection occurs
         this function returns None.
-        
+
         # Inside-out single intersection
         >>> ray = Ray(position=[0.5,0.5,0.5], direction=[0,0,1])
         >>> box = Box()
         >>> box.intersection(ray)
         [array([ 0.5,  0.5,  1. ])]
-        
+
         # Inside-out single intersection with translation
         >>> ray = Ray(position=[0.5,0.5,0.5], direction=[0,0,1])
         >>> box = Box()
         >>> box.transform = tf.translation_matrix([0,0,1])
         >>> box.intersection(ray)
         [array([ 0.5,  0.5,  1. ]), array([ 0.5,  0.5,  2. ])]
-        
+
         >>> ray = Ray(position=[0.5,0.5,0.5], direction=[0,0,1])
         >>> box = Box()
         >>> box.append_transform(tf.rotation_matrix(2*np.pi, [0,0,1]))
         >>> box.intersection(ray)
         [array([ 0.5,  0.5,  1. ])]
-        
+
         >>> ray = Ray(position=[0.5,0.5,0.5], direction=[0,0,1])
         >>> box = Box()
         >>> box.append_transform(tf.rotation_matrix(2*np.pi, norm([1,1,0])))
         >>> box.append_transform(tf.translation_matrix([0,0,1]))
         >>> box.intersection(ray)
         [array([ 0.5,  0.5,  1. ]), array([ 0.5,  0.5,  2. ])]
-        
-        Here I am using the the work of Amy Williams, Steve Barrus, R. Keith Morley, and 
-        Peter Shirley, "An Efficient and Robust Ray-Box Intersection Algorithm" Journal of 
-        graphics tools, 10(1):49-54, 2005'''
+
+        Here I am using the the work of Amy Williams, Steve Barrus, R. Keith Morley, and
+        Peter Shirley, "An Efficient and Robust Ray-Box Intersection Algorithm" Journal of
+        graphics tools, 10(1):49-54, 2005"""
         invtrans = tf.inverse_matrix(self.transform)
         rpos = transform_point(ray.position, invtrans)
         rdir = transform_direction(ray.direction, invtrans)
@@ -869,7 +869,7 @@ class Cylinder(object):
         False
         """
 
-        if self.on_surface(point) == True:
+        if self.on_surface(point):
             return False
         
         local_point = transform_point(point, tf.inverse_matrix(self.transform))
@@ -934,7 +934,7 @@ class Cylinder(object):
 
         if acute:
             if angle(normal, rdir) > np.pi*0.5:
-                normal = normal * -1.
+                normal *= -1.
                 
         return transform_direction(normal, self.transform)
             
@@ -974,8 +974,8 @@ class Cylinder(object):
         origin_z = 0.
         xydistance = np.sqrt(local_point[0]**2 + local_point[1]**2)
         
-        if intervalcheck(origin_z, local_point[2], self.length) == True:
-            if cmp_floats(xydistance, self.radius) == True:
+        if intervalcheck(origin_z, local_point[2], self.length):
+            if cmp_floats(xydistance, self.radius):
                 return True
             
         if smallerequalto(xydistance,self.radius):
@@ -995,20 +995,20 @@ class Cylinder(object):
         """
         assertbool = False
                
-        if intervalcheck(origin_z, local_point[2], self.length) == True:
-            if cmp_floats(xydistance, self.radius) == True:                
+        if intervalcheck(origin_z, local_point[2], self.length):
+            if cmp_floats(xydistance, self.radius):
                 surfacename = 'hull'
                 assertbool = True
             
         if smallerequalto(xydistance,self.radius):
-            if cmp_floats(local_point[2], origin_z) == True:
+            if cmp_floats(local_point[2], origin_z):
                 surfacename = 'base'
                 assertbool = True
-            if cmp_floats(local_point[2], self.length) == True:
+            if cmp_floats(local_point[2], self.length):
                 surfacename = 'cap'
                 assertbool = True
 
-        if assert_on_surface == True:    
+        if assert_on_surface:
             assert assertbool, "The assert bool is wrong."
         return surfacename
         
@@ -1074,14 +1074,14 @@ class Cylinder(object):
             p0 = top.intersection(Ray(rpos, rdir))
             p1 = bottom.intersection(Ray(rpos, rdir))
             cap_intersections = []
-            if p0 != None:
+            if p0 is not None:
                 cap_intersections.append(p0)
-            if p1 != None:
+            if p1 is not None:
                 cap_intersections.append(p1)
             points = []
             for point in cap_intersections:
                 
-                if point[0] != None:
+                if point[0] is not None:
                     point = point[0]
                     point_radius = np.sqrt(point[0]**2 + point[1]**2)
                     if point_radius <= self.radius:
@@ -1149,14 +1149,14 @@ class Cylinder(object):
             p2 = top.intersection(Ray(rpos, rdir))
             p3 = bottom.intersection(Ray(rpos, rdir))
             cap_intersections = []
-            if p2 != None:
+            if p2 is not None:
                 cap_intersections.append(p2)
-            if p3 != None:
+            if p3 is not None:
                 cap_intersections.append(p3)
             
             for point in cap_intersections:
                 
-                if point[0] != None:
+                if point[0] is not None:
                     point = point[0]
                     point_radius = np.sqrt(point[0]**2 + point[1]**2)
                     if point_radius <= self.radius:
@@ -1206,7 +1206,7 @@ class Sphere(object):
         normal = norm(ray.position - self.centre)
         if acute:
             if angle(normal, ray.direction) > np.pi/2:
-                normal = normal * -1.0
+                normal *= -1.0
         return normal
     
     def surface_identifier(self, surface_point, assert_on_surface=True):
@@ -1327,10 +1327,10 @@ class Convex(object):
             if face.on_surface(ray.position):
                 normal = face.surface_normal(ray, acute=acute)
                 if angle(normal , ray.direction) > np.pi/2:
-                    normal = normal * -1
+                    normal *= -1
                 return normal
                 
-        assert("Have not found the surface normal for this ray. Are you sure the ray is on the surface of this object?")
+        assert "Have not found the surface normal for this ray. Are you sure the ray is on the surface of this object?"
     
     def surface_identifier(self, surface_point, assert_on_surface=True):
         return "Convex"
@@ -1339,7 +1339,7 @@ class Convex(object):
         points = []
         for face in self.faces:
             pt = face.intersection(ray)
-            if pt != None:
+            if pt is not None:
                 points.append(np.array(pt[0]))
         if len(points) > 0:
             return points
@@ -1354,8 +1354,8 @@ class Convex(object):
                 return False
                 
             pt = face.intersection(ray)
-            if pt != None:
-                hit_counter = hit_counter + 1
+            if pt is not None:
+                hit_counter += 1
         
         even_or_odd = hit_counter % 2
         if even_or_odd == 0:

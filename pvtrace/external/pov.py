@@ -42,7 +42,7 @@ class File:
       # blank line if this is a top level end
       self.writeln( )
   def write(self,*items):
-    items = filter(lambda x: x!=None, items)#dunno why i got noneObject in the list
+    items = filter(lambda x: x is not None, items)#dunno why i got noneObject in the list
     for item in items:
       if type(item) == str:
         self.include(item)
@@ -152,7 +152,7 @@ class Box(Item):
 
 class Cylinder(Item):
   def __init__(self,v1,v2,r,*opts,**kwargs):
-    " opts: open "
+    """ opts: open """
     Item.__init__(self,"cylinder",(v1,v2,r),opts,**kwargs)
 
 class Plane(Item):
@@ -165,7 +165,7 @@ class Torus(Item):
 
 class Cone(Item):
   def __init__(self,v1,r1,v2,r2,*opts,**kwargs):
-    " opts: open "
+    """ opts: open """
     Item.__init__(self,"cone", (v1,r1,v2,r2),opts,**kwargs)
 
 class Sphere(Item):
@@ -194,7 +194,7 @@ z = Vector(0,0,1)
 white = Texture(Pigment(color=(1,1,1)))
 
 def spiral():
-  " Fibonacci spiral "
+  """ Fibonacci spiral """
   gamma = (sqrt(5)-1)/2
   file = File()
   Camera(location=(0,0,-128), look_at=(0,0,0)).write(file)

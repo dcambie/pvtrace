@@ -30,8 +30,8 @@ def random_spherecial_vector():
             
     z = -1. + 2. * s
     a = 2 * np.sqrt(1 - s)
-    x = a * x
-    y = a * y
+    x *= a
+    y *= a
     return np.array([x,y,z])
         
 class SimpleSource(object):
@@ -69,7 +69,7 @@ class SimpleSource(object):
             photon.polarisation = None
         
         photon.id = self.throw
-        self.throw = self.throw + 1 
+        self.throw += 1
         return photon
 
 class Laser(object):
@@ -80,7 +80,7 @@ class Laser(object):
         self.position = np.array(position)
         self.direction = np.array(direction)
         self.wavelength = wavelength
-        assert polarisation != None, "Polarisation of the Laser is not set."
+        assert polarisation is not None, "Polarisation of the Laser is not set."
         self.polarisation = np.array(polarisation)
         self.throw = 0
         self.source_id = "LaserSource_" + str(id(self))
@@ -96,7 +96,7 @@ class Laser(object):
         photon.wavelength = self.wavelength
         photon.polarisation = self.polarisation
         photon.id = self.throw
-        self.throw = self.throw + 1 
+        self.throw += 1
         return photon
         
 class PlanarSource(object):
@@ -124,7 +124,7 @@ class PlanarSource(object):
         photon = Photon()
         photon.source = self.source_id
         photon.id = self.throw
-        self.throw = self.throw + 1 
+        self.throw += 1
         # Create a point which is on the surface of the finite plane in it's local frame
         x = np.random.uniform(0., self.length)
         y = np.random.uniform(0., self.width)
@@ -134,7 +134,7 @@ class PlanarSource(object):
         photon.position = transform_point(local_point, self.plane.transform)
         photon.direction = self.direction
         photon.active = True
-        if self.spectrum != None:
+        if self.spectrum is not None:
             photon.wavelength = self.spectrum.wavelength_at_probability(np.random.uniform())
         else:
             photon.wavelength = self.wavelength
@@ -161,7 +161,7 @@ class LensSource(object):
         photon = Photon()
         photon.source = self.source_id
         photon.id = self.throw
-        self.throw = self.throw + 1 
+        self.throw += 1
         
         # Position
         x = np.random.uniform(self.planeorigin[0],self.planeextent[0])
@@ -180,7 +180,7 @@ class LensSource(object):
         photon.direction = direction/modulus
         
         # Wavelength
-        if self.spectrum != None:
+        if self.spectrum is not None:
             photon.wavelength = self.spectrum.wavelength_at_probability(np.random.uniform())
         else:
             photon.wavelength = self.wavelength
@@ -211,7 +211,7 @@ class LensSourceAngle(object):
         photon = Photon()
         
         photon.id = self.throw
-        self.throw = self.throw + 1 
+        self.throw += 1
         
         # Position
         x = np.random.uniform(self.planeorigin[0],self.planeextent[0])
@@ -231,7 +231,7 @@ class LensSourceAngle(object):
         photon.direction = direction/modulus
         
         # Wavelength
-        if self.spectrum != None:
+        if self.spectrum is not None:
             photon.wavelength = self.spectrum.wavelength_at_probability(np.random.uniform())
         else:
             photon.wavelength = self.wavelength
@@ -263,7 +263,7 @@ class CylindricalSource(object):
         photon = Photon()
         photon.source = self.source_id
         photon.id = self.throw
-        self.throw = self.throw + 1 
+        self.throw += 1
         
         # Position of emission
         phi = np.random.uniform(0., 2*np.pi)
@@ -289,7 +289,7 @@ class CylindricalSource(object):
         photon.direction = local_direction
         
         # Set wavelength of photon
-        if self.spectrum != None:
+        if self.spectrum is not None:
             photon.wavelength = self.spectrum.wavelength_at_probability(np.random.uniform())        
         else:
             photon.wavelength = self.wavelength
@@ -319,7 +319,7 @@ class PointSource(object):
         photon = Photon()
         photon.source = self.source_id
         photon.id = self.throw
-        self.throw = self.throw + 1
+        self.throw += 1
         
         phi = np.random.uniform(self.phimin, self.phimax)
         theta = np.random.uniform(self.thetamin, self.thetamax)
@@ -335,7 +335,7 @@ class PointSource(object):
         photon.direction = direction
         photon.position = point
         
-        if self.spectrum != None:
+        if self.spectrum is not None:
             photon.wavelength = self.spectrum.wavelength_at_probability(np.random.uniform())
         else:
             photon.wavelength = self.wavelength
@@ -366,7 +366,7 @@ class RadialSource(object):
         
         photon.source = self.source_id
         photon.id = self.throw
-        self.throw = self.throw + 1
+        self.throw += 1
         
         intphi = np.random.randint(1, self.spacing+1)        
         inttheta = np.random.randint(1, self.spacing+1)
@@ -388,7 +388,7 @@ class RadialSource(object):
         photon.direction = direction
         photon.position = point
         
-        if self.spectrum != None:
+        if self.spectrum is not None:
             photon.wavelength = self.spectrum.wavelength_at_probability(np.random.uniform())
         else:
             photon.wavelength = self.wavelength

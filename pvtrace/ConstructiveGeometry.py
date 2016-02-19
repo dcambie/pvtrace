@@ -91,19 +91,19 @@ class CSGadd(object):
         """
         Cover the simpler cases
         """
-        if ADDone__intersections == None and ADDtwo__intersections == None:
+        if ADDone__intersections is None and ADDtwo__intersections is None:
             return None  
 
         """
         Change ..._intersections into tuples
         """
-        if ADDone__intersections != None:
+        if ADDone__intersections is not None:
             for i in range(0,len(ADDone__intersections)):
                 point = ADDone__intersections[i]
                 new_point = (point[0], point[1], point[2])
                 ADDone__intersections[i] = new_point
                 
-        if ADDtwo__intersections != None:
+        if ADDtwo__intersections is not None:
             for i in range(0,len(ADDtwo__intersections)):
                 point = ADDtwo__intersections[i]
                 new_point = (point[0],point[1],point[2])
@@ -115,14 +115,14 @@ class CSGadd(object):
         ADDone_intersections = []
         ADDtwo_intersections = []
 
-        if ADDone__intersections != None:
+        if ADDone__intersections is not None:
             for i in range(0,len(ADDone__intersections)):
-                if self.ADDtwo.contains(ADDone__intersections[i]) == False:
+                if not self.ADDtwo.contains(ADDone__intersections[i]):
                     ADDone_intersections.append(ADDone__intersections[i])
 
-        if ADDtwo__intersections != None:
+        if ADDtwo__intersections is not None:
             for j in range(0,len(ADDtwo__intersections)):
-                if self.ADDone.contains(ADDtwo__intersections[j]) == False:
+                if not self.ADDone.contains(ADDtwo__intersections[j]):
                     ADDtwo_intersections.append(ADDtwo__intersections[j])
 
         """
@@ -162,7 +162,7 @@ class CSGadd(object):
 
         global_frame_intersections_cleared = []
         for point in global_frame_intersections:
-            if self.on_surface(point) == True:
+            if self.on_surface(point):
                 """
                 This is only necessary if the two objects have an entire surface region in common,
                 for example consider two boxes joined at one face.
@@ -222,7 +222,7 @@ class CSGadd(object):
             assertbool = True
         elif bool1 == bool2 == True:
             assertbool = True
-        if assert_on_surface == True:
+        if assert_on_surface:
             assert assertbool == True
 
                                                                          
@@ -305,10 +305,10 @@ class CSGsub(object):
         bool1 = self.SUBplus.contains(local_point)
         bool2 = self.SUBminus.contains(local_point)
         
-        if bool1 == False:
+        if not bool1:
             return False
         
-        if bool2 == True:
+        if bool2:
             return False
         
         else:
@@ -333,19 +333,19 @@ class CSGsub(object):
         """
         Cover the simpler cases
         """
-        if SUBplus__intersections == None and SUBminus__intersections == None:
+        if SUBplus__intersections is None and SUBminus__intersections is None:
             return None  
          
         """
         Change ..._intersections into tuples
         """
-        if SUBplus__intersections != None:
+        if SUBplus__intersections is not None:
             for i in range(0,len(SUBplus__intersections)):
                 point = SUBplus__intersections[i]
                 new_point = (point[0], point[1], point[2])
                 SUBplus__intersections[i] = new_point
 
-        if SUBminus__intersections != None:
+        if SUBminus__intersections is not None:
             for i in range(0,len(SUBminus__intersections)):
                 point = SUBminus__intersections[i]
                 new_point = (point[0], point[1], point[2])
@@ -360,12 +360,12 @@ class CSGsub(object):
         SUBplus_intersections = []
         SUBminus_intersections = []
 
-        if SUBplus__intersections != None:
+        if SUBplus__intersections is not None:
             for intersection in SUBplus__intersections:
                 if not self.SUBminus.contains(intersection):
                     SUBplus_intersections.append(intersection)
 
-        if SUBminus__intersections != None:
+        if SUBminus__intersections is not None:
             for intersection in SUBminus__intersections:
                 if self.SUBplus.contains(intersection):
                     SUBminus_intersections.append(intersection)
@@ -464,7 +464,7 @@ class CSGsub(object):
             assertbool = True
         elif bool2 == True and self.SUBplus.contains(local_point) == True:
             assertbool = True
-        if assert_on_surface == True:
+        if assert_on_surface:
             assert assertbool == True
 
         if bool1 == True and self.SUBminus.contains(local_point) == False:
@@ -567,19 +567,19 @@ class CSGint(object):
         """
         Cover the simpler cases
         """
-        if INTone__intersections == None and INTtwo__intersections == None:
+        if INTone__intersections is None and INTtwo__intersections is None:
             return None  
                                     
         """
         Change ..._intersections into tuples
         """
-        if INTone__intersections != None:
+        if INTone__intersections is not None:
             for i in range(0,len(INTone__intersections)):
                 point = INTone__intersections[i]
                 new_point = (point[0], point[1], point[2])
                 INTone__intersections[i] = new_point
 
-        if INTtwo__intersections != None:
+        if INTtwo__intersections is not None:
             for i in range(0,len(INTtwo__intersections)):
                 point = INTtwo__intersections[i]
                 new_point = (point[0], point[1], point[2])
@@ -591,14 +591,14 @@ class CSGint(object):
         INTone_intersections = []
         INTtwo_intersections = []
 
-        if INTone__intersections != None:
+        if INTone__intersections is not None:
             for i in range(0,len(INTone__intersections)):
-                if self.INTtwo.contains(INTone__intersections[i]) == True:
+                if self.INTtwo.contains(INTone__intersections[i]):
                     INTone_intersections.append(INTone__intersections[i])
 
-        if INTtwo__intersections != None:       
+        if INTtwo__intersections is not None:
             for j in range(0,len(INTtwo__intersections)):
-                if self.INTone.contains(INTtwo__intersections[j]) == True:
+                if self.INTone.contains(INTtwo__intersections[j]):
                     INTtwo_intersections.append(INTtwo__intersections[j])
 
         """
@@ -684,12 +684,12 @@ class CSGint(object):
             assertbool = True
         if bool1 == bool2 == True:
             assertbool = True
-        if assert_on_surface == True:
+        if assert_on_surface:
             assert assertbool == True
                 
-        if bool1 == True:
+        if bool1:
             return self.reference + "_INTone_" + self.INTone.surface_identifier(local_point)
-        if bool2 == True:
+        if bool2:
             return self.reference + "_INTtwo_" + self.INTtwo.surface_identifier(local_point)
 
     def surface_normal(self, ray, acute=True):
@@ -718,7 +718,7 @@ class CSGint(object):
             assertbool = True
         assert assertbool == True
                      
-        if bool1 == True:
+        if bool1:
             return self.INTone.surface_normal(ray, acute)
         else:
             return self.INTtwo.surface_normal(ray, acute)

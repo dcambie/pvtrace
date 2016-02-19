@@ -40,7 +40,7 @@ def load_spectrum(file, xbins=None):
     spectrum = Spectrum(file=file)
 
     # Truncate the spectrum using the xbins
-    if xbins != None:
+    if xbins is not None:
         yvalues = spectrum(xbins)
         return Spectrum(xbins, yvalues)
     return spectrum
@@ -64,18 +64,18 @@ def common_abscissa(a, b):
         if a[i] < b[j]:
             c.append(float(a[i]))
             if i + 1 < len(a):
-                i = i + 1
+                i += 1
             else:
                 break
         elif a[i] > b[j]:
             c.append(float(b[j]))
             if j + 1 < len(b):
-                j = j + 1
+                j += 1
             else:
                 break
         else:
             # c.append(float(a[i]))
-            i = i + 1
+            i += 1
     return c
 
 
@@ -84,27 +84,27 @@ def wav2RGB(wavelength):
     w = int(wavelength)
 
     # colour
-    if w >= 380 and w < 440:
+    if 380 <= w < 440:
         R = -(w - 440.) / (440. - 350.)
         G = 0.0
         B = 1.0
-    elif w >= 440 and w < 490:
+    elif 440 <= w < 490:
         R = 0.0
         G = (w - 440.) / (490. - 440.)
         B = 1.0
-    elif w >= 490 and w < 510:
+    elif 490 <= w < 510:
         R = 0.0
         G = 1.0
         B = -(w - 510.) / (510. - 490.)
-    elif w >= 510 and w < 580:
+    elif 510 <= w < 580:
         R = (w - 510.) / (580. - 510.)
         G = 1.0
         B = 0.0
-    elif w >= 580 and w < 645:
+    elif 580 <= w < 645:
         R = 1.0
         G = -(w - 645.) / (645. - 580.)
         B = 0.0
-    elif w >= 645 and w <= 780:
+    elif 645 <= w <= 780:
         R = 1.0
         G = 0.0
         B = 0.0
@@ -114,11 +114,11 @@ def wav2RGB(wavelength):
         B = 0.0
 
     # intensity correction
-    if w >= 380 and w < 420:
+    if 380 <= w < 420:
         SSS = 0.3 + 0.7 * (w - 350) / (420 - 350)
-    elif w >= 420 and w <= 700:
+    elif 420 <= w <= 700:
         SSS = 1.0
-    elif w > 700 and w <= 780:
+    elif 700 < w <= 780:
         SSS = 0.3 + 0.7 * (780 - w) / (780 - 700)
     else:
         SSS = 0.0
@@ -193,7 +193,7 @@ class Spectrum(object):
         absorption coefficient y must have units of (1/m).
         """
 
-        if file != None:
+        if file is not None:
 
             try:
                 data = np.loadtxt(file)
@@ -205,7 +205,7 @@ class Spectrum(object):
             self.x = np.array(data[:, 0], dtype=np.float32)
             self.y = np.array(data[:, 1], dtype=np.float32)
 
-        elif (x != None and y != None):
+        elif x is not None and y is not None:
             self.x = np.array(x, dtype=np.float32)
             self.y = np.array(y, dtype=np.float32)
 
@@ -258,53 +258,53 @@ class Spectrum(object):
         return self.value(nanometers)
 
     def value(self, nanometers):
-        '''Returns the value of the spectrum at the specified wavelength (if the wavelength is outside the data range zero is returned)'''
+        """Returns the value of the spectrum at the specified wavelength (if the wavelength is outside the data range zero is returned)"""
         return self.spectrum(nanometers)
 
     def probability_at_wavelength(self, nanometers):
-        '''Returns the probability associated with the wavelength. This is found by computing the cumulative probabililty funcion of the spectrum which is unique for each value for each non-zero y values. If the wavelength is below the data range zero is returned, and if above one is returned.'''
-        if (nanometers > self.x.max()):
+        """Returns the probability associated with the wavelength. This is found by computing the cumulative probabililty funcion of the spectrum which is unique for each value for each non-zero y values. If the wavelength is below the data range zero is returned, and if above one is returned."""
+        if nanometers > self.x.max():
             return 1.0
         else:
             return self.pdf_lookup(nanometers)
 
     def wavelength_at_probability(self, probability):
-        '''Returns the wavelength associated with the specified probability. This is found my computing the inverse cumulative probabililty function (see probability_at_wavelength). The probabililty must be between zero and one (inclusive) otherwise a value error exception is raised.'''
-        if (0 <= probability <= 1):
+        """Returns the wavelength associated with the specified probability. This is found my computing the inverse cumulative probabililty function (see probability_at_wavelength). The probabililty must be between zero and one (inclusive) otherwise a value error exception is raised."""
+        if 0 <= probability <= 1:
             return self.pdfinv_lookup(probability)
         else:
             raise ValueError('A probability must be between 0 and 1 inclusive')
 
     def write(self, file=None):
-        if file != None:
+        if file is not None:
             data = np.zeros((len(self.x), 2))
             data[:, 0] = self.x
             data[:, 1] = self.y
             np.savetxt(file, data)
 
     def __add__(self, other):
-        if other == None:
+        if other is None:
             return self
         common_x = common_abscissa(self.x, other.x)
         new_y = self.value(common_x) + other.value(common_x)
         return Spectrum(common_x, new_y)
 
     def __sub__(self, other):
-        if other == None:
+        if other is None:
             return self
         common_x = common_abscissa(self.x, other.x)
         new_y = self.value(common_x) - other.value(common_x)
         return Spectrum(common_x, new_y)
 
     def __mul__(self, other):
-        if other == None:
+        if other is None:
             return self
         common_x = common_abscissa(self.x, other.x)
         new_y = self.value(common_x) * other.value(common_x)
         return Spectrum(common_x, new_y)
 
     def __div__(self, other):
-        if other == None:
+        if other is None:
             return self
         common_x = common_abscissa(self.x, other.x)
         new_y = self.value(common_x) / other.value(common_x)
@@ -377,12 +377,12 @@ class Material(object):
 
 
         # Load absorption data
-        if constant_absorption != None:
+        if constant_absorption is not None:
             # Load linear background absorption
             self.constant_absorption = constant_absorption
             self.absorption_data = Spectrum(x=[200, 4000], y=[constant_absorption, constant_absorption])
 
-        elif absorption_data == None:
+        elif absorption_data is None:
             # No data given -- make if False (used just for BOUNDS)
             # self.absorption_data = Spectrum(x=[0, 4000], y=[0, 0])
             self.absorption_data = False
@@ -391,7 +391,7 @@ class Material(object):
             self.absorption_data = spectrum_from_data_source(absorption_data)
 
         # Load spectral emission data
-        if emission_data == None:
+        if emission_data is None:
             # Flat emission profile
             self.emission_data = Spectrum(x=[200, 4000], y=[1, 1])
 
@@ -408,7 +408,7 @@ class Material(object):
 
     def absorption(self, photon):
         """Returns the absorption coefficient experienced by the photon."""
-        if self.absorption_data == False:
+        if not self.absorption_data:
             return False
         return self.absorption_data.value(photon.wavelength)
 
@@ -428,8 +428,8 @@ class Material(object):
 
         z = -1. + 2. * s
         a = 2 * np.sqrt(1 - s)
-        x = a * x
-        y = a * y
+        x *= a
+        y *= a
         return np.array([x, y, z])
 
     def emission_wavelength(self, photon):
@@ -449,30 +449,30 @@ class Material(object):
         return photon
 
     def trace(self, photon, free_pathlength):
-        '''Will apply absorption and emission probabilities to the photon along its free path in the present geometrical container and return the result photon for tracing. The free_pathlength is the distance travelled in metres until the photon reaches the edge of the present container. It is for the calling object to decided how to proceed with the returned photon. For example, if the returned photon is in the volume of the container the same tracing procedure should be applied. However, if the photon reaches a face, reflection, refraction calculation should be applied etc. If the photon is lost, the photons active instance variables is set to False. It is for the calling object to check this parameter and act accordingly e.g. recording the lost photon and great a new photon to trace.'''
+        """Will apply absorption and emission probabilities to the photon along its free path in the present geometrical container and return the result photon for tracing. The free_pathlength is the distance travelled in metres until the photon reaches the edge of the present container. It is for the calling object to decided how to proceed with the returned photon. For example, if the returned photon is in the volume of the container the same tracing procedure should be applied. However, if the photon reaches a face, reflection, refraction calculation should be applied etc. If the photon is lost, the photons active instance variables is set to False. It is for the calling object to check this parameter and act accordingly e.g. recording the lost photon and great a new photon to trace."""
 
         # Clear state using for collecting statistics
         photon.absorber_material = None
         photon.emitter_material = None
 
         # This is True just for BOUNDS and prevent division by zero warning
-        if self.absorption_data == False:
+        if not self.absorption_data:
             photon.position = photon.position + free_pathlength * photon.direction
             return photon
         # Assuming the material has a uniform absorption coefficient we generated a random path length weigthed by the material absorption coefficient.
         sampled_pathlength = -np.log(1 - np.random.uniform()) / self.absorption(photon)
 
         # Photon absorbed.
-        if (sampled_pathlength < free_pathlength):
+        if sampled_pathlength < free_pathlength:
 
             # Move photon to the absorption location
             photon.material = self
-            photon.position = photon.position + sampled_pathlength * photon.direction
-            photon.absorption_counter = photon.absorption_counter + 1
+            photon.position += sampled_pathlength * photon.direction
+            photon.absorption_counter += 1
 
             # Photon emitted.
-            if (np.random.uniform() < self.quantum_efficiency):
-                photon.reabs = photon.reabs + 1
+            if np.random.uniform() < self.quantum_efficiency:
+                photon.reabs += 1
                 return self.emission(photon)
 
             # Photon not emitted.
@@ -491,7 +491,7 @@ class CompositeMaterial(Material):
     """A material that is composed from a homogeneous mix of multiple materials. For example, a plastic plate doped with a blue and red absorbing dyes has the absorption coefficient of plastic as well as the absorption and emission properties of the dyes."""
 
     def __init__(self, materials, refractive_index=None, silent=False):
-        '''Initalised by a list or array of material objects.'''
+        """Initalised by a list or array of material objects."""
         super(CompositeMaterial, self).__init__()
         self.materials = materials
         if refractive_index is None:
@@ -505,7 +505,7 @@ class CompositeMaterial(Material):
         self.silent = silent
 
     def all_absorption_coefficients(self, nanometers):
-        '''Returns and array of all the the materials absorption coefficients at the specified wavelength.'''
+        """Returns and array of all the the materials absorption coefficients at the specified wavelength."""
         count = len(self.materials)
         absorptions = np.zeros(count)
         for i in range(0, count):
@@ -513,7 +513,7 @@ class CompositeMaterial(Material):
         return absorptions
 
     def trace(self, photon, free_pathlength):
-        '''Will apply absorption and emission probabilities to the photon along its free path in the present geometrical container and return the result photon for tracing. See help(material.trace) for how this is done for a single material because the same principle applies. The ensemble absorption coefficient is found for the specified photon to determine if absorption occurs. The absorbed material its self is found at random from a distrubution weighted by each of the component absorption coefficients. The resultant photon is returned with possibily with a new position, direction and wavelength. If the photon is absorbed and not emitted the photon is retuned but its active property is set to False. '''
+        """Will apply absorption and emission probabilities to the photon along its free path in the present geometrical container and return the result photon for tracing. See help(material.trace) for how this is done for a single material because the same principle applies. The ensemble absorption coefficient is found for the specified photon to determine if absorption occurs. The absorbed material its self is found at random from a distrubution weighted by each of the component absorption coefficients. The resultant photon is returned with possibily with a new position, direction and wavelength. If the photon is absorbed and not emitted the photon is retuned but its active property is set to False. """
 
         # Clear state using for collecting statistics
         photon.absorber_material = None
@@ -524,9 +524,9 @@ class CompositeMaterial(Material):
         sampled_pathlength = -np.log(1 - np.random.uniform()) / absorption_coefficient
 
         # Absorption occurs.
-        if (sampled_pathlength < free_pathlength):
+        if sampled_pathlength < free_pathlength:
             # Move photon along path to the absorption point
-            photon.absorption_counter = photon.absorption_counter + 1
+            photon.absorption_counter += 1
             photon.position = photon.position + sampled_pathlength * photon.direction
 
             # Find the absorption material
@@ -545,17 +545,17 @@ class CompositeMaterial(Material):
             self.quantum_efficiency = material.quantum_efficiency
 
             # Emission occurs.
-            if (np.random.uniform() < material.quantum_efficiency):
-                if self.silent == False:
+            if np.random.uniform() < material.quantum_efficiency:
+                if not self.silent:
                     print "   * Re-emitted *"
-                photon.reabs = photon.reabs + 1
+                photon.reabs += 1
                 photon.emitter_material = material
                 photon = material.emission(
                     photon)  # Generates a new photon with red-shifted wavelength, new direction and polariation (if included in simulation)
                 return photon
 
             else:
-                if self.silent == False:
+                if not self.silent:
                     print "   * Photon Lost *"
                 # Emission does not occur. Now set active = False ans return
                 photon.active = False
@@ -579,8 +579,8 @@ def hemispherical_vector():
 
     z = -1. + 2. * s
     a = 2 * np.sqrt(1 - s)
-    x = a * x
-    y = a * y
+    x *= a
+    y *= a
     return np.array([x, y, abs(z)])
 
 
@@ -648,7 +648,7 @@ class ReflectiveMaterial(object):
             # Make sure that the surface normal points towards the photon
             rads = angle(normal, photon.direction)
             if rads < np.pi / 2.:
-                normal = normal * -1.
+                normal *= -1.
             lambertian_emission_direction_into_positive_z = hemispherical_vector()
             rot_matrix = rotation_matrix_from_vector_alignment(np.array([0, 0, 1]), normal)
             return transform_direction(lambertian_emission_direction_into_positive_z, rot_matrix)

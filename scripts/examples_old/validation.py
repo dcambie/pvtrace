@@ -26,7 +26,7 @@ config['photons_to_throw']      = 500                 # Number of photons to be 
 # Logging
 config['debug']                 = False                 # Debug output (implies informative output)
 config['informative_output']    = True                 # Print informative outpout (implies print summary)
-config['print_waveleghts']      = False                 # Wavelenght of photons in channels
+config['print_wavelegths']      = False                 # Wavelength of photons in channels
 config['print_summary']         = False                  # tab-separated summary data (For ease Excel import)
 # Visualizer parameters
 config['visualizer']            = True                  # VPython
@@ -278,7 +278,7 @@ for i in range(1,2):
     for photon in photons:
         if config['debug']:
             print "Wavelenght: ",trace.database.wavelengthForUid(photon)# Nice output
-        elif config['print_waveleghts']:
+        elif config['print_wavelegths']:
             print " ".join(map(str,trace.database.wavelengthForUid(photon) )) # Clean output (for elaborations)
 
     if config['debug']:

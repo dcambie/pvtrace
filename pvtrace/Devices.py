@@ -37,7 +37,7 @@ class Register(object):
         #import pdb; pdb.set_trace()
         if not self.shape.on_surface(photon.position):
                                     
-            if photon.active == False:
+            if not photon.active:
                 
                 # The photon has been non-radiatively lost inside a material
                 key = 'loss'
@@ -99,9 +99,9 @@ class Register(object):
         counts = 0
         for entry in entries:
             if entry[2] == bound:
-                counts = counts + 1
+                counts += 1
         
-        if counts == None:
+        if counts is None:
             return 0
         return counts
     
@@ -170,7 +170,7 @@ class Register(object):
                     while len(reabs_list) < number_reabs+1:
                         reabs_list.append(0)
 
-                reabs_list[number_reabs] = reabs_list[number_reabs] + 1
+                reabs_list[number_reabs] += 1
                           
         return reabs_list
 
@@ -195,7 +195,7 @@ class Register(object):
                 while len(reabs_list) < number_reabs+1:
                     reabs_list.append(0)
 
-            reabs_list[number_reabs] = reabs_list[number_reabs] + 1
+            reabs_list[number_reabs] += 1
 
         return reabs_list                            
   

@@ -127,7 +127,7 @@ class PhotonDatabase(object):
         self.cursor.execute('INSERT INTO state VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)', values)
         
         # the last line of this method update the unique photon ID (i.e. the row number)
-        self.uid = self.uid + 1
+        self.uid += 1
         
         # Every 50 times write data to dbfile
         if not self.uid % 1:
@@ -154,9 +154,9 @@ class PhotonDatabase(object):
         returned. If both are True then both types are returned i.e. the default behaviour. Setting the keyworks to any other value is ignored."""
         if luminescent == solar and luminescent is None:
             return itemise(self.cursor.execute('SELECT MAX(uid) FROM photon GROUP BY pid HAVING uid IN (SELECT uid FROM state WHERE ray_direction_bound = "Out" AND on_surface_obj=? AND surface_id=? GROUP BY uid);', (object, surface)).fetchall())
-        elif luminescent == True:
+        elif luminescent:
             return itemise(self.cursor.execute('SELECT MAX(uid) FROM photon GROUP BY pid HAVING uid IN (SELECT uid FROM state WHERE ray_direction_bound = "Out" AND on_surface_obj=? AND surface_id=? AND absorption_counter > 0 GROUP BY uid);', (object, surface)).fetchall())
-        elif solar == True:
+        elif solar:
             return itemise(self.cursor.execute('SELECT MAX(uid) FROM photon GROUP BY pid HAVING uid IN (SELECT uid FROM state WHERE ray_direction_bound = "Out" AND on_surface_obj=? AND surface_id=? AND absorption_counter = 0 GROUP BY uid);', (object, surface)).fetchall())
         else:
             print "Cannot return any uids for this question. Are you using the function uids_out_bound_on_surface correctly?"
@@ -189,7 +189,8 @@ class PhotonDatabase(object):
         return filtered_keys
         
     def surfaces_with_records(self):
-        """Returns surfaces that have been hit by a ray for all exiting objects."""
+        """Returns surfaces that have been hit by a ray for all exiting objects.
+        """
         keys = self.cursor.execute('SELECT DISTINCT surface_id FROM state WHERE uid IN (SELECT uid FROM surface_normal WHERE uid IN (SELECT MAX(uid) FROM photon GROUP BY pid));').fetchall()
         keys = itemise(keys)
         filtered_keys = []
@@ -200,7 +201,7 @@ class PhotonDatabase(object):
                 filtered_keys.append(str(key))
         return filtered_keys
     
-    def surfaces_with_records_for_object(object):
+    def surfaces_with_records_for_object(self, object):
         """Returns a list of surface to 'object' that have been hit by a ray."""
         keys = itemise(self.cursor.execute('SELECT DISTINCT surface_id FROM state WHERE uid IN (SELECT uid FROM surface_normal WHERE uid IN (SELECT MAX(uid) FROM photon GROUP BY pid)) INTERSECT SELECT DISTINCT surface_id FROM state WHERE container_obj=?;', (object,)).fetchall())
         
@@ -214,9 +215,9 @@ class PhotonDatabase(object):
         returned. If both are True then both types are returned i.e. the default behaviour. Setting the keyworks to any other value is ignored."""
         if luminescent == solar:
             return itemise(self.cursor.execute('SELECT MAX(uid) FROM photon GROUP BY pid HAVING uid IN (SELECT uid FROM state WHERE ray_direction_bound = "Out" AND surface_id=? GROUP BY uid);', (surface_id,)).fetchall())
-        elif luminescent == True:
+        elif luminescent:
             return itemise(self.cursor.execute('SELECT MAX(uid) FROM photon GROUP BY pid HAVING uid IN (SELECT uid FROM state WHERE ray_direction_bound = "Out" AND surface_id=? AND absorption_counter > 0 GROUP BY uid);', (surface_id,)).fetchall())
-        elif solar == True:
+        elif solar:
             return itemise(self.cursor.execute('SELECT MAX(uid) FROM photon GROUP BY pid HAVING uid IN (SELECT uid FROM state WHERE ray_direction_bound = "Out" AND surface_id=? AND absorption_counter = 0 GROUP BY uid);', (surface_id,)).fetchall())
         else:
             print "Cannot return any uids for this question. Are you using the function uids_out_bound_on_surface correctly?"
@@ -228,9 +229,9 @@ class PhotonDatabase(object):
         returned. If both are True then both types are returned i.e. the default behaviour. Setting the keyworks to any other value is ignored."""
         if luminescent == solar:
             return itemise(self.cursor.execute('SELECT MAX(uid) FROM photon GROUP BY pid HAVING uid IN (SELECT uid FROM state WHERE ray_direction_bound = "In" AND surface_id=? GROUP BY uid);', (surface_id,)).fetchall())
-        elif luminescent == True:
+        elif luminescent:
             return itemise(self.cursor.execute('SELECT MAX(uid) FROM photon GROUP BY pid HAVING uid IN (SELECT uid FROM state WHERE ray_direction_bound = "In" AND surface_id=? AND absorption_counter > 0 GROUP BY uid);', (surface_id,)).fetchall())
-        elif solar == True:
+        elif solar:
             return itemise(self.cursor.execute('SELECT MAX(uid) FROM photon GROUP BY pid HAVING uid IN (SELECT uid FROM state WHERE ray_direction_bound = "In" AND surface_id=? AND absorption_counter = 0 GROUP BY uid);', (surface_id,)).fetchall())
         else:
             print "Cannot return any uids for this question. Are you using the function uids_in_bound_on_surface correctly?"

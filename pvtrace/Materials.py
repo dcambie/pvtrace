@@ -410,11 +410,16 @@ class Material(object):
         """Returns the absorption coefficient experienced by the photon."""
         if not self.absorption_data:
             return False
-        return self.absorption_data.value(photon.wavelength)
+
+        if self.absorption_data.value(photon.wavelength) > 0:
+            return self.absorption_data.value(photon.wavelength)
+        return 10e-30
 
     def emission_direction(self):
-        """Returns a 3 component direction vector with is choosen isotropically. 
-        NB. This method is overridden by subclasses to provide custom emission 
+        """
+        Returns a 3 component direction vector with is choosen isotropically.
+
+        ..note:: This method is overridden by subclasses to provide custom emission
         direction properties."""
 
         # This method of calculating isotropic vectors is taken from GNU Scientific Library

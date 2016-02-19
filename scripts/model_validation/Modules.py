@@ -13,7 +13,8 @@ from __future__ import division
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from pvtrace import *
 import numpy as np
-
+import os
+import pylab
 
 class LightSource(object):
     """
@@ -93,20 +94,26 @@ class Red305(object):
         # Linearity measured up to 0.15mg/g, then it bends as bit due to too high Abs values for spectrometer
         # (secondary peak still linear at 0.20mg/g)
         device_abs_at_peak = 13.031 * self.concentration
-        print "with a concentration of ", self.concentration, ' and thickness', self.thickness, ' this device should have an Abs at peak of', device_abs_at_peak
+        #print "with a concentration of ", self.concentration, ' and thickness', self.thickness, ' this device should have an Abs at peak of', device_abs_at_peak
         # Correcting factor to adjust absorption at peak to match settings
         # Note that in 'original' pvTrace, thin-film.py file np.log was used incorrectly (log10() intended, got ln())
         phi = device_abs_at_peak / (ap * self.thickness)
-        # print 'phi equals ',phi,' (this should approximately be simulation conc/tabulated conc (i.e. 0.10mg/g)'
+        #print 'phi equals ',phi,' (this should approximately be simulation conc/tabulated conc (i.e. 0.10mg/g)'
         # Applying correction to spectrum
         absorption_data[:, 1] = absorption_data[:, 1] * phi
+
+        # Create a reference spectrum for the computed absorption of device (z axis, thickness as optical path)
+        abs_scaled=absorption_data
+        abs_scaled[:, 1] = abs_scaled[:, 1] * self.thickness
+        xyplot(x=abs_scaled[:, 0], y=abs_scaled[:, 1], filename='spectrum_abs_lsc')
         # Create Spectrum elements
         return Spectrum(x=absorption_data[:, 0], y=absorption_data[:, 1])
 
     @staticmethod
     def emission():
         # fixme Add experimental data from pdms low concentration samples (not reabsorption redshifted)
-        emission_data = np.loadtxt(os.path.join(PVTDATA, "dyes", 'fluro-red-fit.ems.txt'))
+        #emission_data = np.loadtxt(os.path.join(PVTDATA, "dyes", 'fluro-red-fit.ems.txt'))
+        emission_data = np.loadtxt(os.path.join(PVTDATA, "dyes", 'Red305_ems_spectrum.txt'))
         return Spectrum(x=emission_data[:, 0], y=emission_data[:, 1])
 
 
@@ -244,6 +251,11 @@ class Statistics(object):
             # print "\t Optical efficiency \t", luminescent_edges * 100 / thrown, "%"
 
     def print_detailed(self):
+        """
+        Prints a detailed report on the fate of the photons stored in self.db
+
+        :return:None
+        """
         self.print_report()
 
         print "Technical details:"
@@ -280,7 +292,7 @@ class Statistics(object):
         photons = self.db.uids_in_reactor()
         photons_in_channels_tot = len(photons)
         luminescent_photons_in_channels = len(self.db.uids_in_reactor_and_luminescent())
-        # oNLY PHOTONS IN CHANNELS!
+        # ONLY PHOTONS IN CHANNELS!
         for photon in photons:
             print "Wavelenght: ", self.db.wavelengthForUid(photon)  # Nice output
             # print " ".join(map(str, self.db.wavelengthForUid(photon)))  # Clean output (for elaborations)
@@ -300,30 +312,100 @@ class Statistics(object):
         #     print "!!! ERROR !!! Check results carefully!"
 
     def create_graphs(self):
-        import os
-        import numpy as np
-        import pylab
-
-        home = os.path.expanduser("~")
-
+        """
+        Generate a series of graphs on photons stored in self.db
+        """
         print "Plotting reactor..."
         uid = self.db.uids_in_reactor()
-        # print "Photons in channels array is: ",uid
-        data = self.db.wavelengthForUid(uid)
-        hist = np.histogram(data, bins=np.linspace(300, 800, num=100))
-        pylab.hist(data, 100, histtype='stepfilled')
-        location = os.path.join(home, "pvtrace_export", "plot-reactor.png")
-        pylab.savefig(location)
-        print 'Plot saved in ', location, '!'
-        pylab.clf()
+        if len(uid) < 10:
+            print "[plot-reactor] The database doesn't have enough photons to generate this graph!"
+        else:
+            data = self.db.wavelengthForUid(uid)
+            self.histogram(data=data, filename='plot-reactor')
 
         print "Plotting reactor luminescent..."
-        uid = db.uids_in_reactor_and_luminescent()
-        # print "Photons in channels array is: ",uid
-        data = db.wavelengthForUid(uid)
+        uid = self.db.uids_in_reactor_and_luminescent()
+        if len(uid) < 10:
+            print "[plot-reactor-luminescent] The database doesn't have enough photons to generate this graph!"
+        else:
+            data = self.db.wavelengthForUid(uid)
+            self.histogram(data=data, filename='plot-reactor-luminescent')
+
+        print "Plotting LSC edges..."
+        edges = ['left', 'near', 'far', 'right']
+        uid = []
+        for surface in edges:
+            uid += self.db.uids_out_bound_on_surface(surface, luminescent=True)
+        if len(uid) < 10:
+            print "[plot-lsc-edges] The database doesn't have enough photons to generate this graph!"
+        else:
+            data = self.db.wavelengthForUid(uid)
+            self.histogram(data=data, filename='plot-lsc-edges')
+
+
+    '''print "Plotting edge"
+
+
+    print "Plotting escape"
+    uid = db.uids_out_bound_on_surface('top', luminescent=True) + db.uids_out_bound_on_surface('bottom', luminescent=True)
+    print uid
+    data = db.wavelengthForUid(uid)
+    hist, bin_edges = np.histogram(data, bins=np.linspace(300,800,num=10))
+    pylab.hist(data, len(bin_edges), histtype='stepfilled')
+    pylab.savefig(os.path.join(drive,"tmp",'plot-escape.pdf'))
+    pylab.clf()
+
+    print "Plotting reflected"
+    uid = db.uids_out_bound_on_surface('bottom', solar=True)
+    data = db.wavelengthForUid(uid)
+    hist, bin_edges = np.histogram(data, bins=np.linspace(300,800,num=10))
+    pylab.hist(data, len(bin_edges), histtype='stepfilled')
+    pylab.savefig(os.path.join(drive,"tmp",'plot-reflected.pdf'))
+    pylab.clf()
+
+    uid = db.uids_out_bound_on_surface('top', solar=True)
+    data = db.wavelengthForUid(uid)
+    hist, bin_edges = np.histogram(data, bins=np.linspace(300,800,num=10))
+    pylab.hist(data, len(bin_edges), histtype='stepfilled')
+    pylab.savefig(os.path.join(drive,"tmp",'plot-transmitted.pdf'))
+    pylab.clf()
+    '''
+
+    def histogram(self, data, filename):
+        """
+        Create an histogram with the cumulative frequency of photons at different wavelength
+
+        :param data: List with photons' wavelengths
+        :param filename: Filename for the exported file. Will be saved in home/pvtrace_export/filenam (+.png appended)
+        :return: None
+        """
+        home = os.path.expanduser('~')
+        suffixes = ('png', 'pdf')
+
         hist = np.histogram(data, bins=np.linspace(300, 800, num=100))
         pylab.hist(data, 100, histtype='stepfilled')
-        location = os.path.join(home, "pvtrace_export", "plot-reactor-luminescent.png")
-        pylab.savefig(location)
-        print 'Plot saved in ', location, '!'
+        for extension in suffixes:
+            location = os.path.join(home, "pvtrace_export"+os.sep+filename+"."+extension)
+            pylab.savefig(location)
+            os.chmod(location, 0o777)
+            print 'Plot saved in ', location, '!'
         pylab.clf()
+
+def xyplot(x, y, filename):
+    """
+    Plots a curve in a cartesian graph
+
+    :param x: X axis (tipically nm for Abs/Ems)
+    :param y: Y axis (e.g. Abs or intesity)
+    :return: None
+    """
+    home = os.path.expanduser('~')
+    suffixes = ('png', 'pdf')
+    pylab.scatter(x, y)
+    for extension in suffixes:
+        location = os.path.join(home, "pvtrace_export"+os.sep+filename+"."+extension)
+        pylab.savefig(location)
+        os.chmod(location, 0o777)
+        print 'Plot saved in ', location, '!'
+    pylab.clf()
+

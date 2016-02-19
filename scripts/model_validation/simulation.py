@@ -13,8 +13,8 @@ from Modules import *
 
 scene = Scene()
 
-# reactor = Reactor(name="5x5_8ch", dye="Red305", dye_concentration=0.20, photocatalyst="MB", photocatalyst_concentration=0.0004)
-reactor = Reactor(name="5x5_0ch", dye="Red305", dye_concentration=0.20)
+reactor = Reactor(name="5x5_8ch", dye="Red305", dye_concentration=0.20, photocatalyst="MB", photocatalyst_concentration=0.0004)
+# reactor = Reactor(name="5x5_0ch", dye="Red305", dye_concentration=0.20)
 for obj in reactor.scene_obj:
     scene.add_object(obj)
 
@@ -22,13 +22,15 @@ for obj in reactor.scene_obj:
 pwd = os.getcwd()
 dbfile = os.path.join(pwd, 'pvtracedb.sql')  # <--- the name of the database file, with "pvtracedb" overwrite is implied
 
-trace = Tracer(scene=scene, source=reactor.source, seed=None, throws=10, database_file=dbfile, use_visualiser=False, show_log=false, show_axis=True)
+trace = Tracer(scene=scene, source=reactor.source, seed=None, throws=100, database_file=dbfile, use_visualiser=False, show_log=false, show_axis=True)
 trace.show_lines = true
 trace.show_path = true
 
 # Run simulation
+print 'Start simulation'
 tic = time.clock()
 trace.start()
+print 'Simulation ended!'
 toc = time.clock()
 
 # For reproducibility reasons always append git version to results (tested on linux only)
@@ -43,5 +45,6 @@ print ''
 stats = Statistics(trace.database)
 stats.print_report()
 stats.print_detailed()
+stats.create_graphs()
 
 sys.exit(0)

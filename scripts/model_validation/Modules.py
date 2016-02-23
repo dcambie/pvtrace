@@ -294,25 +294,29 @@ class Statistics(object):
         print "Non radiative losses\t", self.percent(self.non_radiative)
 
         print "Solar photons (transmitted/reflected):"
-        for surface in edges:
-            print "\t", surface, "\t", self.percent(len(
-                self.db.uids_out_bound_on_surface(surface, solar=True)))
-
         for surface in apertures:
             print "\t", surface, "\t", self.percent(len(
                 self.db.uids_out_bound_on_surface(surface, solar=True)))
 
         print "Reactor's channel photons:"
         luminescent_photons_in_channels = len(self.db.uids_in_reactor_and_luminescent())
-        photons = self.db.uids_in_reactor()
-        photons_in_channels_tot = len(photons)
-        # ONLY PHOTONS IN CHANNELS!
-        # for photon in photons:
-        #     print "Wavelenght: ", self.db.wavelengthForUid(photon)  # Nice output
-        #     print " ".join(map(str, self.db.wavelengthForUid(photon)))  # Clean output (for elaborations)
+        photons_in_channels_tot = len(self.db.uids_in_reactor())
 
-        print "Photons in channels (sum)", self.percent(photons_in_channels_tot)
-        print 'Luminescent', self.percent(luminescent_photons_in_channels)
+        # print " Photons in reactor (luminescent only) "
+        # print " --- 8< --- 8< --- 8< --- CUT HERE  --- 8< --- 8< --- 8< --- "
+        # for photon in self.db.uids_in_reactor_and_luminescent()
+        #     print " ".join(map(str, self.db.wavelengthForUid(photon)))  # Clean output (for elaborations)
+        # print " --- 8< --- 8< --- 8< --- CUT HERE  --- 8< --- 8< --- 8< --- "
+        #
+        # print " Photons in reactor (all) "
+        # print " --- 8< --- 8< --- 8< --- CUT HERE  --- 8< --- 8< --- 8< --- "
+        # for photon in self.db.uids_in_reactor()
+        #     print " ".join(map(str, self.db.wavelengthForUid(photon)))  # Clean output (for elaborations)
+        # print " --- 8< --- 8< --- 8< --- CUT HERE  --- 8< --- 8< --- 8< --- "
+
+        print 'Photons in channels (direct)     ', self.percent(photons_in_channels_tot-luminescent_photons_in_channels)
+        print 'Photons in channels (luminescent)', self.percent(luminescent_photons_in_channels)
+        print 'Photons in channels (sum)        ', self.percent(photons_in_channels_tot)
 
         top_reflected = len(self.db.uids_out_bound_on_surface("top", solar=True))
         bottom_lost = len(self.db.uids_out_bound_on_surface("bottom", solar=True))

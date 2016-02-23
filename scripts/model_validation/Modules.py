@@ -333,7 +333,7 @@ class Statistics(object):
         # else:
         #     print "!!! ERROR !!! Check results carefully!"
 
-    def create_graphs(self):
+    def create_graphs(self, prefix=''):
         """
         Generate a series of graphs on photons stored in self.db
         """
@@ -343,7 +343,7 @@ class Statistics(object):
             print "[plot-reactor] The database doesn't have enough photons to generate this graph!"
         else:
             data = self.db.wavelengthForUid(uid)
-            histogram(data=data, filename='plot-reactor')
+            histogram(data=data, filename=prefix+'plot-reactor')
 
         print "Plotting reactor luminescent..."
         uid = self.db.uids_in_reactor_and_luminescent()
@@ -351,7 +351,7 @@ class Statistics(object):
             print "[plot-reactor-luminescent] The database doesn't have enough photons to generate this graph!"
         else:
             data = self.db.wavelengthForUid(uid)
-            histogram(data=data, filename='plot-reactor-luminescent')
+            histogram(data=data, filename=prefix+'plot-reactor-luminescent')
 
         print "Plotting concentrated photons (luminescent leaving at LSC edges)"
         edges = ['left', 'near', 'far', 'right']
@@ -362,7 +362,7 @@ class Statistics(object):
             print "[plot-lsc-edges] The database doesn't have enough photons to generate this graph!"
         else:
             data = self.db.wavelengthForUid(uid)
-            histogram(data=data, filename='plot-lsc-edges')
+            histogram(data=data, filename=prefix+'plot-lsc-edges')
 
         print "Plotting escaped photons (luminescent leaving at top/bottom)"
         apertures = ['top', 'bottom']
@@ -373,7 +373,7 @@ class Statistics(object):
             print "[plot-lsc-apertures] The database doesn't have enough photons to generate this graph!"
         else:
             data = self.db.wavelengthForUid(uid)
-            histogram(data=data, filename='plot-lsc-apertures')
+            histogram(data=data, filename=prefix+'plot-lsc-apertures')
 
         print "Plotting reflected"
         uid = self.db.uids_out_bound_on_surface('top', solar=True)
@@ -381,7 +381,7 @@ class Statistics(object):
             print "[plot-lsc-reflected] The database doesn't have enough photons to generate this graph!"
         else:
             data = self.db.wavelengthForUid(uid)
-            histogram(data=data, filename='plot-lsc-reflected')
+            histogram(data=data, filename=prefix+'plot-lsc-reflected')
 
         print "Plotting trasmitted"
         uid = self.db.uids_out_bound_on_surface('bottom', solar=True)
@@ -389,7 +389,7 @@ class Statistics(object):
             print "[plot-lsc-trasmitted] The database doesn't have enough photons to generate this graph!"
         else:
             data = self.db.wavelengthForUid(uid)
-            histogram(data=data, filename='plot-lsc-trasmitted')
+            histogram(data=data, filename=prefix+'plot-lsc-trasmitted')
 
 def histogram(data, filename):
     """

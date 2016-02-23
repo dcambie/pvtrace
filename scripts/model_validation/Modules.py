@@ -16,20 +16,45 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 
+model_checks = true
 
 class LightSource(object):
     """
     Lightsources
     """
 
-    def __init__(self, lamp_name):
+    def __init__(self, lamp_name, parameters):
         if lamp_name == 'SolarSimulator':
-            pass
+            self.light = SolarSimulator(parameters).source
         elif lamp_name == 'LED_coiled':
             pass
         else:
-            return
+            pass
 
+    def plot(self):
+        """
+        Plots the lightsource spectrum
+        """
+        xyplot(x=self.light.spectrum.x, y=self.light.spectrum.y, filename='ligthsource_'+lamp_name+'_spectrum')
+
+
+class SolarSimulator(object):
+    def __init__(self, parameters):
+        """
+        Create a SolarSimulator instance
+
+        :param parameters: list with sizes (x and y)
+        :return: PlanarSource
+        """
+        if len(parameters)<2:
+            raise Exception('Missing parameters for SolarSimulator! Dimensions (x,y in meters) are needed')
+        # todo: This should be replaced with solar simulator actual spectrum
+        spectrum_file = os.path.join(PVTDATA, 'sources', 'AM1.5g-full.txt')
+        self.spectrum = load_spectrum(spectrum_file, xbins=np.arange(400, 700))
+        self.source = PlanarSource(direction=(0, 0, -1), spectrum=self.spectrum, length=parameters[0], width=parameters[1])
+        self.source.name = 'Solar simulator Michael (small)'
+        # distance from device in this case is only important for Visualizer :)
+        self.source.translate((0, 0, 0.025))
 
 class Photocatalyst(object):
     def __init__(self, compound, concentration):
@@ -97,18 +122,18 @@ class Red305(object):
         # Linearity measured up to 0.15mg/g, then it bends as bit due to too high Abs values for spectrometer
         # (secondary peak still linear at 0.20mg/g)
         device_abs_at_peak = 13.031 * self.concentration
-        # print "with a concentration of ", self.concentration, ' and thickness', self.thickness, ' this device should have an Abs at peak of', device_abs_at_peak
+        print "with a concentration of ", self.concentration, ' and thickness', self.thickness, ' this device should have an Abs at peak of', device_abs_at_peak
         # Correcting factor to adjust absorption at peak to match settings
         # Note that in 'original' pvTrace, thin-film.py file np.log was used incorrectly (log10() intended, got ln())
         phi = device_abs_at_peak / (ap * self.thickness)
-        # print 'phi equals ',phi,' (this should approximately be simulation conc/tabulated conc (i.e. 0.10mg/g)'
+        print 'phi equals ',phi,' (this should approximately be simulation conc/tabulated conc (i.e. 0.10mg/g)'
         # Applying correction to spectrum
         absorption_data[:, 1] = absorption_data[:, 1] * phi
 
         # Create a reference spectrum for the computed absorption of device (z axis, thickness as optical path)
-        abs_scaled = absorption_data
-        abs_scaled[:, 1] = abs_scaled[:, 1] * self.thickness
-        xyplot(x=abs_scaled[:, 0], y=abs_scaled[:, 1], filename='spectrum_abs_lsc')
+        # abs_scaled = absorption_data
+        # abs_scaled[:, 1] = abs_scaled[:, 1] * self.thickness
+        # xyplot(x=abs_scaled[:, 0], y=abs_scaled[:, 1], filename='spectrum_abs_lsc')
         # Create Spectrum elements
         return Spectrum(x=absorption_data[:, 0], y=absorption_data[:, 1])
 
@@ -132,23 +157,16 @@ class Reactor(object):
             self.photocat = Photocatalyst(photocatalyst, photocatalyst_concentration)
         self.scene_obj = []
 
-        # Create a Material for pdms
+        # Get Abs data for PDMS (depending on reactor thickness they will be adjusted and the material will be created
+        # out of the reactor loop
         pdms_data = np.loadtxt(os.path.join(PVTDATA, 'PDMS.txt'))
-        pdms_abs = Spectrum(x=pdms_data[:, 0], y=pdms_data[:, 1])
-        # Giving emission suppress error. Not used due to quantum_efficiency = 0 :)
-        pdms_ems = Spectrum([0, 1000], [0.1, 0])
-        pdms = Material(absorption_data=pdms_abs, emission_data=pdms_ems, quantum_efficiency=0.0, refractive_index=1.41)
 
         if reactor_name == '5x5_8ch':
             # 1. LSC DEVICE
-            thickness = 0.003
-            lsc = LSC(origin=(0, 0, 0), size=(0.050, 0.050, thickness))
-            # Clear reactor (control) is obtained with dye concentration = 0
-            dye_material = DyeMaterial(dye, dye_concentration, thickness)
-
-            lsc.material = CompositeMaterial([pdms, dye_material.material()], refractive_index=1.41, silent=True)
-            lsc.name = 'Reactor (5x5cm, 8 channel, Dye: ' + dye + ')'
-            self.scene_obj.append(lsc)
+            thickness = 0.003   # 3 mm thickness
+            lsc_x = 0.05        # 5 cm width
+            lsc_y = 0.05        # 5 cm length
+            lsc_name = 'Reactor (5x5cm, 8 channel, Dye: ' + dye + ')'
 
             # 2. CHANNELS
             reaction_mixture = self.getreactionmixture(solvent='acetonitrile')
@@ -160,40 +178,35 @@ class Reactor(object):
                 self.scene_obj.append(channel)
 
             # 3. LIGHT (Perpendicular planar source 5x5 (matching device) with sun spectrum)
-            sun_filename = os.path.join(PVTDATA, 'sources', 'AM1.5g-full.txt')
-            sun = load_spectrum(sun_filename, xbins=np.arange(400, 700))
-            xyplot(x=sun.x, y=sun.y, filename='ligthsource')
-            self.source = PlanarSource(direction=(0, 0, -1), spectrum=sun, length=0.050, width=0.050)
-            self.source.name = 'Solar simulator Michael (small)'
-            # distance from device in this case is only important for Visualizer :)
-            self.source.translate((0, 0, 0.025))
+            lamp_name='SolarSimulator'
+            # Size of the irradiated area
+            lamp_parameters = (0.05, 0.05)
         elif reactor_name == "5x5_0ch":
-            # 1. LSC DEVICE
-            thickness = 0.003
-            lsc = LSC(origin=(0, 0, 0), size=(0.050, 0.050, thickness))
-            # Clear reactor (control) is obtained with dye concentration = 0
-            dye_material = DyeMaterial(dye, dye_concentration, thickness)
-
-            # PDMS background absorption
-            pdms_abs = Spectrum([0, 1000], [2, 2])
-            pdms_ems = Spectrum([0, 1000],
-                                [0.1,  0])  # Giving emission suppress error. (Not used due to quantum_efficiency=0)
-            pdms = Material(absorption_data=pdms_abs, emission_data=pdms_ems, quantum_efficiency=0.0,
-                            refractive_index=1.41)
-
-            lsc.material = CompositeMaterial([pdms, dye_material.material()], refractive_index=1.41, silent=True)
-            lsc.name = 'Reactor (5x5cm, 8 channel, Dye: ' + dye + ')'
-            self.scene_obj.append(lsc)
-
-            # 2. LIGHT (Perpendicular planar source 5x5 (matching device) with sun spectrum)
-            sun_filename = os.path.join(PVTDATA, 'sources', 'AM1.5g-full.txt')
-            sun = load_spectrum(sun_filename, xbins=np.arange(400, 700))
-            self.source = PlanarSource(direction=(0, 0, -1), spectrum=sun, length=0.050, width=0.050)
-            self.source.name = 'Solar simulator Michael (small)'
-            # distance from device in this case is only important for Visualizer :)
-            self.source.translate((0, 0, 0.025))
+            raise Exception('The reactor requested (', reactor_name, ') needs to be re-coded :D')
         else:
             raise Exception('The reactor requested (', reactor_name, ') is not known. Check the name ;)')
+
+        # 1. PDMS
+        # Since PDMS data is m-1 it gets corrected for thickness....
+        pdms_abs = Spectrum(x=pdms_data[:, 0], y=pdms_data[:, 1]*thickness)
+        # Giving emission suppress error. Not used due to quantum_efficiency = 0 :)
+        pdms_ems = Spectrum([0, 1000], [0.1, 0])
+        # Create Material
+        pdms = Material(absorption_data=pdms_abs, emission_data=pdms_ems, quantum_efficiency=0.0, refractive_index=1.41)
+
+        # 2. LSC
+        lsc = LSC(origin=(0, 0, 0), size=(lsc_x, lsc_y, thickness))
+        # Material for dye
+        dye_material = DyeMaterial(dye, dye_concentration, thickness)
+        # LSC CompositeMaterial made of dye+PDMS
+        lsc.material = CompositeMaterial([pdms, dye_material.material()], refractive_index=1.41, silent=True)
+        lsc.name = lsc_name
+        self.scene_obj.append(lsc)
+
+        # 3. LAMP
+        self.source = LightSource(lamp_name, lamp_parameters).light
+        if model_checks:
+            self.source.plot()
 
     def getreactionmixture(self, solvent=None):
         if solvent is None:
@@ -232,7 +245,7 @@ class Statistics(object):
     def percent(self, num_photons):
         """
         Return the percentage of num_photons with respect to thrown photons as 2 decimal digit string
-        :param num_photons:
+        :param num_photons: number of photons to be divided by the total
         :rtype: string
         """
 
@@ -242,8 +255,8 @@ class Statistics(object):
         print "##### PVTRACE LOG RESULTS #####"
 
         print "Summary:"
-        print 'obj ', self.db.objects_with_records()
-        print 'surfaces ', self.db.surfaces_with_records()
+        # print 'obj ', self.db.objects_with_records()
+        # print 'surfaces ', self.db.surfaces_with_records()
 
         # obj_w_records = self.db.objects_with_records()
         # for obj in obj_w_records:
@@ -294,9 +307,9 @@ class Statistics(object):
         photons = self.db.uids_in_reactor()
         photons_in_channels_tot = len(photons)
         # ONLY PHOTONS IN CHANNELS!
-        for photon in photons:
-            print "Wavelenght: ", self.db.wavelengthForUid(photon)  # Nice output
-            # print " ".join(map(str, self.db.wavelengthForUid(photon)))  # Clean output (for elaborations)
+        # for photon in photons:
+        #     print "Wavelenght: ", self.db.wavelengthForUid(photon)  # Nice output
+        #     print " ".join(map(str, self.db.wavelengthForUid(photon)))  # Clean output (for elaborations)
 
         print "Photons in channels (sum)", self.percent(photons_in_channels_tot)
         print 'Luminescent', self.percent(luminescent_photons_in_channels)
@@ -381,8 +394,11 @@ def histogram(data, filename):
     home = os.path.expanduser('~')
     suffixes = ('png', 'pdf')
 
-    hist = np.histogram(data, bins=np.linspace(300, 800, num=101))
-    plt.hist(data, len(hist), histtype='stepfilled')
+    # print "histogram called with ",data
+    hist = np.histogram(data, bins=100, range=(400,800))
+    # hist = np.histogram(data, bins=np.linspace(400, 800, num=101))
+    # print "hist is ",hist
+    plt.hist(data, np.linspace(400, 800, num=101), histtype='stepfilled')
     for extension in suffixes:
         location = os.path.join(home, "pvtrace_export" + os.sep + filename + "." + extension)
         plt.savefig(location)
@@ -390,16 +406,18 @@ def histogram(data, filename):
         print 'Plot saved in ', location, '!'
     plt.clf()
 
-
 def xyplot(x, y, filename):
     """
     Plots a curve in a cartesian graph
 
-    :param x: X axis (tipically nm for Abs/Ems)
-    :param y: Y axis (e.g. Abs or intesity)
+    :rtype: None
+    :param x: X axis (typically nm for Abs/Ems)
+    :param y: Y axis (e.g. Abs or intensity)
     :param filename: Graph filename for disk saving
-    :return: None
     """
+    if not model_checks:
+        return false
+
     home = os.path.expanduser('~')
     suffixes = ('png', 'pdf')
 

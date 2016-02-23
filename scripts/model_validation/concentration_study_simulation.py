@@ -24,7 +24,7 @@ for conc in (1,20):
     pwd = os.getcwd()
     dbfile = os.path.join(pwd, 'pvtracedb.sql')  # <--- the name of the database file, with "pvtracedb" overwrite is implied
 
-    trace = Tracer(scene=scene, source=reactor.source, seed=None, throws=1000, database_file=dbfile, use_visualiser=False, show_log=false, show_axis=True)
+    trace = Tracer(scene=scene, source=reactor.source, seed=None, throws=100, database_file=dbfile, use_visualiser=False, show_log=false, show_axis=True)
     # Run simulation
     trace.start()
 

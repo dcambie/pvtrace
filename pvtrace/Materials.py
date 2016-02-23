@@ -491,9 +491,13 @@ class Material(object):
             photon.position = photon.position + free_pathlength * photon.direction
             return photon
 
-
 class CompositeMaterial(Material):
-    """A material that is composed from a homogeneous mix of multiple materials. For example, a plastic plate doped with a blue and red absorbing dyes has the absorption coefficient of plastic as well as the absorption and emission properties of the dyes."""
+    """
+    A material that is composed from a homogeneous mix of multiple materials.
+
+    For example, a plastic plate doped with a blue and red absorbing dyes has the absorption coefficient of plastic as
+    well as the absorption and emission properties of the dyes.
+    """
 
     def __init__(self, materials, refractive_index=None, silent=False):
         """Initalised by a list or array of material objects."""
@@ -501,7 +505,9 @@ class CompositeMaterial(Material):
         self.materials = materials
         if refractive_index is None:
             print ""
-            print "CompositeMaterial must be created with a value of refractive index which is an estimate of the effective medium of all materials which it contains. The individual refractive index of each material is ignored when grouping mutiple material together using a composite material."
+            print "CompositeMaterial must be created with a value of refractive index which is an estimate of the" \
+                  "effective medium of all materials which it contains. The individual refractive index of each" \
+                  "material is ignored when grouping mutiple material together using a composite material."
             print ""
             print "For example try using, CompositeMaterial([pmma, dye1, dye2], refractive_index=1.5])."
             print ""
@@ -512,24 +518,41 @@ class CompositeMaterial(Material):
     def all_absorption_coefficients(self, nanometers):
         """Returns and array of all the the materials absorption coefficients at the specified wavelength."""
         count = len(self.materials)
+        # Defaults 0 for each material (fill in unexpected missing values)
         absorptions = np.zeros(count)
+        # Foreach material get its absorption
         for i in range(0, count):
             absorptions[i] = self.materials[i].absorption_data.value(nanometers)
         return absorptions
 
     def trace(self, photon, free_pathlength):
-        """Will apply absorption and emission probabilities to the photon along its free path in the present geometrical container and return the result photon for tracing. See help(material.trace) for how this is done for a single material because the same principle applies. The ensemble absorption coefficient is found for the specified photon to determine if absorption occurs. The absorbed material its self is found at random from a distrubution weighted by each of the component absorption coefficients. The resultant photon is returned with possibily with a new position, direction and wavelength. If the photon is absorbed and not emitted the photon is retuned but its active property is set to False. """
+        """
+        Traces the photon in the CompositeMaterial. See the analogous behaviour in Material
+
+        Will apply absorption and emission probabilities to the photon along its free path in the present geometrical
+        container and return the result photon for tracing. See help(material.trace) for how this is done for a single
+        material because the same principle applies. The ensemble absorption coefficient is found for the specified
+        photon to determine if absorption occurs. The absorbed material itself is found at random from a distribution
+        weighted by each of the component absorption coefficients. The resultant photon is returned with possibly
+        a new position, direction and wavelength. If the photon is absorbed and not emitted the photon is returned but
+        its active property is set to False.
+        """
 
         # Clear state using for collecting statistics
         photon.absorber_material = None
         photon.emitter_material = None
 
+        # print "Tracing photon into CompositeMaterial. free_pathlength:",free_pathlength*100,' cm'
         absorptions = self.all_absorption_coefficients(photon.wavelength)
+        # print 'At ',photon.wavelength,' nm the absorption of the materials are:',absorptions
         absorption_coefficient = absorptions.sum()
+        # See WolframAlpha "-ln(1-x)/y from x=0 to 1 from y=0 to 2"
         sampled_pathlength = -np.log(1 - np.random.uniform()) / absorption_coefficient
+        # print "sampled is: ",sampled_pathlength
 
         # Absorption occurs.
         if sampled_pathlength < free_pathlength:
+            # print "photon absorbed"
             # Move photon along path to the absorption point
             photon.absorption_counter += 1
             photon.position = photon.position + sampled_pathlength * photon.direction
@@ -543,6 +566,7 @@ class CompositeMaterial(Material):
             pdfinv_lookup = interp1d(pdf, bins, bounds_error=False, fill_value=0.0)
             absorber_index = int(np.floor(pdfinv_lookup(np.random.uniform())))
             material = self.materials[absorber_index]
+            # print 'the absorber was ',absorber_index
             photon.material = material
             photon.absorber_material = material
             self.emission = material.emission

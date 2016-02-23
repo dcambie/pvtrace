@@ -421,12 +421,13 @@ class Photon (object):
             # TODO WISH: count photons leaving channels without being absorbed (to measure channel absorption efficiency with different concentration)
 
             # Hackish way to account for LSC edge reflectors (0.95 hardcoded for now)
-            if edge != False and np.random.uniform()<0.95:
-                self.direction = reflect_vector(normal, self.direction)
-                self.propagate = False
-                self.exit_device = self.container
-                #print " LSC outer surface, face: ",edge
-                return self
+            # todo: use a variable to toggle edge reflectors!
+            # if edge != False and np.random.uniform()<0.95:
+            #     self.direction = reflect_vector(normal, self.direction)
+            #     self.propagate = False
+            #     self.exit_device = self.container
+            #     #print " LSC outer surface, face: ",edge
+            #     return self
 
 
             self.propagate = True

@@ -14,17 +14,18 @@ from __future__ import division
 from pvtrace import *
 import numpy as np
 import os
-import pylab
+import matplotlib.pyplot as plt
+
 
 class LightSource(object):
     """
     Lightsources
     """
 
-    def __init__(self, name):
-        if name == 'SolarSimulator':
+    def __init__(self, lamp_name):
+        if lamp_name == 'SolarSimulator':
             pass
-        elif name == 'LED_coiled':
+        elif lamp_name == 'LED_coiled':
             pass
         else:
             return
@@ -64,11 +65,11 @@ class DyeMaterial(object):
     Abstract class for LSC's dye material
     """
 
-    def __init__(self, dye_name):
+    def __init__(self, dye_name, concentration, thickness):
         if dye_name == 'Red305':
-            self.dye = Red305()
+            self.dye = Red305(concentration, thickness)
         else:
-            raise Exception('Unknown dye! (', dye, ')')
+            raise Exception('Unknown dye! (', self.dye, ')')
 
     def material(self):
         # Note that refractive index is not important here since it will be overwritten with CompositeMaterial's one
@@ -81,8 +82,10 @@ class Red305(object):
     Class to generate spectra for Red305-based devices
     """
 
-    def __init__(self):
+    def __init__(self, concentration, thickness):
         self.quantum_efficiency = 0.95
+        self.concentration = concentration
+        self.thickness = thickness
 
     def absorption(self):
         if self.thickness is None or self.concentration is None:
@@ -94,16 +97,16 @@ class Red305(object):
         # Linearity measured up to 0.15mg/g, then it bends as bit due to too high Abs values for spectrometer
         # (secondary peak still linear at 0.20mg/g)
         device_abs_at_peak = 13.031 * self.concentration
-        #print "with a concentration of ", self.concentration, ' and thickness', self.thickness, ' this device should have an Abs at peak of', device_abs_at_peak
+        # print "with a concentration of ", self.concentration, ' and thickness', self.thickness, ' this device should have an Abs at peak of', device_abs_at_peak
         # Correcting factor to adjust absorption at peak to match settings
         # Note that in 'original' pvTrace, thin-film.py file np.log was used incorrectly (log10() intended, got ln())
         phi = device_abs_at_peak / (ap * self.thickness)
-        #print 'phi equals ',phi,' (this should approximately be simulation conc/tabulated conc (i.e. 0.10mg/g)'
+        # print 'phi equals ',phi,' (this should approximately be simulation conc/tabulated conc (i.e. 0.10mg/g)'
         # Applying correction to spectrum
         absorption_data[:, 1] = absorption_data[:, 1] * phi
 
         # Create a reference spectrum for the computed absorption of device (z axis, thickness as optical path)
-        abs_scaled=absorption_data
+        abs_scaled = absorption_data
         abs_scaled[:, 1] = abs_scaled[:, 1] * self.thickness
         xyplot(x=abs_scaled[:, 0], y=abs_scaled[:, 1], filename='spectrum_abs_lsc')
         # Create Spectrum elements
@@ -112,7 +115,7 @@ class Red305(object):
     @staticmethod
     def emission():
         # fixme Add experimental data from pdms low concentration samples (not reabsorption redshifted)
-        #emission_data = np.loadtxt(os.path.join(PVTDATA, "dyes", 'fluro-red-fit.ems.txt'))
+        # emission_data = np.loadtxt(os.path.join(PVTDATA, "dyes", 'fluro-red-fit.ems.txt'))
         emission_data = np.loadtxt(os.path.join(PVTDATA, "dyes", 'Red305_ems_spectrum.txt'))
         return Spectrum(x=emission_data[:, 0], y=emission_data[:, 1])
 
@@ -122,7 +125,7 @@ class Reactor(object):
     Class that models the experimental device
     """
 
-    def __init__(self, name, dye, dye_concentration, photocatalyst=None, photocatalyst_concentration=0.001):
+    def __init__(self, reactor_name, dye, dye_concentration, photocatalyst=None, photocatalyst_concentration=0.001):
         if photocatalyst is None:
             self.photocat = False
         else:
@@ -130,19 +133,18 @@ class Reactor(object):
         self.scene_obj = []
 
         # Create a Material for pdms
-        abs = Spectrum([0, 1000], [2, 2])
+        pdms_data = np.loadtxt(os.path.join(PVTDATA, 'PDMS.txt'))
+        pdms_abs = Spectrum(x=pdms_data[:, 0], y=pdms_data[:, 1])
         # Giving emission suppress error. Not used due to quantum_efficiency = 0 :)
-        ems = Spectrum([0, 1000], [0.1, 0])
-        pdms = Material(absorption_data=abs, emission_data=ems, quantum_efficiency=0.0, refractive_index=1.41)
+        pdms_ems = Spectrum([0, 1000], [0.1, 0])
+        pdms = Material(absorption_data=pdms_abs, emission_data=pdms_ems, quantum_efficiency=0.0, refractive_index=1.41)
 
-        if name == '5x5_8ch':
+        if reactor_name == '5x5_8ch':
             # 1. LSC DEVICE
             thickness = 0.003
             lsc = LSC(origin=(0, 0, 0), size=(0.050, 0.050, thickness))
             # Clear reactor (control) is obtained with dye concentration = 0
-            dye_material = DyeMaterial(dye)
-            dye_material.dye.concentration = dye_concentration
-            dye_material.dye.thickness = thickness
+            dye_material = DyeMaterial(dye, dye_concentration, thickness)
 
             lsc.material = CompositeMaterial([pdms, dye_material.material()], refractive_index=1.41, silent=True)
             lsc.name = 'Reactor (5x5cm, 8 channel, Dye: ' + dye + ')'
@@ -158,40 +160,40 @@ class Reactor(object):
                 self.scene_obj.append(channel)
 
             # 3. LIGHT (Perpendicular planar source 5x5 (matching device) with sun spectrum)
-            file = os.path.join(PVTDATA, 'sources', 'AM1.5g-full.txt')
-            sun = load_spectrum(file, xbins=np.arange(400, 800))
+            sun_filename = os.path.join(PVTDATA, 'sources', 'AM1.5g-full.txt')
+            sun = load_spectrum(sun_filename, xbins=np.arange(400, 700))
+            xyplot(x=sun.x, y=sun.y, filename='ligthsource')
             self.source = PlanarSource(direction=(0, 0, -1), spectrum=sun, length=0.050, width=0.050)
             self.source.name = 'Solar simulator Michael (small)'
             # distance from device in this case is only important for Visualizer :)
             self.source.translate((0, 0, 0.025))
-        elif name == "5x5_0ch":
+        elif reactor_name == "5x5_0ch":
             # 1. LSC DEVICE
             thickness = 0.003
             lsc = LSC(origin=(0, 0, 0), size=(0.050, 0.050, thickness))
             # Clear reactor (control) is obtained with dye concentration = 0
-            dye_material = DyeMaterial(dye)
-            dye_material.dye.concentration = dye_concentration
-            dye_material.dye.thickness = thickness
+            dye_material = DyeMaterial(dye, dye_concentration, thickness)
 
             # PDMS background absorption
-            abs = Spectrum([0, 1000], [2, 2])
-            ems = Spectrum([0, 1000],
-                           [0.1, 0])  # Giving emission suppress error. It's not used due to quantum_efficiency=0 :)
-            pdms = Material(absorption_data=abs, emission_data=ems, quantum_efficiency=0.0, refractive_index=1.41)
+            pdms_abs = Spectrum([0, 1000], [2, 2])
+            pdms_ems = Spectrum([0, 1000],
+                                [0.1,  0])  # Giving emission suppress error. (Not used due to quantum_efficiency=0)
+            pdms = Material(absorption_data=pdms_abs, emission_data=pdms_ems, quantum_efficiency=0.0,
+                            refractive_index=1.41)
 
             lsc.material = CompositeMaterial([pdms, dye_material.material()], refractive_index=1.41, silent=True)
             lsc.name = 'Reactor (5x5cm, 8 channel, Dye: ' + dye + ')'
             self.scene_obj.append(lsc)
 
             # 2. LIGHT (Perpendicular planar source 5x5 (matching device) with sun spectrum)
-            file = os.path.join(PVTDATA, 'sources', 'AM1.5g-full.txt')
-            sun = load_spectrum(file, xbins=np.arange(400, 800))
+            sun_filename = os.path.join(PVTDATA, 'sources', 'AM1.5g-full.txt')
+            sun = load_spectrum(sun_filename, xbins=np.arange(400, 700))
             self.source = PlanarSource(direction=(0, 0, -1), spectrum=sun, length=0.050, width=0.050)
             self.source.name = 'Solar simulator Michael (small)'
             # distance from device in this case is only important for Visualizer :)
             self.source.translate((0, 0, 0.025))
         else:
-            raise Exception('The reactor requested (', name, ') is not known. Check the name ;)')
+            raise Exception('The reactor requested (', reactor_name, ') is not known. Check the name ;)')
 
     def getreactionmixture(self, solvent=None):
         if solvent is None:
@@ -234,7 +236,7 @@ class Statistics(object):
         :rtype: string
         """
 
-        return format((num_photons / self.tot) * 100, '.2f')
+        return format((num_photons / self.tot) * 100, '.2f')+' % ('+str(num_photons).rjust(6, ' ')+')'
 
     def print_report(self):
         print "##### PVTRACE LOG RESULTS #####"
@@ -243,12 +245,12 @@ class Statistics(object):
         print 'obj ', self.db.objects_with_records()
         print 'surfaces ', self.db.surfaces_with_records()
 
-        obj_w_records = self.db.objects_with_records()
-        for obj in obj_w_records:
-            print 'OBJ ', obj, ' was hit on: ', self.db.surfaces_with_records_for_object(obj)
+        # obj_w_records = self.db.objects_with_records()
+        # for obj in obj_w_records:
+        #     print 'OBJ ', obj, ' was hit on: ', self.db.surfaces_with_records_for_object(obj)
 
-            # print "\t Photon efficiency \t", (luminescent_edges + luminescent_apertures) * 100 / thrown, "%"
-            # print "\t Optical efficiency \t", luminescent_edges * 100 / thrown, "%"
+        # print "\t Photon efficiency \t", (luminescent_edges + luminescent_apertures) * 100 / thrown, "%"
+        # print "\t Optical efficiency \t", luminescent_edges * 100 / thrown, "%"
 
     def print_detailed(self):
         """
@@ -270,35 +272,34 @@ class Statistics(object):
 
         for surface in edges:
             print "\t", surface, "\t", self.percent(len(
-                self.db.uids_out_bound_on_surface(surface, luminescent=True))), "%"
+                self.db.uids_out_bound_on_surface(surface, luminescent=True)))
 
         for surface in apertures:
             print "\t", surface, "\t", self.percent(len(
-                self.db.uids_out_bound_on_surface(surface, luminescent=True))), "%"
+                self.db.uids_out_bound_on_surface(surface, luminescent=True)))
 
-        # print "Non radiative losses\t", self.percent(non_radiative_photons), "%"
+        print "Non radiative losses\t", self.percent(self.non_radiative)
 
         print "Solar photons (transmitted/reflected):"
         for surface in edges:
             print "\t", surface, "\t", self.percent(len(
-                self.db.uids_out_bound_on_surface(surface, solar=True))), "%"
+                self.db.uids_out_bound_on_surface(surface, solar=True)))
 
         for surface in apertures:
             print "\t", surface, "\t", self.percent(len(
-                self.db.uids_out_bound_on_surface(surface, solar=True))), "%"
+                self.db.uids_out_bound_on_surface(surface, solar=True)))
 
         print "Reactor's channel photons:"
-
+        luminescent_photons_in_channels = len(self.db.uids_in_reactor_and_luminescent())
         photons = self.db.uids_in_reactor()
         photons_in_channels_tot = len(photons)
-        luminescent_photons_in_channels = len(self.db.uids_in_reactor_and_luminescent())
         # ONLY PHOTONS IN CHANNELS!
         for photon in photons:
             print "Wavelenght: ", self.db.wavelengthForUid(photon)  # Nice output
             # print " ".join(map(str, self.db.wavelengthForUid(photon)))  # Clean output (for elaborations)
 
-        print "Photons in channels (sum)", self.percent(photons_in_channels_tot), "% (", photons_in_channels_tot, ")"
-        print 'Luminescent',luminescent_photons_in_channels
+        print "Photons in channels (sum)", self.percent(photons_in_channels_tot)
+        print 'Luminescent', self.percent(luminescent_photons_in_channels)
 
         top_reflected = len(self.db.uids_out_bound_on_surface("top", solar=True))
         bottom_lost = len(self.db.uids_out_bound_on_surface("bottom", solar=True))
@@ -321,7 +322,7 @@ class Statistics(object):
             print "[plot-reactor] The database doesn't have enough photons to generate this graph!"
         else:
             data = self.db.wavelengthForUid(uid)
-            self.histogram(data=data, filename='plot-reactor')
+            histogram(data=data, filename='plot-reactor')
 
         print "Plotting reactor luminescent..."
         uid = self.db.uids_in_reactor_and_luminescent()
@@ -329,9 +330,9 @@ class Statistics(object):
             print "[plot-reactor-luminescent] The database doesn't have enough photons to generate this graph!"
         else:
             data = self.db.wavelengthForUid(uid)
-            self.histogram(data=data, filename='plot-reactor-luminescent')
+            histogram(data=data, filename='plot-reactor-luminescent')
 
-        print "Plotting LSC edges..."
+        print "Plotting concentrated photons (luminescent leaving at LSC edges)"
         edges = ['left', 'near', 'far', 'right']
         uid = []
         for surface in edges:
@@ -340,56 +341,55 @@ class Statistics(object):
             print "[plot-lsc-edges] The database doesn't have enough photons to generate this graph!"
         else:
             data = self.db.wavelengthForUid(uid)
-            self.histogram(data=data, filename='plot-lsc-edges')
+            histogram(data=data, filename='plot-lsc-edges')
 
+        print "Plotting escaped photons (luminescent leaving at top/bottom)"
+        apertures = ['top', 'bottom']
+        uid = []
+        for surface in edges:
+            uid += self.db.uids_out_bound_on_surface(surface, luminescent=True)
+        if len(uid) < 10:
+            print "[plot-lsc-apertures] The database doesn't have enough photons to generate this graph!"
+        else:
+            data = self.db.wavelengthForUid(uid)
+            histogram(data=data, filename='plot-lsc-apertures')
 
-    '''print "Plotting edge"
+        print "Plotting reflected"
+        uid = self.db.uids_out_bound_on_surface('top', solar=True)
+        if len(uid) < 10:
+            print "[plot-lsc-reflected] The database doesn't have enough photons to generate this graph!"
+        else:
+            data = self.db.wavelengthForUid(uid)
+            histogram(data=data, filename='plot-lsc-reflected')
 
+        print "Plotting trasmitted"
+        uid = self.db.uids_out_bound_on_surface('bottom', solar=True)
+        if len(uid) < 10:
+            print "[plot-lsc-trasmitted] The database doesn't have enough photons to generate this graph!"
+        else:
+            data = self.db.wavelengthForUid(uid)
+            histogram(data=data, filename='plot-lsc-trasmitted')
 
-    print "Plotting escape"
-    uid = db.uids_out_bound_on_surface('top', luminescent=True) + db.uids_out_bound_on_surface('bottom', luminescent=True)
-    print uid
-    data = db.wavelengthForUid(uid)
-    hist, bin_edges = np.histogram(data, bins=np.linspace(300,800,num=10))
-    pylab.hist(data, len(bin_edges), histtype='stepfilled')
-    pylab.savefig(os.path.join(drive,"tmp",'plot-escape.pdf'))
-    pylab.clf()
+def histogram(data, filename):
+    """
+    Create an histogram with the cumulative frequency of photons at different wavelength
 
-    print "Plotting reflected"
-    uid = db.uids_out_bound_on_surface('bottom', solar=True)
-    data = db.wavelengthForUid(uid)
-    hist, bin_edges = np.histogram(data, bins=np.linspace(300,800,num=10))
-    pylab.hist(data, len(bin_edges), histtype='stepfilled')
-    pylab.savefig(os.path.join(drive,"tmp",'plot-reflected.pdf'))
-    pylab.clf()
+    :param data: List with photons' wavelengths
+    :param filename: Filename for the exported file. Will be saved in home/pvtrace_export/filenam (+.png appended)
+    :return: None
+    """
+    home = os.path.expanduser('~')
+    suffixes = ('png', 'pdf')
 
-    uid = db.uids_out_bound_on_surface('top', solar=True)
-    data = db.wavelengthForUid(uid)
-    hist, bin_edges = np.histogram(data, bins=np.linspace(300,800,num=10))
-    pylab.hist(data, len(bin_edges), histtype='stepfilled')
-    pylab.savefig(os.path.join(drive,"tmp",'plot-transmitted.pdf'))
-    pylab.clf()
-    '''
+    hist = np.histogram(data, bins=np.linspace(300, 800, num=101))
+    plt.hist(data, len(hist), histtype='stepfilled')
+    for extension in suffixes:
+        location = os.path.join(home, "pvtrace_export" + os.sep + filename + "." + extension)
+        plt.savefig(location)
+        os.chmod(location, 0o777)
+        print 'Plot saved in ', location, '!'
+    plt.clf()
 
-    def histogram(self, data, filename):
-        """
-        Create an histogram with the cumulative frequency of photons at different wavelength
-
-        :param data: List with photons' wavelengths
-        :param filename: Filename for the exported file. Will be saved in home/pvtrace_export/filenam (+.png appended)
-        :return: None
-        """
-        home = os.path.expanduser('~')
-        suffixes = ('png', 'pdf')
-
-        hist = np.histogram(data, bins=np.linspace(300, 800, num=100))
-        pylab.hist(data, 100, histtype='stepfilled')
-        for extension in suffixes:
-            location = os.path.join(home, "pvtrace_export"+os.sep+filename+"."+extension)
-            pylab.savefig(location)
-            os.chmod(location, 0o777)
-            print 'Plot saved in ', location, '!'
-        pylab.clf()
 
 def xyplot(x, y, filename):
     """
@@ -397,15 +397,16 @@ def xyplot(x, y, filename):
 
     :param x: X axis (tipically nm for Abs/Ems)
     :param y: Y axis (e.g. Abs or intesity)
+    :param filename: Graph filename for disk saving
     :return: None
     """
     home = os.path.expanduser('~')
     suffixes = ('png', 'pdf')
-    pylab.scatter(x, y)
+
+    plt.scatter(x, y)
     for extension in suffixes:
-        location = os.path.join(home, "pvtrace_export"+os.sep+filename+"."+extension)
-        pylab.savefig(location)
+        location = os.path.join(home, "pvtrace_export" + os.sep + filename + "." + extension)
+        plt.savefig(location)
         os.chmod(location, 0o777)
         print 'Plot saved in ', location, '!'
-    pylab.clf()
-
+    plt.clf()

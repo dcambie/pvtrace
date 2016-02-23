@@ -7,13 +7,12 @@ from pvtrace import *
 import time
 from Modules import *
 
-#PVTDATA = '/home/dario/pvtrace' # Hack needed for running simulations on /tmp from VM
+PVTDATA = '/home/dario/pvtrace/data' # Hack needed for running simulations on /tmp from VM
 
 # 1 unit = 1 m  Albeit not convenient, this assumption is deeply bounded in pvtrace's hearth
 
-scene = Scene()
-
 for conc in (0,5):
+    scene = Scene()
     if conc==0:
         dye_conc = 0.01
     else:
@@ -30,7 +29,13 @@ for conc in (0,5):
 
     trace = Tracer(scene=scene, source=reactor.source, seed=None, throws=1000, database_file=dbfile, use_visualiser=False, show_log=false, show_axis=True)
     # Run simulation
+#    trace.start()
+
+    tic = time.clock()
     trace.start()
+    print 'Simulation ended!'
+    toc = time.clock()
+    print toc-tic
 
     stats = Statistics(trace.database)
     stats.create_graphs()

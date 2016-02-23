@@ -16,6 +16,8 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 
+PVTDATA = '/home/dario/pvtrace/data' # Hack needed for running simulations on /tmp from VM
+
 model_checks = true
 
 class LightSource(object):
@@ -24,6 +26,7 @@ class LightSource(object):
     """
 
     def __init__(self, lamp_name, parameters):
+        self.name = lamp_name
         if lamp_name == 'SolarSimulator':
             self.light = SolarSimulator(parameters).source
         elif lamp_name == 'LED_coiled':
@@ -35,7 +38,7 @@ class LightSource(object):
         """
         Plots the lightsource spectrum
         """
-        xyplot(x=self.light.spectrum.x, y=self.light.spectrum.y, filename='ligthsource_'+lamp_name+'_spectrum')
+        xyplot(x=self.light.spectrum.x, y=self.light.spectrum.y, filename='ligthsource_'+self.name+'_spectrum')
 
 
 class SolarSimulator(object):
@@ -204,9 +207,10 @@ class Reactor(object):
         self.scene_obj.append(lsc)
 
         # 3. LAMP
-        self.source = LightSource(lamp_name, lamp_parameters).light
+        lamp = LightSource(lamp_name, lamp_parameters)
+        self.source = lamp.light
         if model_checks:
-            self.source.plot()
+            lamp.plot()
 
     def getreactionmixture(self, solvent=None):
         if solvent is None:

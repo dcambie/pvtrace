@@ -38,6 +38,7 @@ for conc in range(0,5):
     print toc-tic
 
     stats = Statistics(trace.database)
+    stats.print_detailed()
     stats.create_graphs(prefix='dye_'+str(dye_conc)+'_')
 
 sys.exit(0)

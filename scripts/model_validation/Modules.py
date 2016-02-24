@@ -406,7 +406,7 @@ def histogram(data, filename):
     hist = np.histogram(data, bins=100, range=(400,800))
     # hist = np.histogram(data, bins=np.linspace(400, 800, num=101))
     # print "hist is ",hist
-    plt.hist(data, np.linspace(400, 800, num=101), histtype='stepfilled')
+    plt.hist(data, np.linspace(400, 700, num=101), histtype='stepfilled')
     for extension in suffixes:
         location = os.path.join(home, "pvtrace_export" + os.sep + filename + "." + extension)
         plt.savefig(location)

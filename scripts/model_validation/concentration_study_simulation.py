@@ -11,7 +11,7 @@ PVTDATA = '/home/dario/pvtrace/data' # Hack needed for running simulations on /t
 
 # 1 unit = 1 m  Albeit not convenient, this assumption is deeply bounded in pvtrace's hearth
 
-for conc in (0,5):
+for conc in range(0,5):
     scene = Scene()
     if conc==0:
         dye_conc = 0.01
@@ -38,6 +38,6 @@ for conc in (0,5):
     print toc-tic
 
     stats = Statistics(trace.database)
-    stats.create_graphs(prefix='dye_'+dye_conc+'_')
+    stats.create_graphs(prefix='dye_'+str(dye_conc)+'_')
 
 sys.exit(0)

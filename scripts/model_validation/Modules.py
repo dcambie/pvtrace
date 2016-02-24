@@ -367,7 +367,7 @@ class Statistics(object):
         print "Plotting escaped photons (luminescent leaving at top/bottom)"
         apertures = ['top', 'bottom']
         uid = []
-        for surface in edges:
+        for surface in apertures:
             uid += self.db.uids_out_bound_on_surface(surface, luminescent=True)
         if len(uid) < 10:
             print "[plot-lsc-apertures] The database doesn't have enough photons to generate this graph!"

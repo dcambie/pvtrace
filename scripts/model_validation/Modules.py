@@ -332,6 +332,37 @@ class Statistics(object):
         #     print "Results validity check OK :)"
         # else:
         #     print "!!! ERROR !!! Check results carefully!"
+    def print_excel(self):
+        """
+        Prints an easy to import report on the fate of the photons stored in self.db
+
+        :return:None
+        """
+        print self.photon_generated
+        print self.photon_killed
+        print self.tot
+        print self.non_radiative
+        print "\n"
+        
+        edges = ['left', 'near', 'far', 'right']
+        apertures = ['top', 'bottom']
+
+        for surface in edges:
+            print len(
+                self.db.uids_out_bound_on_surface(surface, luminescent=True))
+        for surface in apertures:
+            print len(
+                self.db.uids_out_bound_on_surface(surface, luminescent=True))
+        print "\n"
+        
+        for surface in apertures:
+            print len(
+                self.db.uids_out_bound_on_surface(surface, solar=True))
+        print "\n"
+        luminescent_photons_in_channels = len(self.db.uids_in_reactor_and_luminescent())
+        photons_in_channels_tot = len(self.db.uids_in_reactor())
+        print photons_in_channels_tot-luminescent_photons_in_channels
+        print luminescent_photons_in_channels
 
     def create_graphs(self, prefix=''):
         """

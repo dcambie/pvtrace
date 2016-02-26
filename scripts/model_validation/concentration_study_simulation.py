@@ -11,12 +11,13 @@ PVTDATA = '/home/dario/pvtrace/data' # Hack needed for running simulations on /t
 
 # 1 unit = 1 m  Albeit not convenient, this assumption is deeply bounded in pvtrace's hearth
 
-for conc in range(0,5):
+for conc in range(0,40):
     scene = Scene()
-    if conc==0:
-        dye_conc = 0.01
-    else:
-        dye_conc = 0.05 * conc
+    #if conc==0:
+        #dye_conc = 0.01
+    #else:
+        #dye_conc = 0.05 * conc
+    dye_conc = 0.20
 
     reactor = Reactor(reactor_name="5x5_8ch", dye="Red305", dye_concentration=dye_conc, photocatalyst="MB", photocatalyst_concentration=0.0004)
     # reactor = Reactor(name="5x5_0ch", dye="Red305", dye_concentration=0.20)
@@ -38,7 +39,8 @@ for conc in range(0,5):
     print toc-tic
 
     stats = Statistics(trace.database)
-    stats.print_detailed()
-    stats.create_graphs(prefix='dye_'+str(dye_conc)+'_')
+    #stats.print_detailed()
+    stats.print_excel()
+    #stats.create_graphs(prefix='dye_'+str(dye_conc)+'_')
 
 sys.exit(0)

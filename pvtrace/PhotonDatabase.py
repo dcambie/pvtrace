@@ -43,15 +43,20 @@ def itemise(array):
     return new
         
 class PhotonDatabase(object):
-    """An object the wraps a mysql database.
+    """
+    An object the wraps a mysql database.
     """
     def __init__(self, dbfile=None):
+        """
+        Create the database and loads the schema into it.
+
+        :param dbfile: Filename for the database. If None then a RAM DB will be used (way faster!)
+        """
         super(PhotonDatabase, self).__init__()
-        
+
+        self.uid = 0
         if dbfile is not None:
-            
             # There is a defa
-            self.uid = 0
             self.file = dbfile
             
             # Delete this dbfile and start again
@@ -61,7 +66,6 @@ class PhotonDatabase(object):
                 else:
                     raise ValueError("A database already exist at '%s', please rename your new database to something else." % self.file )
             
-            
             #print "Attempting to creating database dbfile...", self.file
             try:
                 file(self.file, 'w').close()
@@ -69,18 +73,23 @@ class PhotonDatabase(object):
                 raise IOError("Could not create file, %s" % self.file)
             
             self.connection = sql.connect(self.file)
-            self.cursor = self.connection.cursor()
-            
-            try:
-                #print "Attempting to loading schema into database from dbfile ... ", DB_SCHEMA
-                dbfile = open(os.path.abspath(DB_SCHEMA), "r")
-                for line in dbfile:
-                    self.cursor.execute(line)
-            except Exception as inst:
-                print "Could not load schema dbfile."
-                print type(inst)
-                print inst
-                exit(1)
+        else:
+            self.file = None
+            self.connection = sql.connect(":memory:")
+
+        self.cursor = self.connection.cursor()
+        try:
+            #print "Attempting to loading schema into database from dbfile ... ", DB_SCHEMA
+            dbfile = open(os.path.abspath(DB_SCHEMA), "r")
+            for line in dbfile:
+                self.cursor.execute(line)
+        except Exception as inst:
+            print "Could not load schema dbfile."
+            print type(inst)
+            print inst
+            exit(1)
+
+
             
     def load(self, dbfile):
         """Loads and exisiting photon database into memory from a dbfile path."""

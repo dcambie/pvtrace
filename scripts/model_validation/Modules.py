@@ -16,7 +16,7 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 
-PVTDATA = '/home/dario/pvtrace/data' # Hack needed for running simulations on /tmp from VM
+#PVTDATA = '/home/dario/pvtrace/data' # Hack needed for running simulations on /tmp from VM
 
 model_checks = true
 

@@ -18,11 +18,8 @@ reactor = Reactor(reactor_name="5x5_8ch", dye="Red305", dye_concentration=0.20, 
 for obj in reactor.scene_obj:
     scene.add_object(obj)
 
-# Ask python that the directory of this script file is and use it as the location of the database file
-pwd = os.getcwd()
-dbfile = os.path.join(pwd, 'pvtracedb.sql')  # <--- the name of the database file, with "pvtracedb" overwrite is implied
-
-trace = Tracer(scene=scene, source=reactor.source, seed=None, throws=100, database_file=dbfile, use_visualiser=False, show_log=false, show_axis=True)
+# Doesn't save DB file but uses RAM disk for faster simulation
+trace = Tracer(scene=scene, source=reactor.source, seed=None, throws=2000, database_file=None, use_visualiser=False, show_log=false, show_axis=True)
 trace.show_lines = true
 trace.show_path = true
 
@@ -34,9 +31,9 @@ print 'Simulation ended!'
 toc = time.clock()
 
 # For reproducibility reasons always append git version to results (tested on linux only)
-import subprocess
-label = subprocess.check_output(["git", "describe"], cwd=PVTDATA)
-print 'PvTrace ', label,  ' simulation ended'
+#import subprocess
+#label = subprocess.check_output(["git", "describe"], cwd=PVTDATA)
+#print 'PvTrace ', label,  ' simulation ended'
 print 'Date/Time ', time.strftime("%c")
 print 'Run Time: ', toc - tic, ' sec.(s)'
 print ''

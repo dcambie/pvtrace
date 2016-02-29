@@ -866,11 +866,11 @@ class Tracer(object):
             #import pdb; pdb.set_trace()
             # Delete last ray from visualiser
             # fixme: if channels are cylinder they will be removed from the view if this is active!
-            if Visualiser.VISUALISER_ON:
-                for obj in self.visualiser.display.objects:
-                    if obj.__class__ is visual.cylinder:
-                        if obj.radius < 0.001:
-                            obj.visible = False
+            # if Visualiser.VISUALISER_ON:
+            #     for obj in self.visualiser.display.objects:
+            #         if obj.__class__ is visual.cylinder:
+            #             if obj.radius < 0.001:
+            #                 obj.visible = False
                 
             if self.show_log:
                 print "Photon number:", throw

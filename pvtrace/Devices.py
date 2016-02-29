@@ -291,15 +291,26 @@ class Channel(Register):
         super(Channel, self).__init__()
         self.origin = np.array(origin)
         self.size = np.array(size)
+        self.volume = 1
         if shape == "box":
             self.shape = Box(origin=origin, extent=np.array(origin) + np.array(size))
+            for coord in size:
+                self.volume *= coord
         elif shape == "cylinder":# takes radius, lenght
+            # The following is a little workaround to convert origin, size into cylinder (radius, length) descriptors
+            # Axis is based on the longest direction among the size (x,y,z)
             axis = np.argmax(size)
+            # Length is the value of the longest axis of size
             length = np.amax(size)
+            # Radius is the average of the other two coordinates divided by two (radius, not diameter!)
             radius = np.average(np.delete(size,axis))/2 # Div. by 2 cause what's given it's the diameter
+
+            # Cylinder volume formula
+            self.volume = math.pi * radius**2 * length
             
             self.shape = Cylinder(radius=radius, length=length)
-            
+
+            # For CSG first rotation then translation (assuming scaling is not needed)
             import math
             if axis == 0 : # Z to X Rotation needed
                 self.shape.append_transform(tf.rotation_matrix(math.pi/2.0, [0, 1, 0]))
@@ -311,6 +322,7 @@ class Channel(Register):
             raise Exception("Channel has invalid shape")
         self.material = SimpleMaterial(bandgap)
         self.name = "Channel"
+
         
 #class Collector(Register):
 #    """Collector implementation."""

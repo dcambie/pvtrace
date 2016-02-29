@@ -124,7 +124,7 @@ class Red305(object):
         ap = absorption_data[:, 1].max()
         # Linearity measured up to 0.15mg/g, then it bends as bit due to too high Abs values for spectrometer
         # (secondary peak still linear at 0.20mg/g)
-        device_abs_at_peak = 13.031 * self.concentration
+        device_abs_at_peak = 13.031 * self.concentration * (self.thickness/0.003)
         print "with a concentration of ", self.concentration, ' and thickness', self.thickness, ' this device should have an Abs at peak of', device_abs_at_peak
         # Correcting factor to adjust absorption at peak to match settings
         # Note that in 'original' pvTrace, thin-film.py file np.log was used incorrectly (log10() intended, got ln())
@@ -176,6 +176,8 @@ class Reactor(object):
             for i in range(1, 9):
                 channel = Channel(origin=(0.005, 0.007 + 0.005 * (i - 1), 0.001), size=(0.040, 0.001, 0.001),
                                   shape="box")
+                channel = Channel(origin=(0, 0.02475, 0.001), size=(0.050, 0.0005, 0.001),
+                                  shape="cylinder")
                 channel.material = reaction_mixture
                 channel.name = "Channel" + str(i)
                 self.scene_obj.append(channel)
@@ -184,8 +186,26 @@ class Reactor(object):
             lamp_name='SolarSimulator'
             # Size of the irradiated area
             lamp_parameters = (0.05, 0.05)
-        elif reactor_name == "5x5_0ch":
-            raise Exception('The reactor requested (', reactor_name, ') needs to be re-coded :D')
+        elif reactor_name == "wip":
+             # 1. LSC DEVICE
+            thickness = 0.004   # 3 mm thickness
+            lsc_x = 0.05        # 5 cm width
+            lsc_y = 0.05        # 5 cm length
+            lsc_name = 'Reactor (5x5cm, 8 channel, Dye: ' + dye + ')'
+
+            # 2. CHANNELS
+            reaction_mixture = self.getreactionmixture(solvent='acetonitrile')
+            for i in range(1, 9):
+                channel = Channel(origin=(0.005, 0.007 + 0.005 * (i - 1), 0.001), size=(0.025, 0.001, 0.002),
+                                  shape="box")
+                channel.material = reaction_mixture
+                channel.name = "Channel" + str(i)
+                self.scene_obj.append(channel)
+
+            # 3. LIGHT (Perpendicular planar source 5x5 (matching device) with sun spectrum)
+            lamp_name='SolarSimulator'
+            # Size of the irradiated area
+            lamp_parameters = (0.05, 0.05)
         else:
             raise Exception('The reactor requested (', reactor_name, ') is not known. Check the name ;)')
 
@@ -347,10 +367,15 @@ class Statistics(object):
         edges = ['left', 'near', 'far', 'right']
         apertures = ['top', 'bottom']
 
+        lumi=0
         for surface in edges:
+            lumi = lumi + len(
+                self.db.uids_out_bound_on_surface(surface, luminescent=True))
             print len(
                 self.db.uids_out_bound_on_surface(surface, luminescent=True))
         for surface in apertures:
+            lumi = lumi + len(
+                self.db.uids_out_bound_on_surface(surface, luminescent=True))
             print len(
                 self.db.uids_out_bound_on_surface(surface, luminescent=True))
         print "\n"
@@ -363,6 +388,8 @@ class Statistics(object):
         photons_in_channels_tot = len(self.db.uids_in_reactor())
         print photons_in_channels_tot-luminescent_photons_in_channels
         print luminescent_photons_in_channels
+
+        print luminescent_photons_in_channels/(lumi+luminescent_photons_in_channels)
 
     def create_graphs(self, prefix=''):
         """

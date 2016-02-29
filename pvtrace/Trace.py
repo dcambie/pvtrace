@@ -421,12 +421,7 @@ class Photon (object):
             # TODO WISH: count photons leaving channels without being absorbed (to measure channel absorption efficiency with different concentration)
 
             # Hackish way to account for LSC edge reflectors (0.95 hardcoded for now)
-            # todo: use a variable to toggle edge reflectors!
-            # if edge != False and np.random.uniform()<0.95:
-            #     self.direction = reflect_vector(normal, self.direction)
-            #     self.propagate = False
-            #     self.exit_device = self.container
-            #     #print " LSC outer surface, face: ",edge
+            # todo: use a v SC outer surface, face: ",edge
             #     return self
 
 
@@ -767,7 +762,7 @@ class Scene(object):
 
 class Tracer(object):
     """An object that will fire multiple photons through the scene."""
-    def __init__(self, scene=None, source=None, throws=1, steps=50, seed=None, use_visualiser=True, show_log=False, background=(0.957, 0.957, 1), ambient=0.5, database_file="pvtracedb.sql", show_axis=True):
+    def __init__(self, scene=None, source=None, throws=1, steps=50, seed=None, use_visualiser=True, show_log=False, background=(0.957, 0.957, 1), ambient=0.5, database_file="pvtracedb.sql", show_axis=True, show_counter=False):
         super(Tracer, self).__init__()
         self.scene = scene
         from LightSources import SimpleSource, PlanarSource, CylindricalSource, PointSource, RadialSource
@@ -780,6 +775,7 @@ class Tracer(object):
         self.database = PhotonDatabase.PhotonDatabase(database_file)
         self.stats = dict()
         self.show_log = show_log
+        self.show_counter = show_counter
         np.random.seed(self.seed)
         if not use_visualiser:
             Visualiser.VISUALISER_ON = False
@@ -863,39 +859,36 @@ class Tracer(object):
         self.show_start = False#Was True
         self.show_normals = False
         
-        
     def start(self):
         
         logged = 0
-        
         for throw in range(0, self.throws):
-            
             #import pdb; pdb.set_trace()
-            
             # Delete last ray from visualiser
-            #FIXME introduce a config for this
-            #if Visualiser.VISUALISER_ON:
-                #for obj in self.visualiser.display.objects:
-                    #if obj.__class__ is visual.cylinder: # can say either box or 'box'
-                        #if obj.radius < 0.001:
-                            #obj.visible = False
+            # fixme: if channels are cylinder they will be removed from the view if this is active!
+            if Visualiser.VISUALISER_ON:
+                for obj in self.visualiser.display.objects:
+                    if obj.__class__ is visual.cylinder:
+                        if obj.radius < 0.001:
+                            obj.visible = False
                 
-            #if self.show_log:
-            #    print "Photon number:", throw
-            #else:
-            #    print "Photon number:", throw, "\r",
-            #    sys.stdout.flush()
+            if self.show_log:
+                print "Photon number:", throw
+            elif self.show_counter:
+                sys.stdout.write('\r Photon number: ' + str(throw))
+                sys.stdout.flush()
 
             # Create random photon from lightsource and set relative variables
             photon = self.source.photon()
-            photon.visualiser = self.visualiser
             photon.scene = self.scene
             photon.material = self.source
             photon.show_log = self.show_log
             
-            a = list(photon.position)
-            if self.show_start:
-                self.visualiser.addSmallSphere(a)
+            if Visualiser.VISUALISER_ON:
+                photon.visualiser = self.visualiser
+                a = list(photon.position)
+                if self.show_start:
+                    self.visualiser.addSmallSphere(a)
             
             step = 0
             while photon.active and step < self.steps:
@@ -936,23 +929,22 @@ class Tracer(object):
                     entering_photon = copy(photon)
                 
                 #print "Step number:", step
-                b = list(photon.position)                
-                
-                if self.show_lines and photon.active == True:
-                    self.visualiser.addLine(a,b, colour=wav2RGB(photon.wavelength))
-                
-                if self.show_path and photon.active == True:
-                    self.visualiser.addSmallSphere(b)
-                
+                if Visualiser.VISUALISER_ON:
+                    b = list(photon.position)
+                    if self.show_lines and photon.active == True:
+                        self.visualiser.addLine(a,b, colour=wav2RGB(photon.wavelength))
+
+                    if self.show_path and photon.active == True:
+                        self.visualiser.addSmallSphere(b)
                 
                 #import pdb; pdb.set_trace()
-                
                 if photon.active == False and photon.container == self.scene.bounds:
                     
                     #import pdb; pdb.set_trace()
-                    if self.show_exit:
-                        self.visualiser.addSmallSphere(a, colour=[.33,.33,.33])
-                        self.visualiser.addLine(a, a + 0.01*photon.direction, colour=wav2RGB(wavelength))
+                    if Visualiser.VISUALISER_ON:
+                        if self.show_exit:
+                            self.visualiser.addSmallSphere(a, colour=[.33,.33,.33])
+                            self.visualiser.addLine(a, a + 0.01*photon.direction, colour=wav2RGB(wavelength))
                     
                     # Record photon that has made it to the bounds
                     if step == 0:
@@ -982,7 +974,9 @@ class Tracer(object):
                     #assert logged == throw, "Logged (%s) and thorw (%s) not equal" % (str(logged), str(throw))
                     logged += 1
                 
-                a = b
+                if Visualiser.VISUALISER_ON:
+                    a = b
+
                 step += 1
                 self.totalsteps += 1
                 if step >= self.steps:

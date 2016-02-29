@@ -13,13 +13,13 @@ from Modules import *
 
 scene = Scene()
 
-reactor = Reactor(reactor_name="5x5_8ch", dye="Red305", dye_concentration=0.20, photocatalyst="MB", photocatalyst_concentration=0.0004)
+reactor = Reactor(reactor_name="wip", dye="Red305", dye_concentration=0.20, photocatalyst="MB", photocatalyst_concentration=0.0004)
 # reactor = Reactor(name="5x5_0ch", dye="Red305", dye_concentration=0.20)
 for obj in reactor.scene_obj:
     scene.add_object(obj)
 
 # Doesn't save DB file but uses RAM disk for faster simulation
-trace = Tracer(scene=scene, source=reactor.source, seed=None, throws=2000, database_file=None, use_visualiser=False, show_log=false, show_axis=True)
+trace = Tracer(scene=scene, source=reactor.source, seed=None, throws=200, database_file=None, use_visualiser=False, show_log=False, show_axis=True, show_counter=True)
 trace.show_lines = true
 trace.show_path = true
 
@@ -42,6 +42,7 @@ print ''
 stats = Statistics(trace.database)
 stats.print_report()
 stats.print_detailed()
-stats.create_graphs()
+stats.print_excel()
+#stats.create_graphs()
 
 sys.exit(0)

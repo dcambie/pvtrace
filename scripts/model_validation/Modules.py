@@ -222,6 +222,55 @@ class Reactor(object):
             lamp_name='SolarSimulator'
             # Size of the irradiated area
             lamp_parameters = (0.05, 0.05)
+        elif reactor_name == '5x5_6ch_squared':
+            # 1. LSC DEVICE
+            thickness = 0.003   # 3 mm thickness
+            lsc_x = 0.05        # 5 cm width
+            lsc_y = 0.05        # 5 cm length
+            lsc_name = 'Reactor (5x5cm, 6 channel, Squared)'
+
+            # 2. CHANNELS
+            reaction_mixture = self.getreactionmixture(solvent='acetonitrile')
+            self.reaction_volume = 0
+
+            # Geometry of channels: origin and sizes in mm
+            geometry = []
+            # Note: inlet and outlet have a 1 um LSC before endings to prevent surface overlaps
+            # todo: check if inlet and outlet protruding out of LSC also cause problems
+            #            ORIGIN:  X      Y    Z  L:   X     Y   Z
+            geometry.append(((  0.001, 5.25, 1), ( 10.0,  1.0, 1)))      # Inlet, bigger for the first 10 mm
+            geometry.append((( 10.0,   5.50, 1), ( 37.5,  0.5, 1)))      # 1st channel
+            geometry.append((( 47.0,   5.75, 1), (  0.5,  7.3, 1)))      # 1st Vertical connection
+            geometry.append(((  2.5,  13.05, 1), ( 45.0,  0.5, 1)))      # 2nd channel
+            geometry.append(((  2.5,  13.55, 1), (  0.5,  7.3, 1)))      # 2nd Vertical connection
+            geometry.append(((  2.5,  20.85, 1), ( 45.0,  0.5, 1)))      # 3rd channel
+            geometry.append((( 47.0,  21.35, 1), (  0.5,  7.3, 1)))      # 3rd Vertical connection
+            geometry.append(((  2.5,  28.65, 1), ( 45.0,  0.5, 1)))      # 4th channel
+            geometry.append(((  2.5,  29.15, 1), (  0.5,  7.3, 1)))      # 4th Vertical connection
+            geometry.append(((  2.5,  36.45, 1), ( 45.0,  0.5, 1)))      # 5th channel
+            geometry.append((( 47.0,  36.95, 1), (  0.5,  7.3, 1)))      # 5th Vertical connection
+            geometry.append((( 10.0,  44.25, 1), ( 37.5,  0.5, 1)))      # 6th channel
+            geometry.append(((  0.010,44.00, 1), ( 10.0,  1.0, 1)))      # Inlet, bigger for the first 10 mm
+
+            # Transform mm into meters
+            geometry = [[[coord*0.001 for coord in tuples] for tuples in channel] for channel in geometry]
+
+            for i in range(0, len(geometry)):
+                position = geometry[i]
+                print "positio 9is ",position
+                print "origin ",position[0]
+                print "size ",position[1]
+
+                channel = Channel(origin=position[0], size=position[1],shape="box")
+                channel.material = reaction_mixture
+                channel.name = "Channel" + str(i)
+                self.scene_obj.append(channel)
+                self.reaction_volume += channel.volume
+
+            # 3. LIGHT (Perpendicular planar source 5x5 (matching device) with sun spectrum)
+            lamp_name='SolarSimulator'
+            # Size of the irradiated area
+            lamp_parameters = (0.05, 0.05)
         elif reactor_name == "wip":
              # 1. LSC DEVICE
             thickness = 0.004   # 4 mm thickness
@@ -431,6 +480,26 @@ class Statistics(object):
 
         print luminescent_photons_in_channels/(lumi+luminescent_photons_in_channels)
 
+    def get_bounces(self):
+        """
+        Average number of bounces per luminescent photon
+        :return:
+        """
+        photons = self.db.uids_in_reactor_and_luminescent()
+        print "In channels ",str(len(photons))," are present!"
+
+        bounces = []
+        print photons
+        for photon in photons:
+            pid = self.db.pid_from_uid(photon)
+            # print photon,' is photon whose pid ',pid
+            bounces.append(self.db.bounces_for_pid(pid[0][0]))
+        # print bounces
+
+        y = np.bincount(bounces)
+        x = np.linspace(0,max(bounces),num = max(bounces)+1)
+        xyplot(x, y, 'bounces')
+
     def create_graphs(self, prefix=''):
         """
         Generate a series of graphs on photons stored in self.db
@@ -489,7 +558,7 @@ class Statistics(object):
             data = self.db.wavelengthForUid(uid)
             histogram(data=data, filename=prefix+'plot-lsc-trasmitted')
 
-def histogram(data, filename):
+def histogram(data, filename, range=(400,700)):
     """
     Create an histogram with the cumulative frequency of photons at different wavelength
 
@@ -501,10 +570,13 @@ def histogram(data, filename):
     suffixes = ('png', 'pdf')
 
     # print "histogram called with ",data
-    hist = np.histogram(data, bins=100, range=(400,800))
+    #hist = np.histogram(data, bins=100, range=range)
     # hist = np.histogram(data, bins=np.linspace(400, 800, num=101))
     # print "hist is ",hist
-    plt.hist(data, np.linspace(400, 700, num=101), histtype='stepfilled')
+    if range is None:
+        plt.hist(data, histtype='stepfilled')
+    else:
+        plt.hist(data, np.linspace(range[0], range[1], num=101), histtype='stepfilled')
     for extension in suffixes:
         location = os.path.join(home, "pvtrace_export" + os.sep + filename + "." + extension)
         plt.savefig(location)
@@ -527,7 +599,8 @@ def xyplot(x, y, filename):
     home = os.path.expanduser('~')
     suffixes = ('png', 'pdf')
 
-    plt.scatter(x, y)
+    plt.scatter(x, y, linewidths=1)
+    plt.plot(x, y, '-')
     for extension in suffixes:
         location = os.path.join(home, "pvtrace_export" + os.sep + filename + "." + extension)
         plt.savefig(location)

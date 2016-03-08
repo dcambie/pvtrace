@@ -13,15 +13,15 @@ from Modules import *
 
 scene = Scene()
 
-#reactor = Reactor(reactor_name="5x5_8ch", dye="Red305", dye_concentration=0.20, photocatalyst="MB", photocatalyst_concentration=0.0004)
-reactor = Reactor(reactor_name="5x5_8ch_air", dye="Red305", dye_concentration=0.20, photocatalyst="Air", photocatalyst_concentration=0.0004)
+reactor = Reactor(reactor_name="5x5_6ch_squared", dye="Red305", dye_concentration=0.20, photocatalyst="MB", photocatalyst_concentration=0.0004)
+# reactor = Reactor(reactor_name="5x5_8ch_air", dye="Red305", dye_concentration=0.20, photocatalyst="Air", photocatalyst_concentration=0.0004)
 print "The calculated reactor volume is ",reactor.reaction_volume*1000000," mL"
 # reactor = Reactor(name="5x5_0ch", dye="Red305", dye_concentration=0.20)
 for obj in reactor.scene_obj:
     scene.add_object(obj)
 
 # Doesn't save DB file but uses RAM disk for faster simulation
-trace = Tracer(scene=scene, source=reactor.source, seed=None, throws=100000, database_file=None, use_visualiser=False, show_log=False, show_axis=True, show_counter=True)
+trace = Tracer(scene=scene, source=reactor.source, seed=None, throws=1000, database_file=None, use_visualiser=False, show_log=False, show_axis=True, show_counter=True)
 trace.show_lines = true
 trace.show_path = false
 
@@ -46,5 +46,6 @@ stats.print_report()
 stats.print_detailed()
 #stats.print_excel()
 #stats.create_graphs()
+stats.get_bounces()
 
 sys.exit(0)

@@ -263,7 +263,18 @@ class PhotonDatabase(object):
     
     def pid_from_uid(self, uid):
         return self.cursor.execute('SELECT pid FROM photon WHERE uid=?', (uid,)).fetchall()
+
+    def uids_for_pid(self, pid):
+        return itemise(self.cursor.execute('SELECT uid FROM photon WHERE pid=?', (pid,)))
     
+    def bounces_for_pid(self, pid):
+        # Four events for bounchless absorption
+        # 1. Lamp to LSC
+        # 2. LSC to dye_abs
+        # 3. dye_abs to channel
+        # 4. channel to rmix_abs
+        return len(self.uids_for_pid(pid))-4
+
     def uids_nonradiative_losses(self):
         return itemise(self.cursor.execute("SELECT uid FROM state WHERE reaction = 0 AND surface_id = 'None' AND absorption_counter > 0 AND killed = 0 GROUP BY uid HAVING uid IN (SELECT MAX(uid) FROM photon group BY pid)").fetchall())
     

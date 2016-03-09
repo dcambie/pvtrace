@@ -480,25 +480,35 @@ class Statistics(object):
 
         print luminescent_photons_in_channels/(lumi+luminescent_photons_in_channels)
 
-    def get_bounces(self):
+    def get_bounces(self, photon_list=None, correction=4):
         """
         Average number of bounces per luminescent photon
+
+        :param photon_list: array with uids of photons of interest (they are assumed to be fluorescent)
+        :param correction: correction to minimum steps (i.e. zero bounces)
         :return:
         """
-        photons = self.db.uids_in_reactor_and_luminescent()
-        print "In channels ",str(len(photons))," are present!"
-
+        # Fixme: better calculation of bounces (no correction but real path)
         bounces = []
-        print photons
-        for photon in photons:
+        for photon in photon_list:
             pid = self.db.pid_from_uid(photon)
             # print photon,' is photon whose pid ',pid
-            bounces.append(self.db.bounces_for_pid(pid[0][0]))
-        # print bounces
-
+            bounces.append(self.db.bounces_for_pid(pid=pid[0][0], correction=correction))
         y = np.bincount(bounces)
         x = np.linspace(0,max(bounces),num = max(bounces)+1)
-        xyplot(x, y, 'bounces')
+        return (x, y)
+
+    def history(self, photon_list = None):
+        """
+        Extract from the DB  the trace of the give photons
+
+        :param photon_list: list of uids of photons to be investigated
+        :return:
+        """
+        for photon in photon_list:
+            pid = self.db.pid_from_uid(photon)
+
+
 
     def create_graphs(self, prefix=''):
         """
@@ -551,12 +561,47 @@ class Statistics(object):
             histogram(data=data, filename=prefix+'plot-lsc-reflected')
 
         print "Plotting trasmitted"
-        uid = self.db.uids_out_bound_on_surface('bottom', solar=True)
-        if len(uid) < 10:
+        uids = self.db.uids_out_bound_on_surface('bottom', solar=True)
+        if len(uids) < 10:
             print "[plot-lsc-trasmitted] The database doesn't have enough photons to generate this graph!"
         else:
-            data = self.db.wavelengthForUid(uid)
+            data = self.db.wavelengthForUid(uids)
             histogram(data=data, filename=prefix+'plot-lsc-trasmitted')
+
+        print "Plotting bounces luminescent to channels"
+        uids = self.db.uids_in_reactor_and_luminescent()
+        if len(uids) < 10:
+            print "[bounces channel] The database doesn't have enough photons to generate this graph!"
+        else:
+            data = self.get_bounces(photon_list=uids, correction=4)
+            xyplot(x=data[0], y=data[1], filename=prefix+'bounces_channel')
+
+        print "Plotting bounces luminescent"
+        uids = self.db.uids_luminescent()
+        if len(uids) < 10:
+            print "[bounces channel] The database doesn't have enough photons to generate this graph!"
+        else:
+            data = self.get_bounces(photon_list=uids, correction=3)
+            xyplot(x=data[0], y=data[1], filename=prefix+'bounces_all')
+
+    def saveDB(self, location = None):
+        """
+        Saves to file the current DB to a given location. Useful for in-memory DBs
+
+        :param location: complete URL (path+filename) to save the db to
+        :return:
+        """
+        # Seems impossible to instal sqlitebck on Windows, linking fails with Visual C++ for Python 2.7 even when
+        # sqlite head file and *.lib are provided.
+        import sqlitebck
+        import sqlite3 as sql
+        if location is None:
+            file =  os.path.join(os.path.expanduser('~'), 'pvtrace.db')
+        else:
+            file = location
+        file_connection = sql.connect(file)
+        sqlitebck.copy(self.db.connection, file_connection)
+
 
 def histogram(data, filename, range=(400,700)):
     """

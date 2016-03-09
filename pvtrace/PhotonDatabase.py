@@ -251,9 +251,13 @@ class PhotonDatabase(object):
         return itemise(self.cursor.execute("SELECT MAX(uid) FROM photon GROUP BY pid INTERSECT SELECT uid FROM state WHERE reaction = 1"))
     
     def uids_in_reactor_and_luminescent(self):
-        """Returns photons in reactor and luminescent One absoption is.the reactiorn mixture, so >1"""
+        """Returns photons in reactor and luminescent One absorption is.the reactiorn mixture, so >1"""
         return itemise(self.cursor.execute("SELECT MAX(uid) FROM photon GROUP BY pid INTERSECT SELECT uid FROM state WHERE reaction = 1 AND absorption_counter > 1"))
     
+    def uids_luminescent(self):
+        """Returns luminescent photons"""
+        return itemise(self.cursor.execute("SELECT MAX(uid) FROM photon GROUP BY pid INTERSECT SELECT uid FROM state WHERE absorption_counter > 1"))
+
     def uids_first_intersection(self):
         """Returns the unique identifier of the first intersection for all photons"""
         return self.cursor.execute('SELECT uid FROM state WHERE intersection_counter = 1;').fetchall()
@@ -267,13 +271,13 @@ class PhotonDatabase(object):
     def uids_for_pid(self, pid):
         return itemise(self.cursor.execute('SELECT uid FROM photon WHERE pid=?', (pid,)))
     
-    def bounces_for_pid(self, pid):
+    def bounces_for_pid(self, pid, correction = 4):
         # Four events for bounchless absorption
         # 1. Lamp to LSC
         # 2. LSC to dye_abs
         # 3. dye_abs to channel
         # 4. channel to rmix_abs
-        return len(self.uids_for_pid(pid))-4
+        return len(self.uids_for_pid(pid))-correction
 
     def uids_nonradiative_losses(self):
         return itemise(self.cursor.execute("SELECT uid FROM state WHERE reaction = 0 AND surface_id = 'None' AND absorption_counter > 0 AND killed = 0 GROUP BY uid HAVING uid IN (SELECT MAX(uid) FROM photon group BY pid)").fetchall())

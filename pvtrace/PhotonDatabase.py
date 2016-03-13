@@ -141,7 +141,7 @@ class PhotonDatabase(object):
         self.uid += 1
         
         # Every 50 times write data to dbfile
-        if not self.uid % 1:
+        if self.uid % 50==0:
             self.connection.commit()
 
     def dump_to_file(self, location = None):
@@ -165,6 +165,39 @@ class PhotonDatabase(object):
         file_connection = sql.connect(file)
         sqlitebck.copy(self.connection, file_connection)
         print "DB copy saved as ",file
+
+    def add_db_file(self, filename=None,
+                    tables=("state", "direction", "polarisation", "position", "surface_normal", "photon")):
+        """
+        Adds the data in the give filename db to the current DB (only the tables in tables)
+
+        Used by split_db option to re-merge dumped dbs at the end of simulation
+
+        """
+        print filename
+        self.cursor.execute("ATTACH DATABASE ? AS  toMerge", [filename])
+        for table in tables:
+            self.cursor.execute("INSERT INTO "+table+" SELECT * FROM toMerge."+table)
+        self.cursor.execute("DETACH DATABASE toMerge")
+
+        return False
+        import sqlitebck
+        if filename == None:
+            return False
+        else:
+            sqlitebck.copy(sql.connect(filename), self.connection)
+
+    def empty(self):
+        """
+        Empties DB
+        """
+        self.cursor.execute("DELETE FROM state")
+        self.cursor.execute("DELETE FROM direction")
+        self.cursor.execute("DELETE FROM polarisation")
+        self.cursor.execute("DELETE FROM position")
+        self.cursor.execute("DELETE FROM surface_normal")
+        self.cursor.execute("DELETE FROM photon")
+        self.connection.commit()
         
     def __del__(self):
         self.cursor.close()

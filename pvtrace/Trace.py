@@ -764,7 +764,7 @@ class Tracer(object):
     """An object that will fire multiple photons through the scene."""
     def __init__(self, scene=None, source=None, throws=1, steps=50, seed=None, use_visualiser=True, show_log=False,
                  background=(0.957, 0.957, 1), ambient=0.5, database_file="pvtracedb.sql", show_axis=True,
-                 show_counter=False):
+                 show_counter=False, db_split=False):
         super(Tracer, self).__init__()
         self.scene = scene
         from LightSources import SimpleSource, PlanarSource, CylindricalSource, PointSource, RadialSource
@@ -778,6 +778,13 @@ class Tracer(object):
         self.stats = dict()
         self.show_log = show_log
         self.show_counter = show_counter
+
+        # DB splitting (performance tweak)
+        self.db_split = db_split
+        self.dumped = [] # Keeps a list with filenames of dumped db (if db_split is True and throws>split_num
+        # After 20k photons performance decrease is greater than 20% (compared vs. first photon simulated)
+        self.split_num = 20000
+
         np.random.seed(self.seed)
         if not use_visualiser:
             Visualiser.VISUALISER_ON = False
@@ -876,6 +883,7 @@ class Tracer(object):
             #             if obj.radius < 0.001:
             #                 obj.visible = False
 
+            # DB speed statistics
             if throw==0:
                 then = time.clock()
             elif throw%100==0:
@@ -999,6 +1007,31 @@ class Tracer(object):
                     self.database.log(photon)
                     if self.show_log: 
                         print "   * Reached Max Steps *"
+
+            # Split DB if needed
+            if throw>0 and throw%self.split_num==0:
+                db_num = int(throw/self.split_num)
+                self.database.connection.commit()
+                db_file_dump = os.path.join(os.path.expanduser('~'),"~pvtrace_tmp"+str(db_num)+".sql")
+                self.database.dump_to_file(location = db_file_dump)
+                self.dumped.append(db_file_dump)
+                # Empty DB
+                self.database.empty()
+
+        # Commit DB
+        self.database.connection.commit()
+        if self.db_split:
+            db_num += 1
+            db_file_dump = os.path.join(os.path.expanduser('~'),"~pvtrace_tmp"+str(db_num)+".sql")
+            self.database.dump_to_file(location = db_file_dump)
+            self.dumped.append(db_file_dump)
+
+            # MERGE DB before statistics
+            # this will be done in memory only (RAM is cheap nowadays)
+            self.database = PhotonDatabase.PhotonDatabase(dbfile = None)
+            for db_file in self.dumped:
+                self.database.add_db_file(db_file, tables=("state", "photon"))
+
 
 #    def stop(self):
 #        self.database.connection.commit()

@@ -164,7 +164,7 @@ class PhotonDatabase(object):
             file = location
         file_connection = sql.connect(file)
         sqlitebck.copy(self.connection, file_connection)
-        print "DB copy saved as ",file
+        print "\r DB copy saved as ",file
 
     def add_db_file(self, filename=None,
                     tables=("state", "direction", "polarisation", "position", "surface_normal", "photon")):
@@ -174,18 +174,10 @@ class PhotonDatabase(object):
         Used by split_db option to re-merge dumped dbs at the end of simulation
 
         """
-        print filename
         self.cursor.execute("ATTACH DATABASE ? AS  toMerge", [filename])
         for table in tables:
             self.cursor.execute("INSERT INTO "+table+" SELECT * FROM toMerge."+table)
         self.cursor.execute("DETACH DATABASE toMerge")
-
-        return False
-        import sqlitebck
-        if filename == None:
-            return False
-        else:
-            sqlitebck.copy(sql.connect(filename), self.connection)
 
     def empty(self):
         """

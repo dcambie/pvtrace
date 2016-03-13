@@ -26,6 +26,17 @@ import Geometry as geo
 import ConstructiveGeometry as csg
 import external.transformations as tf
 
+def keyInput(evt):
+    s = evt.key
+    if len(s) == 1:
+        if s == 'd':
+            self.display.center = (self.display.center[0]+0.01,self.display.center[1],self.display.center[2])
+        if s == 's':
+            self.display.center = (self.display.center[0],self.display.center[1]-0.01,self.display.center[2])
+        if s == 'a':
+            self.display.center = (self.display.center[0]-0.01,self.display.center[1],self.display.center[2])
+        if s == 'w':
+            self.display.center = (self.display.center[0],self.display.center[1]+0.01,self.display.center[2])
 
 class Visualiser (object):
     """Visualiser a class that converts project geometry objects into vpython objects and draws them. It can be used programmatically: just add objects as they are created and the changes will update in the display."""
@@ -37,13 +48,13 @@ class Visualiser (object):
         super(Visualiser, self).__init__()
         if not Visualiser.VISUALISER_ON:
             return
+
         self.display = visual.display(title='PVTrace', x=0, y=0, width=800, height=600, background=(0.957, 0.957, 1), ambient=0.5)
         self.display.exit = False
 #        self.display.autocenter = True
         self.display.forward = vector(0,0.75,-0.5)
         self.display.center = (0.035,0.03,0)
-        
-        #<0.00112387, 0.895789, -0.444478>
+        # scene.bind('keydown', keyInput)
 
         if show_axis:
             visual.curve(pos=[(0,0,0), (.08,0,0)], radius=0.0005, color=visual.color.red)
@@ -52,7 +63,6 @@ class Visualiser (object):
             visual.label(pos=(.09, 0, 0), text='X', linecolor=visual.color.red)
             visual.label(pos=(0, .08, 0), text='Y', linecolor=visual.color.green)
             visual.label(pos=(0, 0, .07), text='Z', linecolor=visual.color.blue)
-        
     
     def addBox(self, box, colour=None, opacity=1., material=visual.materials.plastic):
         if not Visualiser.VISUALISER_ON:
@@ -62,13 +72,13 @@ class Visualiser (object):
                 colour = visual.color.red
             org = geo.transform_point(box.origin, box.transform)
             ext = geo.transform_point(box.extent, box.transform)
-            print "Visualiser: box origin=%s, extent=%s" % (str(org), str(ext))
+            # print "Visualiser: box origin=%s, extent=%s" % (str(org), str(ext))
             size = np.abs(ext - org)
             
             pos = org + 0.5*size
-            print "Visualiser: box position=%s, size=%s" % (str(pos), str(size))
+            # print "Visualiser: box position=%s, size=%s" % (str(pos), str(size))
             angle, direction, point = tf.rotation_from_matrix(box.transform)
-            print "colour,", colour
+            # print "colour,", colour
             if np.allclose(np.array(colour), np.array([0,0,0])):
                 visual.box(pos=pos, size=size, material=material, opacity=opacity)
             else:
@@ -155,8 +165,8 @@ class Visualiser (object):
             return
         if colour is None:
             colour = visual.color.blue
-        #FIXME tempora
-        colour = visual.color.blue
+        # FIXME temporary code for blue channels (when cylindric in shape)
+        # colour = visual.color.blue
         #angle, direction, point = tf.rotation_from_matrix(cylinder.transform)
         #axis = direction * cylinder.length
         position = geo.transform_point([0,0,0], cylinder.transform)
@@ -175,22 +185,6 @@ class Visualiser (object):
         """
         Visualise a CSG structure in a space subset defined by xmin, xmax, ymin, .... with division factor (i.e. ~ resolution) res
         """
-
-        #INTone = Box(origin = (-1.,-1.,-0.), extent = (1,1,3))
-        #INTtwo = Box(origin = (-0.5,-0.5,0), extent = (0.5,0.5,3))
-        #INTtwo.append_transform(tf.translation_matrix((0,0.5,0)))
-        #INTtwo.append_transform(tf.rotation_matrix(np.pi/4, (0,0,1)))
-        #CSGobj = CSGsub(INTone, INTtwo)
-       
-        #xmin = -1.
-        #xmax = 1.
-        #ymin = -1.
-        #ymax = 1.
-        #zmin = -1.
-        #zmax = 3.
-
-        #resolution = 0.05
-        #print "Resolution: ", res
 
         xmin = origin[0]
         xmax = extent[0]
@@ -263,13 +257,25 @@ class Visualiser (object):
         visual.box(pos=pos, size=size, color=colour, opacity=opacity, material=material)
         
     def addPhoton(self, photon):
-        """Draws a smallSphere with direction arrow and polariation (if data is avaliable)."""
+        """
+        Draws a smallSphere with direction arrow and polarisation (if data is available).
+        """
         self.addSmallSphere(photon.position)
         visual.arrow(pos=photon.position, axis=photon.direction * 0.0005, shaftwidth=0.0003, color=visual.color.magenta, opacity=0.8)
         if photon.polarisation is not None:
             visual.arrow(pos=photon.position, axis=photon.polarisation * 0.0005, shaftwidth=0.0003, color=visual.color.white, opacity=0.4 )
         
-    def addObject(self, obj, colour=None, opacity=0.5, res=0.05, material=None):
+    def addObject(self, obj, colour=None, opacity=0.5, res=0.01, material=None):
+        """
+        Translates Scene's geometry elements into CSG elements for visualizer
+
+        :param obj: object to draw (link to the "real"object used in simulation_
+        :param colour: display color
+        :param opacity: opacity
+        :param res: resolution
+        :param material: material
+        :return: None
+        """
         if not Visualiser.VISUALISER_ON:
             return
         if isinstance(obj, geo.Box):
@@ -288,50 +294,3 @@ class Visualiser (object):
             self.addConvex(obj, colour=colour, material=material, opacity=opacity)
         if isinstance(obj, geo.Sphere):
             self.addSphere(obj, colour=colour, material=material, opacity=opacity)
-
-
-if False:
-    box1 = geo.Box(origin=[0,0,0], extent=[2,2,2])
-    box2 = geo.Box(origin=[2,2,2], extent=[2.1,4,4])
-    ray1 = geo.Ray(position=[-1,-1,-1], direction=[1,1,1])
-    ray2 = geo.Ray(position=[-1,-1,-1], direction=[1,0,0])
-    vis = Visualiser()
-    vis.addObject(box1)
-    import time
-    vis.addObject(ray1)
-    vis.addObject(ray2)
-    vis.addObject(box2)
-    vis.addLine([0,0,0],[5,4,5])
-    
-    time.sleep(1)
-    print vis.display.forward
-    time.sleep(1)
-    print vis.display.forward
-    time.sleep(1)
-    print vis.display.forward
-    time.sleep(1)
-    print vis.display.forward
-    time.sleep(1)
-    print vis.display.forward
-    
-    
-#    newforward = vector(vis.display.forward)
-#    newforward = rotate(newforward, angle=0.3, axis=vis.display.up)
-#    vis.display.forward = newforward
-
-"""
-# TEST TEST TEST
-vis = Visualiser()
-
-INTone = geo.Box(origin = (-1.,-1.,-0.), extent = (1,1,3))
-INTtwo = geo.Box(origin = (-0.5,-0.5,0), extent = (0.5,0.5,3))
-#INTtwo.append_transform(tf.translation_matrix((0,0.5,0)))
-INTtwo.append_transform(tf.rotation_matrix(np.pi/4, (0,0,1)))
-myobj = csg.CSGsub(INTone, INTtwo)
-
-#vis.addObject(INTone, colour=visual.color.green)
-#vis.addObject(INTtwo, colour=visual.color.blue)
-
-vis.addObject(myobj, res=0.05, colour = visual.color.green)
-"""
-

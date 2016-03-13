@@ -581,26 +581,7 @@ class Statistics(object):
             xyplot(x=data[0], y=data[1], filename=prefix+'bounces_all')
 
     def saveDB(self, location = None):
-        """
-        Saves to file the current DB to a given location. Useful for in-memory DBs
-
-        :param location: complete URL (path+filename) to save the db to
-        :return:
-        """
-        # Seems impossible to instal sqlitebck on Windows, linking fails with Visual C++ for Python 2.7 even when
-        # sqlite head file and *.lib are provided.
-        # import apsw
-
-        import sqlitebck
-        import sqlite3 as sql
-        if location is None:
-            file = os.path.join(os.path.expanduser('~'), 'pvtracedb.sql')
-        else:
-            file = location
-        file_connection = sql.connect(file)
-        sqlitebck.copy(self.db.connection, file_connection)
-        print "DB copy saved as ",file
-
+        self.db.dump_to_file(location)
 
 def histogram(data, filename, range=(400,700)):
     """

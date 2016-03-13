@@ -1,7 +1,6 @@
 from __future__ import division
 import numpy as np
 import sqlite3 as sql
-#import apsw as sql
 import inspect
 import types
 import os
@@ -144,6 +143,28 @@ class PhotonDatabase(object):
         # Every 50 times write data to dbfile
         if not self.uid % 1:
             self.connection.commit()
+
+    def dump_to_file(self, location = None):
+        """
+        Saves to file the current DB to a given location. Useful for in-memory DBs
+
+        NOTE: it doesn't update self.connection with the new location, so the old db will still be used for further
+         query (intended behaviour since, if it's :memory:, is presumably faster
+
+        :param location: complete URL (path+filename) to save the db to
+        :return:
+        """
+        # Seems impossible to instal sqlitebck on Windows, linking fails with Visual C++ for Python 2.7 even when
+        # sqlite head file and *.lib are provided.
+        # import apsw
+        import sqlitebck
+        if location is None:
+            file = os.path.join(os.path.expanduser('~'), 'pvtracedb.sql')
+        else:
+            file = location
+        file_connection = sql.connect(file)
+        sqlitebck.copy(self.connection, file_connection)
+        print "DB copy saved as ",file
         
     def __del__(self):
         self.cursor.close()

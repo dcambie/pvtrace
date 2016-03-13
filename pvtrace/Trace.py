@@ -762,7 +762,9 @@ class Scene(object):
 
 class Tracer(object):
     """An object that will fire multiple photons through the scene."""
-    def __init__(self, scene=None, source=None, throws=1, steps=50, seed=None, use_visualiser=True, show_log=False, background=(0.957, 0.957, 1), ambient=0.5, database_file="pvtracedb.sql", show_axis=True, show_counter=False):
+    def __init__(self, scene=None, source=None, throws=1, steps=50, seed=None, use_visualiser=True, show_log=False,
+                 background=(0.957, 0.957, 1), ambient=0.5, database_file="pvtracedb.sql", show_axis=True,
+                 show_counter=False):
         super(Tracer, self).__init__()
         self.scene = scene
         from LightSources import SimpleSource, PlanarSource, CylindricalSource, PointSource, RadialSource
@@ -785,7 +787,8 @@ class Tracer(object):
         
         for obj in scene.objects:
             if obj != scene.bounds:
-                if not isinstance(obj.shape, CSGadd) and not isinstance(obj.shape, CSGint) and not isinstance(obj.shape, CSGsub):
+                if not isinstance(obj.shape, CSGadd) and not isinstance(obj.shape, CSGint)\
+                        and not isinstance(obj.shape, CSGsub):
                 
                     #import pdb; pdb.set_trace()
                     if isinstance(obj, RayBin):
@@ -860,7 +863,8 @@ class Tracer(object):
         self.show_normals = False
         
     def start(self):
-        
+        import time
+
         logged = 0
         for throw in range(0, self.throws):
             #import pdb; pdb.set_trace()
@@ -871,7 +875,16 @@ class Tracer(object):
             #         if obj.__class__ is visual.cylinder:
             #             if obj.radius < 0.001:
             #                 obj.visible = False
-                
+
+            if throw==0:
+                then = time.clock()
+            elif throw%100==0:
+                now = time.clock()
+                zeit = now-then
+                sys.stdout.write('\r'+str(throw)+" "+str(zeit).rjust(6, ' '))
+                print
+                then = now
+
             if self.show_log:
                 print "Photon number:", throw
             elif self.show_counter:

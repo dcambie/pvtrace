@@ -16,9 +16,10 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 
-#PVTDATA = '/home/dario/pvtrace/data' # Hack needed for running simulations on /tmp from VM
+# PVTDATA = '/home/dario/pvtrace/data' # Hack needed for running simulations on /tmp from VM
 
 model_checks = true
+
 
 class LightSource(object):
     """
@@ -38,7 +39,7 @@ class LightSource(object):
         """
         Plots the lightsource spectrum
         """
-        xyplot(x=self.light.spectrum.x, y=self.light.spectrum.y, filename='ligthsource_'+self.name+'_spectrum')
+        xyplot(x=self.light.spectrum.x, y=self.light.spectrum.y, filename='ligthsource_' + self.name + '_spectrum')
 
 
 class SolarSimulator(object):
@@ -49,15 +50,17 @@ class SolarSimulator(object):
         :param parameters: list with sizes (x and y)
         :return: PlanarSource
         """
-        if len(parameters)<2:
+        if len(parameters) < 2:
             raise Exception('Missing parameters for SolarSimulator! Dimensions (x,y in meters) are needed')
         # todo: This should be replaced with solar simulator actual spectrum
         spectrum_file = os.path.join(PVTDATA, 'sources', 'AM1.5g-full.txt')
         self.spectrum = load_spectrum(spectrum_file, xbins=np.arange(400, 700))
-        self.source = PlanarSource(direction=(0, 0, -1), spectrum=self.spectrum, length=parameters[0], width=parameters[1])
+        self.source = PlanarSource(direction=(0, 0, -1), spectrum=self.spectrum, length=parameters[0],
+                                   width=parameters[1])
         self.source.name = 'Solar simulator Michael (small)'
         # distance from device in this case is only important for Visualizer :)
         self.source.translate((0, 0, 0.025))
+
 
 class Photocatalyst(object):
     def __init__(self, compound, concentration):
@@ -76,10 +79,30 @@ class Photocatalyst(object):
         photocat_abs_data[:, 1] = photocat_abs_data[:, 1] * self.concentration
         return Spectrum(x=photocat_abs_data[:, 0], y=photocat_abs_data[:, 1])
 
+    def reactionMixture(self, solvent=None):
+        if solvent is None:
+            self.compound.solvent
+
+        if solvent == 'acetonitrile':
+            n = 1.344
+        elif solvent == 'air':
+            n = 1
+        elif solvent == 'water':
+            n = 1.33
+        else:
+            print "Unknown solvent. Water assumed as worst scenario (n=1.33)"
+            n = 1.33
+
+        # Reaction mixture as abortive medium with no emission
+        ems = Spectrum([0, 1000], [0.1, 0])
+        reaction_mixture = Material(absorption_data=self.spectrum(), emission_data=ems, quantum_efficiency=0.0,
+                                    refractive_index=n)
+        return reaction_mixture
+
 
 class MethyleneBlue(object):
     def __init__(self):
-        pass
+        self.solvent = "acetonitrile"
 
     @staticmethod
     def abs():
@@ -94,11 +117,12 @@ class Air(object):
     """
     Air as photocatalyst: abs=0 for all wavelength.
     """
+
     def __init__(self):
-        pass
+        self.solvent = "air"
 
     def abs(self):
-         # return Spectrum([0,1000], [0,0])
+        # return Spectrum([0,1000], [0,0])
         return np.loadtxt(os.path.join(PVTDATA, "photocatalysts", 'Air.txt'))
 
 
@@ -138,12 +162,12 @@ class Red305(object):
         ap = absorption_data[:, 1].max()
         # Linearity measured up to 0.15mg/g, then it bends as bit due to too high Abs values for spectrometer
         # (secondary peak still linear at 0.20mg/g)
-        device_abs_at_peak = 13.031 * self.concentration * (self.thickness/0.003)
+        device_abs_at_peak = 13.031 * self.concentration * (self.thickness / 0.003)
         print "with a concentration of ", self.concentration, ' and thickness', self.thickness, ' this device should have an Abs at peak of', device_abs_at_peak
         # Correcting factor to adjust absorption at peak to match settings
         # Note that in 'original' pvTrace, thin-film.py file np.log was used incorrectly (log10() intended, got ln())
         phi = device_abs_at_peak / (ap * self.thickness)
-        print 'phi equals ',phi,' (this should approximately be simulation conc/tabulated conc (i.e. 0.10mg/g)'
+        print 'phi equals ', phi, ' (this should approximately be simulation conc/tabulated conc (i.e. 0.10mg/g)'
         # Applying correction to spectrum
         absorption_data[:, 1] = absorption_data[:, 1] * phi
 
@@ -167,12 +191,24 @@ class Reactor(object):
     Class that models the experimental device
     """
 
-    def __init__(self, reactor_name, dye, dye_concentration, photocatalyst=None, photocatalyst_concentration=0.001):
+    def __init__(self, reactor_name, dye, dye_concentration, photocatalyst=None, photocatalyst_concentration=0.001,
+                 solvent=None):
+
+        # Set photocatalyst
         if photocatalyst is None:
             self.photocat = False
         else:
             self.photocat = Photocatalyst(photocatalyst, photocatalyst_concentration)
+
+        # Solvent is default for photocat or explicitly set
+        if solvent == None:
+            reaction_mixture = self.photocat.reactionMixture()
+        else:
+            reaction_mixture = self.photocat.reactionMixture(solvent)
+
+        # Set default values
         self.scene_obj = []
+        self.reaction_volume = 0
 
         # Get Abs data for PDMS (depending on reactor thickness they will be adjusted and the material will be created
         # out of the reactor loop
@@ -180,14 +216,14 @@ class Reactor(object):
 
         if reactor_name == '5x5_8ch':
             # 1. LSC DEVICE
+            # @formatter:off
             thickness = 0.003   # 3 mm thickness
             lsc_x = 0.05        # 5 cm width
             lsc_y = 0.05        # 5 cm length
             lsc_name = 'Reactor (5x5cm, 8 channel, Dye: ' + dye + ')'
+            # @formatter:on
 
             # 2. CHANNELS
-            reaction_mixture = self.getreactionmixture(solvent='acetonitrile')
-            self.reaction_volume = 0
             for i in range(1, 9):
                 channel = Channel(origin=(0.005, 0.007 + 0.005 * (i - 1), 0.001), size=(0.040, 0.001, 0.001),
                                   shape="box")
@@ -197,81 +233,60 @@ class Reactor(object):
                 self.reaction_volume += channel.volume
 
             # 3. LIGHT (Perpendicular planar source 5x5 (matching device) with sun spectrum)
-            lamp_name='SolarSimulator'
-            # Size of the irradiated area
-            lamp_parameters = (0.05, 0.05)
-        elif reactor_name == '5x5_8ch_air':
-            # 1. LSC DEVICE
-            thickness = 0.003   # 3 mm thickness
-            lsc_x = 0.05        # 5 cm width
-            lsc_y = 0.05        # 5 cm length
-            lsc_name = 'Reactor (5x5cm, 8 channel, Air)'
-
-            # 2. CHANNELS
-            reaction_mixture = self.getreactionmixture(solvent='air')
-            self.reaction_volume = 0
-            for i in range(1, 9):
-                channel = Channel(origin=(0, 0.007 + 0.005 * (i - 1), 0.001), size=(0.050, 0.001, 0.001),
-                                  shape="box")
-                channel.material = reaction_mixture
-                channel.name = "Channel" + str(i)
-                self.scene_obj.append(channel)
-                self.reaction_volume += channel.volume
-
-            # 3. LIGHT (Perpendicular planar source 5x5 (matching device) with sun spectrum)
-            lamp_name='SolarSimulator'
+            lamp_name = 'SolarSimulator'
             # Size of the irradiated area
             lamp_parameters = (0.05, 0.05)
         elif reactor_name == '5x5_6ch_squared':
             # 1. LSC DEVICE
+            # @formatter:off
             thickness = 0.003   # 3 mm thickness
             lsc_x = 0.05        # 5 cm width
             lsc_y = 0.05        # 5 cm length
             lsc_name = 'Reactor (5x5cm, 6 channel, Squared)'
+            # @formatter:on
 
             # 2. CHANNELS
-            reaction_mixture = self.getreactionmixture(solvent='acetonitrile')
-            self.reaction_volume = 0
-
             # Geometry of channels: origin and sizes in mm
             geometry = []
             # Note: inlet and outlet have a 1 um LSC before endings to prevent surface overlaps
             # todo: check if inlet and outlet protruding out of LSC also cause problems
-            #            ORIGIN:  X      Y    Z  L:   X     Y   Z
-            geometry.append(((    0,   5.00, 1), ( 10.0,  1.0, 1)))      # Inlet, bigger for the first 10 mm
-            geometry.append((( 10.0,   5.25, 1), ( 37.5,  0.5, 1)))      # 1st channel
-            geometry.append((( 47.0,   5.75, 1), (  0.5,  7.3, 1)))      # 1st Vertical connection
-            geometry.append(((  2.5,  13.05, 1), ( 45.0,  0.5, 1)))      # 2nd channel
-            geometry.append(((  2.5,  13.55, 1), (  0.5,  7.3, 1)))      # 2nd Vertical connection
-            geometry.append(((  2.5,  20.85, 1), ( 45.0,  0.5, 1)))      # 3rd channel
-            geometry.append((( 47.0,  21.35, 1), (  0.5,  7.3, 1)))      # 3rd Vertical connection
-            geometry.append(((  2.5,  28.65, 1), ( 45.0,  0.5, 1)))      # 4th channel
-            geometry.append(((  2.5,  29.15, 1), (  0.5,  7.3, 1)))      # 4th Vertical connection
-            geometry.append(((  2.5,  36.45, 1), ( 45.0,  0.5, 1)))      # 5th channel
-            geometry.append((( 47.0,  36.95, 1), (  0.5,  7.3, 1)))      # 5th Vertical connection
-            geometry.append((( 10.0,  44.25, 1), ( 37.5,  0.5, 1)))      # 6th channel
-            geometry.append(((    0,  44.00, 1), ( 10.0,  1.0, 1)))      # Outlet, bigger for the first 10 mm
+            # @formatter:off
+            #        ORIGIN:  X      Y    Z  L:   X     Y   Z
+            geometry.append(((   0,  5.00, 1), (10.0, 1.0, 1)))  # Inlet, bigger for the first 10 mm
+            geometry.append(((10.0,  5.25, 1), (37.5, 0.5, 1)))  # 1st channel
+            geometry.append(((47.0,  5.75, 1), ( 0.5, 7.3, 1)))  # 1st Vertical connection
+            geometry.append((( 2.5, 13.05, 1), (45.0, 0.5, 1)))  # 2nd channel
+            geometry.append((( 2.5, 13.55, 1), ( 0.5, 7.3, 1)))  # 2nd Vertical connection
+            geometry.append((( 2.5, 20.85, 1), (45.0, 0.5, 1)))  # 3rd channel
+            geometry.append(((47.0, 21.35, 1), ( 0.5, 7.3, 1)))  # 3rd Vertical connection
+            geometry.append((( 2.5, 28.65, 1), (45.0, 0.5, 1)))  # 4th channel
+            geometry.append((( 2.5, 29.15, 1), ( 0.5, 7.3, 1)))  # 4th Vertical connection
+            geometry.append((( 2.5, 36.45, 1), (45.0, 0.5, 1)))  # 5th channel
+            geometry.append(((47.0, 36.95, 1), ( 0.5, 7.3, 1)))  # 5th Vertical connection
+            geometry.append(((10.0, 44.25, 1), (37.5, 0.5, 1)))  # 6th channel
+            geometry.append(((   0, 44.00, 1), (10.0, 1.0, 1)))  # Outlet, bigger for the first 10 mm
+            # @formatter:on
 
-            # Transform mm into meters
-            geometry = [[[coord*0.001 for coord in tuples] for tuples in channel] for channel in geometry]
+            # Transform mm into meters (overly complicated code to multiply all values im geometry per 0.001)
+            geometry = [[[coord * 0.001 for coord in tuples] for tuples in channel] for channel in geometry]
 
             for i in range(0, len(geometry)):
                 position = geometry[i]
-                channel = Channel(origin=position[0], size=position[1],shape="box")
+                channel = Channel(origin=position[0], size=position[1], shape="box")
                 channel.material = reaction_mixture
                 channel.name = "Channel" + str(i)
                 self.scene_obj.append(channel)
                 self.reaction_volume += channel.volume
 
             # 3. LIGHT (Perpendicular planar source 5x5 (matching device) with sun spectrum)
-            lamp_name='SolarSimulator'
+            lamp_name = 'SolarSimulator'
             # Size of the irradiated area
             lamp_parameters = (0.05, 0.05)
         elif reactor_name == "wip":
-             # 1. LSC DEVICE
-            thickness = 0.004   # 4 mm thickness
-            lsc_x = 0.05        # 5 cm width
-            lsc_y = 0.05        # 5 cm length
+            # 1. LSC DEVICE
+            thickness = 0.004  # 4 mm thickness
+            lsc_x = 0.05  # 5 cm width
+            lsc_y = 0.05  # 5 cm length
             lsc_name = 'Reactor (5x5cm, 8 channel, Dye: ' + dye + ')'
 
             # 2. CHANNELS
@@ -286,7 +301,7 @@ class Reactor(object):
                 self.reaction_volume += channel.volume
 
             # 3. LIGHT (Perpendicular planar source 5x5 (matching device) with sun spectrum)
-            lamp_name='SolarSimulator'
+            lamp_name = 'SolarSimulator'
             # Size of the irradiated area
             lamp_parameters = (0.05, 0.05)
         else:
@@ -294,7 +309,7 @@ class Reactor(object):
 
         # 1. PDMS
         # Since PDMS data is m-1 it gets corrected for thickness....
-        pdms_abs = Spectrum(x=pdms_data[:, 0], y=pdms_data[:, 1]*thickness)
+        pdms_abs = Spectrum(x=pdms_data[:, 0], y=pdms_data[:, 1] * thickness)
         # Giving emission suppress error. Not used due to quantum_efficiency = 0 :)
         pdms_ems = Spectrum([0, 1000], [0.1, 0])
         # Create Material
@@ -314,29 +329,6 @@ class Reactor(object):
         self.source = lamp.light
         if model_checks:
             lamp.plot()
-
-    def getreactionmixture(self, solvent=None):
-        if solvent is None:
-            n = 1.33
-        elif solvent == 'acetonitrile':
-            n = 1.344
-        elif solvent == 'air':
-            n = 1
-        elif solvent == 'water':
-            n = 1.33
-        else:
-            print "Unknown solvent. Water assumed as worst scenario (n=1.33)"
-            n = 1.33
-
-        if not self.photocat:
-            raise Exception('No Photocatalyst data for reaction mixture')
-
-        # Reaction mixture as abortive medium with no emission
-        ems = Spectrum([0, 1000], [0.1, 0])
-        reaction_mixture = Material(absorption_data=self.photocat.spectrum(), emission_data=ems, quantum_efficiency=0.0,
-                                    refractive_index=n)
-        return reaction_mixture
-
 
 class Statistics(object):
     """
@@ -358,7 +350,7 @@ class Statistics(object):
         :rtype: string
         """
 
-        return format((num_photons / self.tot) * 100, '.2f')+' % ('+str(num_photons).rjust(6, ' ')+')'
+        return format((num_photons / self.tot) * 100, '.2f') + ' % (' + str(num_photons).rjust(6, ' ') + ')'
 
     def print_report(self):
         print "##### PVTRACE LOG RESULTS #####"
@@ -423,7 +415,8 @@ class Statistics(object):
         #     print " ".join(map(str, self.db.wavelengthForUid(photon)))  # Clean output (for elaborations)
         # print " --- 8< --- 8< --- 8< --- CUT HERE  --- 8< --- 8< --- 8< --- "
 
-        print 'Photons in channels (direct)     ', self.percent(photons_in_channels_tot-luminescent_photons_in_channels)
+        print 'Photons in channels (direct)     ', self.percent(
+            photons_in_channels_tot - luminescent_photons_in_channels)
         print 'Photons in channels (luminescent)', self.percent(luminescent_photons_in_channels)
         print 'Photons in channels (sum)        ', self.percent(photons_in_channels_tot)
 
@@ -437,6 +430,7 @@ class Statistics(object):
         #     print "Results validity check OK :)"
         # else:
         #     print "!!! ERROR !!! Check results carefully!"
+
     def print_excel(self):
         """
         Prints an easy to import report on the fate of the photons stored in self.db
@@ -448,11 +442,11 @@ class Statistics(object):
         print self.tot
         print self.non_radiative
         print "\n"
-        
+
         edges = ['left', 'near', 'far', 'right']
         apertures = ['top', 'bottom']
 
-        lumi=0
+        lumi = 0
         for surface in edges:
             lumi = lumi + len(
                 self.db.uids_out_bound_on_surface(surface, luminescent=True))
@@ -464,17 +458,17 @@ class Statistics(object):
             print len(
                 self.db.uids_out_bound_on_surface(surface, luminescent=True))
         print "\n"
-        
+
         for surface in apertures:
             print len(
                 self.db.uids_out_bound_on_surface(surface, solar=True))
         print "\n"
         luminescent_photons_in_channels = len(self.db.uids_in_reactor_and_luminescent())
         photons_in_channels_tot = len(self.db.uids_in_reactor())
-        print photons_in_channels_tot-luminescent_photons_in_channels
+        print photons_in_channels_tot - luminescent_photons_in_channels
         print luminescent_photons_in_channels
 
-        print luminescent_photons_in_channels/(lumi+luminescent_photons_in_channels)
+        print luminescent_photons_in_channels / (lumi + luminescent_photons_in_channels)
 
     def get_bounces(self, photon_list=None, correction=4):
         """
@@ -491,10 +485,10 @@ class Statistics(object):
             # print photon,' is photon whose pid ',pid
             bounces.append(self.db.bounces_for_pid(pid=pid[0][0], correction=correction))
         y = np.bincount(bounces)
-        x = np.linspace(0,max(bounces),num = max(bounces)+1)
+        x = np.linspace(0, max(bounces), num=max(bounces) + 1)
         return (x, y)
 
-    def history(self, photon_list = None):
+    def history(self, photon_list=None):
         """
         Extract from the DB  the trace of the give photons
 
@@ -503,8 +497,6 @@ class Statistics(object):
         """
         for photon in photon_list:
             pid = self.db.pid_from_uid(photon)
-
-
 
     def create_graphs(self, prefix=''):
         """
@@ -516,7 +508,7 @@ class Statistics(object):
             print "[plot-reactor] The database doesn't have enough photons to generate this graph!"
         else:
             data = self.db.wavelengthForUid(uid)
-            histogram(data=data, filename=prefix+'plot-reactor')
+            histogram(data=data, filename=prefix + 'plot-reactor')
 
         print "Plotting reactor luminescent..."
         uid = self.db.uids_in_reactor_and_luminescent()
@@ -524,7 +516,7 @@ class Statistics(object):
             print "[plot-reactor-luminescent] The database doesn't have enough photons to generate this graph!"
         else:
             data = self.db.wavelengthForUid(uid)
-            histogram(data=data, filename=prefix+'plot-reactor-luminescent')
+            histogram(data=data, filename=prefix + 'plot-reactor-luminescent')
 
         print "Plotting concentrated photons (luminescent leaving at LSC edges)"
         edges = ['left', 'near', 'far', 'right']
@@ -535,7 +527,7 @@ class Statistics(object):
             print "[plot-lsc-edges] The database doesn't have enough photons to generate this graph!"
         else:
             data = self.db.wavelengthForUid(uid)
-            histogram(data=data, filename=prefix+'plot-lsc-edges')
+            histogram(data=data, filename=prefix + 'plot-lsc-edges')
 
         print "Plotting escaped photons (luminescent leaving at top/bottom)"
         apertures = ['top', 'bottom']
@@ -546,7 +538,7 @@ class Statistics(object):
             print "[plot-lsc-apertures] The database doesn't have enough photons to generate this graph!"
         else:
             data = self.db.wavelengthForUid(uid)
-            histogram(data=data, filename=prefix+'plot-lsc-apertures')
+            histogram(data=data, filename=prefix + 'plot-lsc-apertures')
 
         print "Plotting reflected"
         uid = self.db.uids_out_bound_on_surface('top', solar=True)
@@ -554,7 +546,7 @@ class Statistics(object):
             print "[plot-lsc-reflected] The database doesn't have enough photons to generate this graph!"
         else:
             data = self.db.wavelengthForUid(uid)
-            histogram(data=data, filename=prefix+'plot-lsc-reflected')
+            histogram(data=data, filename=prefix + 'plot-lsc-reflected')
 
         print "Plotting trasmitted"
         uids = self.db.uids_out_bound_on_surface('bottom', solar=True)
@@ -562,7 +554,7 @@ class Statistics(object):
             print "[plot-lsc-trasmitted] The database doesn't have enough photons to generate this graph!"
         else:
             data = self.db.wavelengthForUid(uids)
-            histogram(data=data, filename=prefix+'plot-lsc-trasmitted')
+            histogram(data=data, filename=prefix + 'plot-lsc-trasmitted')
 
         print "Plotting bounces luminescent to channels"
         uids = self.db.uids_in_reactor_and_luminescent()
@@ -570,7 +562,7 @@ class Statistics(object):
             print "[bounces channel] The database doesn't have enough photons to generate this graph!"
         else:
             data = self.get_bounces(photon_list=uids, correction=4)
-            xyplot(x=data[0], y=data[1], filename=prefix+'bounces_channel')
+            xyplot(x=data[0], y=data[1], filename=prefix + 'bounces_channel')
 
         print "Plotting bounces luminescent"
         uids = self.db.uids_luminescent()
@@ -578,12 +570,13 @@ class Statistics(object):
             print "[bounces channel] The database doesn't have enough photons to generate this graph!"
         else:
             data = self.get_bounces(photon_list=uids, correction=3)
-            xyplot(x=data[0], y=data[1], filename=prefix+'bounces_all')
+            xyplot(x=data[0], y=data[1], filename=prefix + 'bounces_all')
 
-    def saveDB(self, location = None):
+    def saveDB(self, location=None):
         self.db.dump_to_file(location)
 
-def histogram(data, filename, range=(400,700)):
+
+def histogram(data, filename, range=(400, 700)):
     """
     Create an histogram with the cumulative frequency of photons at different wavelength
 
@@ -595,7 +588,7 @@ def histogram(data, filename, range=(400,700)):
     suffixes = ('png', 'pdf')
 
     # print "histogram called with ",data
-    #hist = np.histogram(data, bins=100, range=range)
+    # hist = np.histogram(data, bins=100, range=range)
     # hist = np.histogram(data, bins=np.linspace(400, 800, num=101))
     # print "hist is ",hist
     if range is None:
@@ -608,6 +601,7 @@ def histogram(data, filename, range=(400,700)):
         os.chmod(location, 0o777)
         print 'Plot saved in ', location, '!'
     plt.clf()
+
 
 def xyplot(x, y, filename):
     """

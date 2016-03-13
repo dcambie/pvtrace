@@ -257,7 +257,12 @@ class Ray(object):
 class Intersection(object):
     """Defines the intersection between a ray and a geometrical objects."""
     def __init__(self, ray, point, receiver):
-        """An intersection is defined as the point that a ray and receiver meet. This class is simiply a wapper for these deatils. Intersection objects can be sorted with respect to their separations (distance from the ray.position to the point of intersection), this length is returned with intersection_obj.separation."""
+        """
+        An intersection is defined as the point that a ray and receiver meet.
+        This class is simply a wrapper for these details.
+        Intersection objects can be sorted with respect to their separations (distance from the ray.position
+        to the point of intersection), this length is returned with intersection_obj.separation.
+        """
         super(Intersection, self).__init__()
         self.ray = ray
         self.point = point
@@ -691,7 +696,7 @@ class Box(object):
         """
         
         #pdb.set_trace()
-        assert self.on_surface(ray.position), "The point is not on the surface of the box."
+        assert self.on_surface(ray.position), "The point is not on the surface of the box."+str(ray.position)
         invtrans = tf.inverse_matrix(self.transform)
         rpos = transform_point(ray.position, invtrans)
         rdir = transform_direction(ray.direction, invtrans)
@@ -967,8 +972,6 @@ class Cylinder(object):
             return False
         """
 
-        
-        
         local_point = transform_point(point, tf.inverse_matrix(self.transform))
         
         origin_z = 0.

@@ -238,8 +238,8 @@ class Reactor(object):
             # Note: inlet and outlet have a 1 um LSC before endings to prevent surface overlaps
             # todo: check if inlet and outlet protruding out of LSC also cause problems
             #            ORIGIN:  X      Y    Z  L:   X     Y   Z
-            geometry.append(((  0.001, 5.25, 1), ( 10.0,  1.0, 1)))      # Inlet, bigger for the first 10 mm
-            geometry.append((( 10.0,   5.50, 1), ( 37.5,  0.5, 1)))      # 1st channel
+            geometry.append(((    0,   5.00, 1), ( 10.0,  1.0, 1)))      # Inlet, bigger for the first 10 mm
+            geometry.append((( 10.0,   5.25, 1), ( 37.5,  0.5, 1)))      # 1st channel
             geometry.append((( 47.0,   5.75, 1), (  0.5,  7.3, 1)))      # 1st Vertical connection
             geometry.append(((  2.5,  13.05, 1), ( 45.0,  0.5, 1)))      # 2nd channel
             geometry.append(((  2.5,  13.55, 1), (  0.5,  7.3, 1)))      # 2nd Vertical connection
@@ -250,17 +250,13 @@ class Reactor(object):
             geometry.append(((  2.5,  36.45, 1), ( 45.0,  0.5, 1)))      # 5th channel
             geometry.append((( 47.0,  36.95, 1), (  0.5,  7.3, 1)))      # 5th Vertical connection
             geometry.append((( 10.0,  44.25, 1), ( 37.5,  0.5, 1)))      # 6th channel
-            geometry.append(((  0.010,44.00, 1), ( 10.0,  1.0, 1)))      # Inlet, bigger for the first 10 mm
+            geometry.append(((    0,  44.00, 1), ( 10.0,  1.0, 1)))      # Outlet, bigger for the first 10 mm
 
             # Transform mm into meters
             geometry = [[[coord*0.001 for coord in tuples] for tuples in channel] for channel in geometry]
 
             for i in range(0, len(geometry)):
                 position = geometry[i]
-                print "positio 9is ",position
-                print "origin ",position[0]
-                print "size ",position[1]
-
                 channel = Channel(origin=position[0], size=position[1],shape="box")
                 channel.material = reaction_mixture
                 channel.name = "Channel" + str(i)
@@ -593,14 +589,17 @@ class Statistics(object):
         """
         # Seems impossible to instal sqlitebck on Windows, linking fails with Visual C++ for Python 2.7 even when
         # sqlite head file and *.lib are provided.
+        # import apsw
+
         import sqlitebck
         import sqlite3 as sql
         if location is None:
-            file =  os.path.join(os.path.expanduser('~'), 'pvtrace.db')
+            file = os.path.join(os.path.expanduser('~'), 'pvtracedb.sql')
         else:
             file = location
         file_connection = sql.connect(file)
         sqlitebck.copy(self.db.connection, file_connection)
+        print "DB copy saved as ",file
 
 
 def histogram(data, filename, range=(400,700)):

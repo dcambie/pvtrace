@@ -1,6 +1,7 @@
 from __future__ import division
 import numpy as np
 import sqlite3 as sql
+#import apsw as sql
 import inspect
 import types
 import os
@@ -89,6 +90,8 @@ class PhotonDatabase(object):
             print inst
             exit(1)
 
+        self.cursor.execute("PRAGMA synchronous = OFF")
+        self.cursor.execute("PRAGMA journal_mode = OFF")
 
             
     def load(self, dbfile):

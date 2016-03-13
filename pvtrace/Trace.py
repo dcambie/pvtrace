@@ -242,14 +242,14 @@ class Photon (object):
         #    self.container = intersection_object
         #    self.exit_device = intersection_object
         #    return self
-        
+
         # KARLG NEW CODE HERE
         #import pudb; pudb.set_trace()
         if isinstance(intersection_object, Face):
             self.exit_device = intersection_object
             print "FACE EXISTS"
             
-            # Now change the properties of the photon accoring to what your surface does
+            # Now change the properties of the photon according to what your surface does
             random_number = np.random.random_sample()
             if random_number < intersection_object.reflectivity:
                 # Reflected
@@ -600,7 +600,7 @@ class Scene(object):
                     intersection_objects.append(obj)
             #else:
                 #print obj.name
-        
+
         if len(points) == 0:
             return None, None
         return points, intersection_objects

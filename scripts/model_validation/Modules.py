@@ -20,7 +20,6 @@ import os
 # Print lamp data to export folder?
 print_lamp = true
 
-
 class LightSource(object):
     """
     Lightsources

@@ -14,11 +14,11 @@ from __future__ import division
 from pvtrace import *
 import numpy as np
 import os
-import matplotlib.pyplot as plt
 
 # PVTDATA = '/home/dario/pvtrace/data' # Hack needed for running simulations on /tmp from VM
 
-model_checks = true
+# Print lamp data to export folder?
+print_lamp = true
 
 
 class LightSource(object):
@@ -39,7 +39,7 @@ class LightSource(object):
         """
         Plots the lightsource spectrum
         """
-        xyplot(x=self.light.spectrum.x, y=self.light.spectrum.y, filename='ligthsource_' + self.name + '_spectrum')
+        Analysis.xyplot(x=self.light.spectrum.x, y=self.light.spectrum.y, filename='ligthsource_' + self.name + '_spectrum')
 
 
 class SolarSimulator(object):
@@ -81,7 +81,7 @@ class Photocatalyst(object):
 
     def reactionMixture(self, solvent=None):
         if solvent is None:
-            self.compound.solvent
+            solvent = self.compound.solvent
 
         if solvent == 'acetonitrile':
             n = 1.344
@@ -327,302 +327,5 @@ class Reactor(object):
         # 3. LAMP
         lamp = LightSource(lamp_name, lamp_parameters)
         self.source = lamp.light
-        if model_checks:
+        if print_lamp:
             lamp.plot()
-
-class Statistics(object):
-    """
-    Class for analysis of results, based on the produced database.
-    Can also be applied to old database data
-    """
-
-    def __init__(self, database):
-        self.db = database
-        self.photon_generated = len(self.db.uids_generated_photons())
-        self.photon_killed = len(self.db.killed())
-        self.tot = self.photon_generated - self.photon_killed
-        self.non_radiative = len(self.db.uids_nonradiative_losses())
-
-    def percent(self, num_photons):
-        """
-        Return the percentage of num_photons with respect to thrown photons as 2 decimal digit string
-        :param num_photons: number of photons to be divided by the total
-        :rtype: string
-        """
-
-        return format((num_photons / self.tot) * 100, '.2f') + ' % (' + str(num_photons).rjust(6, ' ') + ')'
-
-    def print_report(self):
-        print "##### PVTRACE LOG RESULTS #####"
-
-        print "Summary:"
-        # print 'obj ', self.db.objects_with_records()
-        # print 'surfaces ', self.db.surfaces_with_records()
-
-        # obj_w_records = self.db.objects_with_records()
-        # for obj in obj_w_records:
-        #     print 'OBJ ', obj, ' was hit on: ', self.db.surfaces_with_records_for_object(obj)
-
-        # print "\t Photon efficiency \t", (luminescent_edges + luminescent_apertures) * 100 / thrown, "%"
-        # print "\t Optical efficiency \t", luminescent_edges * 100 / thrown, "%"
-
-    def print_detailed(self):
-        """
-        Prints a detailed report on the fate of the photons stored in self.db
-
-        :return:None
-        """
-        self.print_report()
-
-        print "Technical details:"
-        print "\t Generated \t", self.photon_generated
-        print "\t Killed \t", self.photon_killed
-        print "\t Thrown \t", self.tot
-
-        print "Luminescent photons:"
-
-        edges = ['left', 'near', 'far', 'right']
-        apertures = ['top', 'bottom']
-
-        for surface in edges:
-            print "\t", surface, "\t", self.percent(len(
-                self.db.uids_out_bound_on_surface(surface, luminescent=True)))
-
-        for surface in apertures:
-            print "\t", surface, "\t", self.percent(len(
-                self.db.uids_out_bound_on_surface(surface, luminescent=True)))
-
-        print "Non radiative losses\t", self.percent(self.non_radiative)
-
-        print "Solar photons (transmitted/reflected):"
-        for surface in apertures:
-            print "\t", surface, "\t", self.percent(len(
-                self.db.uids_out_bound_on_surface(surface, solar=True)))
-
-        print "Reactor's channel photons:"
-        luminescent_photons_in_channels = len(self.db.uids_in_reactor_and_luminescent())
-        photons_in_channels_tot = len(self.db.uids_in_reactor())
-
-        # print " Photons in reactor (luminescent only) "
-        # print " --- 8< --- 8< --- 8< --- CUT HERE  --- 8< --- 8< --- 8< --- "
-        # for photon in self.db.uids_in_reactor_and_luminescent()
-        #     print " ".join(map(str, self.db.wavelengthForUid(photon)))  # Clean output (for elaborations)
-        # print " --- 8< --- 8< --- 8< --- CUT HERE  --- 8< --- 8< --- 8< --- "
-        #
-        # print " Photons in reactor (all) "
-        # print " --- 8< --- 8< --- 8< --- CUT HERE  --- 8< --- 8< --- 8< --- "
-        # for photon in self.db.uids_in_reactor()
-        #     print " ".join(map(str, self.db.wavelengthForUid(photon)))  # Clean output (for elaborations)
-        # print " --- 8< --- 8< --- 8< --- CUT HERE  --- 8< --- 8< --- 8< --- "
-
-        print 'Photons in channels (direct)     ', self.percent(
-            photons_in_channels_tot - luminescent_photons_in_channels)
-        print 'Photons in channels (luminescent)', self.percent(luminescent_photons_in_channels)
-        print 'Photons in channels (sum)        ', self.percent(photons_in_channels_tot)
-
-        top_reflected = len(self.db.uids_out_bound_on_surface("top", solar=True))
-        bottom_lost = len(self.db.uids_out_bound_on_surface("bottom", solar=True))
-
-        # print thrown, "\t", top_reflected, "\t", bottom_lost, "\t", luminescent_edges, "\t", luminescent_apertures, "\t", (
-        # photons_in_channels_tot - luminescent_photons_in_channels), "\t", luminescent_photons_in_channels, "\t", non_radiative_photons
-
-        # if top_reflected + bottom_lost + luminescent_edges + luminescent_apertures + photons_in_channels_tot + non_radiative_photons == thrown:
-        #     print "Results validity check OK :)"
-        # else:
-        #     print "!!! ERROR !!! Check results carefully!"
-
-    def print_excel(self):
-        """
-        Prints an easy to import report on the fate of the photons stored in self.db
-
-        :return:None
-        """
-        print self.photon_generated
-        print self.photon_killed
-        print self.tot
-        print self.non_radiative
-        print "\n"
-
-        edges = ['left', 'near', 'far', 'right']
-        apertures = ['top', 'bottom']
-
-        lumi = 0
-        for surface in edges:
-            lumi = lumi + len(
-                self.db.uids_out_bound_on_surface(surface, luminescent=True))
-            print len(
-                self.db.uids_out_bound_on_surface(surface, luminescent=True))
-        for surface in apertures:
-            lumi = lumi + len(
-                self.db.uids_out_bound_on_surface(surface, luminescent=True))
-            print len(
-                self.db.uids_out_bound_on_surface(surface, luminescent=True))
-        print "\n"
-
-        for surface in apertures:
-            print len(
-                self.db.uids_out_bound_on_surface(surface, solar=True))
-        print "\n"
-        luminescent_photons_in_channels = len(self.db.uids_in_reactor_and_luminescent())
-        photons_in_channels_tot = len(self.db.uids_in_reactor())
-        print photons_in_channels_tot - luminescent_photons_in_channels
-        print luminescent_photons_in_channels
-
-        print luminescent_photons_in_channels / (lumi + luminescent_photons_in_channels)
-
-    def get_bounces(self, photon_list=None, correction=4):
-        """
-        Average number of bounces per luminescent photon
-
-        :param photon_list: array with uids of photons of interest (they are assumed to be fluorescent)
-        :param correction: correction to minimum steps (i.e. zero bounces)
-        :return:
-        """
-        # Fixme: better calculation of bounces (no correction but real path)
-        bounces = []
-        for photon in photon_list:
-            pid = self.db.pid_from_uid(photon)
-            # print photon,' is photon whose pid ',pid
-            bounces.append(self.db.bounces_for_pid(pid=pid[0][0], correction=correction))
-        y = np.bincount(bounces)
-        x = np.linspace(0, max(bounces), num=max(bounces) + 1)
-        return (x, y)
-
-    def history(self, photon_list=None):
-        """
-        Extract from the DB  the trace of the give photons
-
-        :param photon_list: list of uids of photons to be investigated
-        :return:
-        """
-        for photon in photon_list:
-            pid = self.db.pid_from_uid(photon)
-
-    def create_graphs(self, prefix=''):
-        """
-        Generate a series of graphs on photons stored in self.db
-        """
-        print "Plotting reactor..."
-        uid = self.db.uids_in_reactor()
-        if len(uid) < 10:
-            print "[plot-reactor] The database doesn't have enough photons to generate this graph!"
-        else:
-            data = self.db.wavelengthForUid(uid)
-            histogram(data=data, filename=prefix + 'plot-reactor')
-
-        print "Plotting reactor luminescent..."
-        uid = self.db.uids_in_reactor_and_luminescent()
-        if len(uid) < 10:
-            print "[plot-reactor-luminescent] The database doesn't have enough photons to generate this graph!"
-        else:
-            data = self.db.wavelengthForUid(uid)
-            histogram(data=data, filename=prefix + 'plot-reactor-luminescent')
-
-        print "Plotting concentrated photons (luminescent leaving at LSC edges)"
-        edges = ['left', 'near', 'far', 'right']
-        uid = []
-        for surface in edges:
-            uid += self.db.uids_out_bound_on_surface(surface, luminescent=True)
-        if len(uid) < 10:
-            print "[plot-lsc-edges] The database doesn't have enough photons to generate this graph!"
-        else:
-            data = self.db.wavelengthForUid(uid)
-            histogram(data=data, filename=prefix + 'plot-lsc-edges')
-
-        print "Plotting escaped photons (luminescent leaving at top/bottom)"
-        apertures = ['top', 'bottom']
-        uid = []
-        for surface in apertures:
-            uid += self.db.uids_out_bound_on_surface(surface, luminescent=True)
-        if len(uid) < 10:
-            print "[plot-lsc-apertures] The database doesn't have enough photons to generate this graph!"
-        else:
-            data = self.db.wavelengthForUid(uid)
-            histogram(data=data, filename=prefix + 'plot-lsc-apertures')
-
-        print "Plotting reflected"
-        uid = self.db.uids_out_bound_on_surface('top', solar=True)
-        if len(uid) < 10:
-            print "[plot-lsc-reflected] The database doesn't have enough photons to generate this graph!"
-        else:
-            data = self.db.wavelengthForUid(uid)
-            histogram(data=data, filename=prefix + 'plot-lsc-reflected')
-
-        print "Plotting trasmitted"
-        uids = self.db.uids_out_bound_on_surface('bottom', solar=True)
-        if len(uids) < 10:
-            print "[plot-lsc-trasmitted] The database doesn't have enough photons to generate this graph!"
-        else:
-            data = self.db.wavelengthForUid(uids)
-            histogram(data=data, filename=prefix + 'plot-lsc-trasmitted')
-
-        print "Plotting bounces luminescent to channels"
-        uids = self.db.uids_in_reactor_and_luminescent()
-        if len(uids) < 10:
-            print "[bounces channel] The database doesn't have enough photons to generate this graph!"
-        else:
-            data = self.get_bounces(photon_list=uids, correction=4)
-            xyplot(x=data[0], y=data[1], filename=prefix + 'bounces_channel')
-
-        print "Plotting bounces luminescent"
-        uids = self.db.uids_luminescent()
-        if len(uids) < 10:
-            print "[bounces channel] The database doesn't have enough photons to generate this graph!"
-        else:
-            data = self.get_bounces(photon_list=uids, correction=3)
-            xyplot(x=data[0], y=data[1], filename=prefix + 'bounces_all')
-
-    def saveDB(self, location=None):
-        self.db.dump_to_file(location)
-
-
-def histogram(data, filename, range=(400, 700)):
-    """
-    Create an histogram with the cumulative frequency of photons at different wavelength
-
-    :param data: List with photons' wavelengths
-    :param filename: Filename for the exported file. Will be saved in home/pvtrace_export/filenam (+.png appended)
-    :return: None
-    """
-    home = os.path.expanduser('~')
-    suffixes = ('png', 'pdf')
-
-    # print "histogram called with ",data
-    # hist = np.histogram(data, bins=100, range=range)
-    # hist = np.histogram(data, bins=np.linspace(400, 800, num=101))
-    # print "hist is ",hist
-    if range is None:
-        plt.hist(data, histtype='stepfilled')
-    else:
-        plt.hist(data, np.linspace(range[0], range[1], num=101), histtype='stepfilled')
-    for extension in suffixes:
-        location = os.path.join(home, "pvtrace_export" + os.sep + filename + "." + extension)
-        plt.savefig(location)
-        os.chmod(location, 0o777)
-        print 'Plot saved in ', location, '!'
-    plt.clf()
-
-
-def xyplot(x, y, filename):
-    """
-    Plots a curve in a cartesian graph
-
-    :rtype: None
-    :param x: X axis (typically nm for Abs/Ems)
-    :param y: Y axis (e.g. Abs or intensity)
-    :param filename: Graph filename for disk saving
-    """
-    if not model_checks:
-        return false
-
-    home = os.path.expanduser('~')
-    suffixes = ('png', 'pdf')
-
-    plt.scatter(x, y, linewidths=1)
-    plt.plot(x, y, '-')
-    for extension in suffixes:
-        location = os.path.join(home, "pvtrace_export" + os.sep + filename + "." + extension)
-        plt.savefig(location)
-        os.chmod(location, 0o777)
-        print 'Plot saved in ', location, '!'
-    plt.clf()

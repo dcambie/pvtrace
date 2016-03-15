@@ -13,9 +13,6 @@
 
 from __future__ import division
 
-import multiprocessing
-
-cpu_count = multiprocessing.cpu_count()
 from Devices import *
 from Visualise import Visualiser
 import visual
@@ -24,8 +21,13 @@ import os
 import external.pov as pov
 import sys
 import PhotonDatabase
+import Analysis
 import external.transformations as tf
 from copy import copy
+import shortuuid
+
+# import multiprocessing
+# cpu_count = multiprocessing.cpu_count()
 
 def remove_duplicates(the_list):
     l = list(the_list)
@@ -582,6 +584,8 @@ class Scene(object):
         super(Scene, self).__init__()
         self.bounds = Bounds()  # Create bounderies to world and apply to scene
         self.objects = [self.bounds]
+        self.uuid = shortuuid.uuid()
+        self.stats = Analysis.Analysis(uuid = self.uuid)
 
     def add_object(self, object):
         """Adds a new object to the scene. NB the new object must have a unique name otherwise this operation will fail."""
@@ -788,9 +792,11 @@ class Tracer(object):
         self.seed = seed
         self.killed = 0
         self.database = PhotonDatabase.PhotonDatabase(database_file)
-        self.stats = dict()
         self.show_log = show_log
         self.show_counter = show_counter
+        # From Scene, link db with analytics and get uuid
+        self.scene.stats.add_db(self.database)
+        self.uuid = self.scene.uuid
 
         # DB splitting (performance tweak)
         self.db_split = db_split
@@ -883,7 +889,6 @@ class Tracer(object):
         self.show_normals = False
 
     def start(self):
-        import time
 
         logged = 0
         db_num = 0

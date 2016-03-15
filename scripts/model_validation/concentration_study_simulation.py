@@ -1,9 +1,5 @@
 from __future__ import division
-import numpy as np
-import sys
 # import logging
-from pvtrace.external import transformations as tf
-from pvtrace import *
 import time
 from Modules import *
 
@@ -38,7 +34,7 @@ for conc in range(0,40):
     toc = time.clock()
     print toc-tic
 
-    stats = Statistics(trace.database)
+    stats = Analysis(trace.database)
     #stats.print_detailed()
     stats.print_excel()
     #stats.create_graphs(prefix='dye_'+str(dye_conc)+'_')

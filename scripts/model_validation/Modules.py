@@ -29,6 +29,8 @@ class LightSource(object):
         self.name = lamp_name
         if lamp_name == 'SolarSimulator':
             self.light = SolarSimulator(parameters).source
+        elif lamp_name == 'Sun':
+            self.light = Sun(parameters).source
         elif lamp_name == 'LED_coiled':
             pass
         else:
@@ -51,15 +53,34 @@ class SolarSimulator(object):
         """
         if len(parameters) < 2:
             raise Exception('Missing parameters for SolarSimulator! Dimensions (x,y in meters) are needed')
-        # todo: This should be replaced with solar simulator actual spectrum
-        spectrum_file = os.path.join(PVTDATA, 'sources', 'AM1.5g-full.txt')
-        self.spectrum = load_spectrum(spectrum_file, xbins=np.arange(400, 700))
+        # spectrum_file = os.path.join(PVTDATA, 'sources', 'AM1.5g-full.txt')
+        spectrum_file = os.path.join(PVTDATA, 'sources', 'Oriel_solar_sim.txt')
+
+        self.spectrum = load_spectrum(spectrum_file, xbins=np.arange(350, 700))
         self.source = PlanarSource(direction=(0, 0, -1), spectrum=self.spectrum, length=parameters[0],
                                    width=parameters[1])
         self.source.name = 'Solar simulator Michael (small)'
         # distance from device in this case is only important for Visualizer :)
         self.source.translate((0, 0, 0.025))
 
+class Sun(object):
+    def __init__(self, parameters):
+        """
+        Create a SolarSimulator instance
+
+        :param parameters: list with sizes (x and y)
+        :return: PlanarSource
+        """
+        if len(parameters) < 2:
+            raise Exception('Missing parameters for SolarSimulator! Dimensions (x,y in meters) are needed')
+        spectrum_file = os.path.join(PVTDATA, 'sources', 'AM1.5g-full.txt')
+
+        self.spectrum = load_spectrum(spectrum_file, xbins=np.arange(350, 700))
+        self.source = PlanarSource(direction=(0, 0, -1), spectrum=self.spectrum, length=parameters[0],
+                                   width=parameters[1])
+        self.source.name = 'Sun'
+        # distance from device in this case is only important for Visualizer :)
+        self.source.translate((0, 0, 0.025))
 
 class Photocatalyst(object):
     def __init__(self, compound, concentration):
@@ -161,11 +182,15 @@ class Red305(object):
         ap = absorption_data[:, 1].max()
         # Linearity measured up to 0.15mg/g, then it bends as bit due to too high Abs values for spectrometer
         # (secondary peak still linear at 0.20mg/g)
-        device_abs_at_peak = 13.031 * self.concentration * (self.thickness / 0.003)
-        print "with a concentration of ", self.concentration, ' and thickness', self.thickness, ' this device should have an Abs at peak of', device_abs_at_peak
+        # device_abs_at_peak = 13.031 * self.concentration * (self.thickness / 0.003)
+        # print "with a concentration of ", self.concentration, ' and thickness', self.thickness, ' this device should have an Abs at peak of', device_abs_at_peak
         # Correcting factor to adjust absorption at peak to match settings
         # Note that in 'original' pvTrace, thin-film.py file np.log was used incorrectly (log10() intended, got ln())
-        phi = device_abs_at_peak / (ap * self.thickness)
+        # phi = device_abs_at_peak / (ap * self.thickness)
+
+        # Abs at 525 = 7.94956*dye loading, 1.0067 is the correction factor between exp. data at 0.10 mg/g and theoretical value
+        phi = 1.006732182 * self.concentration/0.10
+
         print 'phi equals ', phi, ' (this should approximately be simulation conc/tabulated conc (i.e. 0.10mg/g)'
         # Applying correction to spectrum
         absorption_data[:, 1] = absorption_data[:, 1] * phi

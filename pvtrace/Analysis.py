@@ -1,5 +1,6 @@
 import os
 import matplotlib.pyplot as plt
+import numpy as np
 
 class Analysis(object):
     """
@@ -11,12 +12,15 @@ class Analysis(object):
     """
 
     def __init__(self, database = None, uuid = None):
+        self.working_dir = None
         if database is not None:
             self.db = database
             self.db_stats()
 
         if uuid is not None:
             self.uuid = uuid
+            self.working_dir = os.path.join(os.path.expanduser('~'), 'pvtrace_data',  self.uuid )
+            self.graph_dir = os.path.join(self.working_dir, 'graphs')
 
     def add_db(self, database):
         self.db = database
@@ -41,8 +45,7 @@ class Analysis(object):
 
         :return:None
         """
-        if not hasattr(self, 'tot'):
-            self.db_stats()
+        self.db_stats()
 
         print "##### PVTRACE LOG RESULTS #####"
 
@@ -189,14 +192,15 @@ class Analysis(object):
         print "Plotting reactor..."
 
         if hasattr(self, 'uuid'):
-            prefix = os.path.join(self.uuid, os.path.sep, prefix)
+            prefix = self.graph_dir
+            os.makedirs(prefix)
 
         uid = self.db.uids_in_reactor()
         if len(uid) < 10:
             print "[plot-reactor] The database doesn't have enough photons to generate this graph!"
         else:
             data = self.db.wavelengthForUid(uid)
-            histogram(data=data, filename=prefix + 'plot-reactor')
+            histogram(data=data, filename=os.path.join(prefix, 'plot-reactor'))
 
         print "Plotting reactor luminescent..."
         uid = self.db.uids_in_reactor_and_luminescent()
@@ -204,7 +208,7 @@ class Analysis(object):
             print "[plot-reactor-luminescent] The database doesn't have enough photons to generate this graph!"
         else:
             data = self.db.wavelengthForUid(uid)
-            histogram(data=data, filename=prefix + 'plot-reactor-luminescent')
+            histogram(data=data, filename=os.path.join(prefix, 'plot-reactor-luminescent'))
 
         print "Plotting concentrated photons (luminescent leaving at LSC edges)"
         edges = ['left', 'near', 'far', 'right']
@@ -215,7 +219,7 @@ class Analysis(object):
             print "[plot-lsc-edges] The database doesn't have enough photons to generate this graph!"
         else:
             data = self.db.wavelengthForUid(uid)
-            histogram(data=data, filename=prefix + 'plot-lsc-edges')
+            histogram(data=data, filename=os.path.join(prefix, 'plot-lsc-edges'))
 
         print "Plotting escaped photons (luminescent leaving at top/bottom)"
         apertures = ['top', 'bottom']
@@ -226,7 +230,7 @@ class Analysis(object):
             print "[plot-lsc-apertures] The database doesn't have enough photons to generate this graph!"
         else:
             data = self.db.wavelengthForUid(uid)
-            histogram(data=data, filename=prefix + 'plot-lsc-apertures')
+            histogram(data=data, filename=os.path.join(prefix, 'plot-lsc-apertures'))
 
         print "Plotting reflected"
         uid = self.db.uids_out_bound_on_surface('top', solar=True)
@@ -234,7 +238,7 @@ class Analysis(object):
             print "[plot-lsc-reflected] The database doesn't have enough photons to generate this graph!"
         else:
             data = self.db.wavelengthForUid(uid)
-            histogram(data=data, filename=prefix + 'plot-lsc-reflected')
+            histogram(data=data, filename=os.path.join(prefix, 'plot-lsc-reflected'))
 
         print "Plotting trasmitted"
         uids = self.db.uids_out_bound_on_surface('bottom', solar=True)
@@ -242,7 +246,7 @@ class Analysis(object):
             print "[plot-lsc-trasmitted] The database doesn't have enough photons to generate this graph!"
         else:
             data = self.db.wavelengthForUid(uids)
-            histogram(data=data, filename=prefix + 'plot-lsc-trasmitted')
+            histogram(data=data, filename=os.path.join(prefix, 'plot-lsc-trasmitted'))
 
         print "Plotting bounces luminescent to channels"
         uids = self.db.uids_in_reactor_and_luminescent()
@@ -250,7 +254,7 @@ class Analysis(object):
             print "[bounces channel] The database doesn't have enough photons to generate this graph!"
         else:
             data = self.get_bounces(photon_list=uids, correction=4)
-            xyplot(x=data[0], y=data[1], filename=prefix + 'bounces_channel')
+            xyplot(x=data[0], y=data[1], filename=os.path.join(prefix, 'bounces_channel'))
 
         print "Plotting bounces luminescent"
         uids = self.db.uids_luminescent()
@@ -258,13 +262,13 @@ class Analysis(object):
             print "[bounces channel] The database doesn't have enough photons to generate this graph!"
         else:
             data = self.get_bounces(photon_list=uids, correction=3)
-            xyplot(x=data[0], y=data[1], filename=prefix + 'bounces_all')
+            xyplot(x=data[0], y=data[1], filename=os.path.join(prefix, 'bounces_all'))
 
     def saveDB(self, location=None):
         self.db.dump_to_file(location)
 
 
-def histogram(data, filename, range=(400, 700)):
+def histogram(data, filename, range=(350, 700)):
     """
     Create an histogram with the cumulative frequency of photons at different wavelength
 
@@ -272,7 +276,12 @@ def histogram(data, filename, range=(400, 700)):
     :param filename: Filename for the exported file. Will be saved in home/pvtrace_export/filenam (+.png appended)
     :return: None
     """
+
     home = os.path.expanduser('~')
+    if filename.find(home)<>-1:
+        saving_location = filename
+    else:
+        saving_location = os.path.join(home, "pvtrace_export", filename)
     suffixes = ('png', 'pdf')
 
     # print "histogram called with ",data
@@ -284,12 +293,11 @@ def histogram(data, filename, range=(400, 700)):
     else:
         plt.hist(data, np.linspace(range[0], range[1], num=101), histtype='stepfilled')
     for extension in suffixes:
-        location = os.path.join(home, "pvtrace_export" + os.sep + filename + "." + extension)
+        location = saving_location + "." + extension
+        print location
         plt.savefig(location)
         os.chmod(location, 0o777)
-        print 'Plot saved in ', location, '!'
     plt.clf()
-
 
 def xyplot(x, y, filename):
     """
@@ -302,12 +310,16 @@ def xyplot(x, y, filename):
     """
 
     home = os.path.expanduser('~')
+    if filename.find(home)<>-1:
+        saving_location = filename
+    else:
+        saving_location = os.path.join(home, "pvtrace_export", filename)
     suffixes = ('png', 'pdf')
 
     plt.scatter(x, y, linewidths=1)
     plt.plot(x, y, '-')
     for extension in suffixes:
-        location = os.path.join(home, "pvtrace_export" + os.sep + filename + "." + extension)
+        location = saving_location + "." + extension
         plt.savefig(location)
         os.chmod(location, 0o777)
         print 'Plot saved in ', location, '!'

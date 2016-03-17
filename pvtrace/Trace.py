@@ -582,10 +582,21 @@ class Scene(object):
 
     def __init__(self):
         super(Scene, self).__init__()
-        self.bounds = Bounds()  # Create bounderies to world and apply to scene
+        self.bounds = Bounds()  # Create boundaries to world and apply to scene
         self.objects = [self.bounds]
-        self.uuid = shortuuid.uuid()
+        self.working_dir = self.get_working_dir()
         self.stats = Analysis.Analysis(uuid = self.uuid)
+
+    def get_working_dir(self):
+        uuid = shortuuid.uuid()
+        working_dir = os.path.join(os.path.expanduser('~'),  'pvtrace_data', uuid )
+
+        if not os.path.exists(working_dir):
+            os.makedirs(working_dir)
+            self.uuid = uuid
+            return working_dir
+        else: # The probability of this to happen is extremely low\
+            self.get_working_dir()
 
     def add_object(self, object):
         """Adds a new object to the scene. NB the new object must have a unique name otherwise this operation will fail."""
@@ -781,8 +792,8 @@ class Tracer(object):
     """An object that will fire multiple photons through the scene."""
 
     def __init__(self, scene=None, source=None, throws=1, steps=50, seed=None, use_visualiser=True, show_log=False,
-                 background=(0.957, 0.957, 1), ambient=0.5, database_file="pvtracedb.sql", show_axis=True,
-                 show_counter=False, db_split=False):
+                 background=(0.957, 0.957, 1), ambient=0.5, show_axis=True,
+                 show_counter=False, db_split=None):
         super(Tracer, self).__init__()
         self.scene = scene
         self.source = source
@@ -791,18 +802,26 @@ class Tracer(object):
         self.totalsteps = 0
         self.seed = seed
         self.killed = 0
-        self.database = PhotonDatabase.PhotonDatabase(database_file)
+        self.database = PhotonDatabase.PhotonDatabase(None)
         self.show_log = show_log
         self.show_counter = show_counter
         # From Scene, link db with analytics and get uuid
-        self.scene.stats.add_db(self.database)
         self.uuid = self.scene.uuid
 
         # DB splitting (performance tweak)
-        self.db_split = db_split
+        self.split_num = self.database.split_size
+
+        if db_split is None:
+            if throws < self.split_num:
+                self.db_split = False
+            else:
+                self.db_split = True
+        else:
+            self.db_split = bool(db_split)
+
         self.dumped = []  # Keeps a list with filenames of dumped db (if db_split is True and throws>split_num
         # After 20k photons performance decrease is greater than 20% (compared vs. first photon simulated)
-        self.split_num = 20000
+
 
         np.random.seed(self.seed)
         if not use_visualiser:
@@ -1035,7 +1054,8 @@ class Tracer(object):
             if self.db_split and throw % self.split_num == 0 and throw > 0:
                 db_num = int(throw / self.split_num)
                 self.database.connection.commit()
-                db_file_dump = os.path.join(os.path.expanduser('~'), "~pvtrace_tmp" + str(db_num) + ".sql")
+                # db_file_dump = os.path.join(os.path.expanduser('~'), "~pvtrace_tmp" + str(db_num) + ".sql")
+                db_file_dump = os.path.join(self.scene.working_dir, "~pvtrace_tmp" + str(db_num) + ".sql")
                 self.database.dump_to_file(location=db_file_dump)
                 self.dumped.append(db_file_dump)
                 # Empty DB
@@ -1045,7 +1065,7 @@ class Tracer(object):
         self.database.connection.commit()
         if self.db_split:
             db_num += 1
-            db_file_dump = os.path.join(os.path.expanduser('~'), "~pvtrace_tmp" + str(db_num) + ".sql")
+            db_file_dump = os.path.join(self.scene.working_dir, "~pvtrace_tmp" + str(db_num) + ".sql")
             self.database.dump_to_file(location=db_file_dump)
             self.dumped.append(db_file_dump)
 
@@ -1054,6 +1074,14 @@ class Tracer(object):
             self.database = PhotonDatabase.PhotonDatabase(dbfile=None)
             for db_file in self.dumped:
                 self.database.add_db_file(db_file, tables=("state", "photon"))
+                os.remove(db_file)
+                # print "merged ",db_file
+
+        # Finalize merged DB
+        self.scene.stats.add_db(self.database)
+        db_final_location = os.path.join(self.scene.working_dir, 'db.sql')
+        self.database.dump_to_file(db_final_location)
+
 
 
 # def stop(self):

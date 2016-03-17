@@ -55,6 +55,8 @@ class PhotonDatabase(object):
         super(PhotonDatabase, self).__init__()
 
         self.uid = 0
+        self.split_size = 20000
+
         if dbfile is not None:
             # There is a defa
             self.file = dbfile
@@ -66,7 +68,7 @@ class PhotonDatabase(object):
                 else:
                     raise ValueError("A database already exist at '%s', please rename your new database to something else." % self.file )
             
-            #print "Attempting to creating database dbfile...", self.file
+            # print "Attempting to creating database dbfile...", self.file
             try:
                 file(self.file, 'w').close()
             except:
@@ -78,20 +80,22 @@ class PhotonDatabase(object):
             self.connection = sql.connect(":memory:")
 
         self.cursor = self.connection.cursor()
+
+        # Faster DB on disk without journaling
+        if self.file is not None:
+            self.cursor.execute("PRAGMA synchronous = OFF")
+            self.cursor.execute("PRAGMA journal_mode = OFF")
+
         try:
-            #print "Attempting to loading schema into database from dbfile ... ", DB_SCHEMA
+            # print "Attempting to loading schema into database from dbfile ... ", DB_SCHEMA
             dbfile = open(os.path.abspath(DB_SCHEMA), "r")
             for line in dbfile:
                 self.cursor.execute(line)
         except Exception as inst:
-            print "Could not load schema dbfile."
+            print "Could not load DB schema file. (",DB_SCHEMA,")"
             print type(inst)
             print inst
             exit(1)
-
-        self.cursor.execute("PRAGMA synchronous = OFF")
-        self.cursor.execute("PRAGMA journal_mode = OFF")
-
             
     def load(self, dbfile):
         """Loads and exisiting photon database into memory from a dbfile path."""
@@ -162,6 +166,7 @@ class PhotonDatabase(object):
             file = os.path.join(os.path.expanduser('~'), 'pvtracedb.sql')
         else:
             file = location
+
         file_connection = sql.connect(file)
         sqlitebck.copy(self.connection, file_connection)
         print "\r DB copy saved as ",file
@@ -178,6 +183,7 @@ class PhotonDatabase(object):
         for table in tables:
             self.cursor.execute("INSERT INTO "+table+" SELECT * FROM toMerge."+table)
         self.cursor.execute("DETACH DATABASE toMerge")
+
 
     def empty(self):
         """

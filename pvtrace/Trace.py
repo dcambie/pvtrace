@@ -1084,7 +1084,7 @@ class Tracer(object):
 
         # Finalize merged DB
         self.scene.stats.add_db(self.database)
-        db_final_location = os.path.join(self.scene.working_dir, 'db.sql')
+        db_final_location = os.path.join(self.scene.working_dir, 'db.sqlite')
         self.database.dump_to_file(db_final_location)
 
 

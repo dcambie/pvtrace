@@ -580,11 +580,16 @@ class Scene(object):
 
     #        """
 
-    def __init__(self):
+    def __init__(self, uuid=None):
         super(Scene, self).__init__()
         self.bounds = Bounds()  # Create boundaries to world and apply to scene
         self.objects = [self.bounds]
-        self.working_dir = self.get_working_dir()
+        if uuid is None:
+            self.uuid = ''
+            self.working_dir = self.get_working_dir()
+        else:
+            self.uuid = uuid
+            self.working_dir = os.path.join(os.path.expanduser('~'),  'pvtrace_data', self.uuid )
         self.stats = Analysis.Analysis(uuid = self.uuid)
 
     def get_working_dir(self):

@@ -578,7 +578,7 @@ class Scene(object):
         # A for antialising, q is quality (1-11)
         subprocess.call("povray +A +Q10 +H" + str(height) + " +W" + str(width) + " demo.pov", shell=True)
         # windows exe is "C:\Program Files\POV-Ray\v3.7\bin\pvengine64.exe"
-        # Fixme: Find platform indipendent file opener (no internet access now)
+        # Fixme: Find platform independent file opener (no internet access now)
         # os.system("gnome-open demo.png")
 
     #        """

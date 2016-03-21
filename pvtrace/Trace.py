@@ -13,20 +13,25 @@
 
 from __future__ import division
 
+import logging
+import os
+import subprocess
+import sys
+import time
+from copy import copy
+
+import shortuuid
+import visual
+
+import Analysis
+import PhotonDatabase
+import external.pov as pov
+import external.transformations as tf
 from Devices import *
 from Visualise import Visualiser
-import visual
-import logging
-import time
-import subprocess
-import os
-import external.pov as pov
-import sys
-import PhotonDatabase
-import Analysis
-import external.transformations as tf
-from copy import copy
-import shortuuid
+
+
+POVRAY_BINARY = ("pvengine.exe" if os.name=='nt' else "pvtrace")
 
 # import multiprocessing
 # cpu_count = multiprocessing.cpu_count()
@@ -35,12 +40,15 @@ def remove_duplicates(the_list):
     l = list(the_list)
     return [x for x in l if l.count(x) == 1]
 
+
 class Photon(object):
-    """A generic photon class."""
+    """
+    A generic photon class.
+    """
 
     def __init__(self, wavelength=555, position=[.0, .0, .0], direction=[.0, .0, 1.], active=True, show_log=True):
         """
-        All arguments are optional because a photon is greated with default values. The possible arguments are:
+        All arguments are optional because a photon is created with default values. The possible arguments are:
         wavelength -- The photon wavelength in nanometers (float).
         position   -- The photon position in cartesian coordinates (3 elements) is array-like quantity in units of metres.
         direction  -- The photon Cartesian direction vector (3 elements), a normalised vector is array-like.
@@ -110,15 +118,21 @@ class Photon(object):
         return info
 
     def getPosition(self):
-        """Returns the position of the photons rays"""
+        """
+        Returns the position of the photons rays
+        """
         return self.ray.position
 
     def isReaction(self):
-        """True wheter the photon ends in the reaction mixture"""
+        """
+        True if the photon path ends in the reaction mixture
+        """
         return self.reaction
 
     def getDirection(self):
-        """Returns the direction of the photons rays"""
+        """
+        Returns the direction of the photons rays
+        """
         return self.ray.direction
 
     def setPosition(self, position):
@@ -133,7 +147,9 @@ class Photon(object):
     direction = property(getDirection, setDirection)
 
     def trace(self):
-        """The ray can trace its self through the scene."""
+        """
+        The ray can trace itself through the scene.
+        """
 
         assert self.scene is not None, "The photon's scene variable is not set."
 
@@ -268,15 +284,11 @@ class Photon(object):
                 same_pt_indices.append(i)
         assert len(same_pt_indices) < 3, "An interface can only have 2 or 0 common intersection points."
 
-        initialised_internally = None
-
         if len(same_pt_indices) == 2:
             intersection_object = self.container
 
         #
-        #
         # Calculate the reflectivity of surface
-        #
         #
 
         # Reflection and refraction require the surface normal
@@ -353,9 +365,7 @@ class Photon(object):
                                                                       next_containing_object.material.refractive_index)
 
         #
-        #
         # Does reflection or refraction occur?
-        #
         #
 
         if np.random.uniform() < reflection:
@@ -460,7 +470,7 @@ class Photon(object):
                 return self
 
             else:
-                # Initalised externally
+                # Initialised externally
                 self.direction = fresnel_refraction(normal, self.direction, self.container.material.refractive_index,
                                                     intersection_object.material.refractive_index)
 
@@ -478,7 +488,8 @@ class Photon(object):
                                       np.pi / 2), "Exit Pt. #4: Angle between photon direction and polarisation must be 90 degrees: theta=%s" % str(
                         angle(self.direction, self.polarisation))
 
-            # DJF 13.5.2010: This was crashing the statisical collection because it meant that an incident ray, hitting and transmitted, then lost would have bounds as the exit_device.
+            # DJF 13.5.2010: This was crashing the statistical collection because it meant that an incident ray,
+            # hitting and transmitted, then lost would have bounds as the exit_device.
             # self.exit_device = self.container
             self.exit_device = intersection_object
             self.previous_container = self.container
@@ -487,7 +498,7 @@ class Photon(object):
 
 
 def povObj(obj, colour=None):
-    print type(obj)
+    # print type(obj)
     try:
         T = obj.transform
         white = pov.Texture(pov.Pigment(color="White", transmit=0.5)) if colour is None else colour
@@ -527,27 +538,32 @@ def povObj(obj, colour=None):
     if type(obj) == Channel:
         colour = pov.Pigment(color=(0, 0, 0.5, 1))  # BLUE (rgb/255)
         return povObj(obj.shape, colour=colour)
-    print "Uncought object type! TYPE:", type(obj), " VALUE: ", obj
+    print "Uncaught object type! TYPE:", type(obj), " VALUE: ", obj
 
 
 class Scene(object):
-    """A collection of objects. All intersection points can be found or a ray can be traced through."""
+    """
+    A collection of objects. All intersection points can be found or a ray can be traced through.
+    """
 
     def pov_render(self, camera_position=(0, 0, -10), camera_target=(0, 0, 0), height=2400, width=3200):
         """Pov thing
-        >>> S = Scene()
+        >>> S = Scene('LHF4b3gTFVqpsXcuVYCzd3')
+        Working directory:  D:\Users\dcambie\pvtrace_data\LHF4b3gTFVqpsXcuVYCzd3
         >>> L, W, D = 1, 1, 1
         >>> box = Box(origin=(-L/2., -W/2.,-D/2.), extent=(L/2, W/2, D/2))
+        >>> box.name = 'box'
         >>> myCylinder = Cylinder(radius = 1)
+        >>> myCylinder.name = 'cyl'
         >>> #myCylinder.append_transform(tf.translation_matrix((0,-1,0)))
         >>> box.append_transform(tf.rotation_matrix(-np.pi/3,(0,1,0), point=(0,0,0)))
         >>> #S.add_object(CSGsub(myCylinder, box))
         >>> myPlane = FinitePlane()
         >>> myPlane.name = 'Plane'
-        >>> #myPlane.append_transform(tf.translation_matrix((0,0,9.9)))
+        >>> myPlane.append_transform(tf.translation_matrix((0,0,9.9)))
         >>> S.add_object(myPlane)
-        >>> #S.add_object(box)
-        >>> #S.add_object(myCylinder)
+        >>> S.add_object(box)
+        >>> S.add_object(myCylinder)
         >>> S.pov_render()
         """
 
@@ -559,26 +575,14 @@ class Scene(object):
 
         povObjs = [cam, light]
         for obj in self.objects[1:]:
-            # test coordinate transfroms
-            # print M
-            # vectors = np.array([[0,0,0,1], #origin
-            #                     [1,0,0,1], # x
-            #                     [0,1,0,1], # y
-            #                     [0,0,1,1]]).transpose() # z
-            # origin,x,y,z = (T*vectors).transpose()
             povObjs.append(povObj(obj))
 
         # print tuple(povObjs)
         f.write(*tuple(povObjs))
         f.close()
-        # sphere1 = pov.Sphere( (1,1,2), 2, pov.Texture(pov.Pigment(color="Yellow")))
-        # sphere2 = pov.Sphere( (0,1,2), 2, pov.Texture(pov.Pigment(color="Yellow")))
-        # composite2 = None#pov.Difference(sphere1, sphere2)
 
-        # f.write( cam, composite2, light )
-        # f.close()
-        # A for antialising, q is quality (1-11)
-        subprocess.call("povray +A +Q10 +H" + str(height) + " +W" + str(width) + " demo.pov", shell=True)
+        # A for anti-aliasing, q is quality (1-11)
+        subprocess.call(POVRAY_BINARY+" +A +Q10 +H" + str(height) + " +W" + str(width) + " demo.pov", shell=True)
         # windows exe is "C:\Program Files\POV-Ray\v3.7\bin\pvengine64.exe"
         # Fixme: Find platform independent file opener (no internet access now)
         # os.system("gnome-open demo.png")
@@ -594,29 +598,30 @@ class Scene(object):
             self.working_dir = self.get_working_dir()
         else:
             self.uuid = uuid
-            self.working_dir = os.path.join(os.path.expanduser('~'),  'pvtrace_data', self.uuid )
-        print "Working directory: ",self.working_dir
+            self.working_dir = os.path.join(os.path.expanduser('~'), 'pvtrace_data', self.uuid)
+        print "Working directory: ", self.working_dir
         self.log = self.start_logging()
-        self.stats = Analysis.Analysis(uuid = self.uuid)
+        self.stats = Analysis.Analysis(uuid=self.uuid)
 
     def start_logging(self):
         LOG_FILENAME = os.path.join(self.working_dir, 'output.log')
-        logging.basicConfig(filename=LOG_FILENAME,level=logging.DEBUG)
+        logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG)
         logger = logging.getLogger('pvtrace.trace')
         logger.debug('*** NEW SIMULATION ***')
-        logger.info('UUID: '+self.uuid)
-        logger.debug('Filename:'+__file__)
-        logger.debug('Date/Time '+time.strftime("%c"))
+        logger.info('UUID: ' + self.uuid)
+        logger.debug('Filename:' + __file__)
+        logger.debug('Date/Time ' + time.strftime("%c"))
+        return logger
 
     def get_working_dir(self):
         uuid = shortuuid.uuid()
-        working_dir = os.path.join(os.path.expanduser('~'),  'pvtrace_data', uuid )
+        working_dir = os.path.join(os.path.expanduser('~'), 'pvtrace_data', uuid)
 
         if not os.path.exists(working_dir):
             os.makedirs(working_dir)
             self.uuid = uuid
             return working_dir
-        else: # The probability of this to happen is extremely low\
+        else:  # The probability of this to happen is extremely low\
             self.get_working_dir()
 
     def add_object(self, object):
@@ -639,7 +644,9 @@ class Scene(object):
         self.objects.append(object)
 
     def intersection(self, ray):
-        """Returns a ray of intersection points and associated objects in no particular order."""
+        """
+        Returns a ray of intersection points and associated objects in no particular order.
+        """
         points = []
         intersection_objects = []
         for obj in self.objects:
@@ -1103,6 +1110,8 @@ class Tracer(object):
         db_final_location = os.path.join(self.scene.working_dir, 'db.sqlite')
         self.database.dump_to_file(db_final_location)
 
+
 if __name__ == "__main__":
     import doctest
+
     doctest.testmod()

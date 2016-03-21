@@ -12,7 +12,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import division
-import numpy as np
 
 # try:
 # import scipy as sp
@@ -26,23 +25,17 @@ import numpy as np
 #        print "It seems that you don't have interpolate... bugger... Python FAIL."
 
 from Geometry import *
-from ConstructiveGeometry import CSGadd, CSGint, CSGsub
 from Interpolation import interp1d, BilinearInterpolation
 from types import *
 import os
-from external.transformations import translation_matrix, rotation_matrix
-import external.transformations as tf
 
 
 def load_spectrum(file, xbins=None):
     assert os.path.exists(file) == True, "File '%s' does not exist." % file
-    xy = np.loadtxt(file)
     spectrum = Spectrum(file=file)
 
     # Truncate the spectrum using the xbins
-    if xbins is not None:
-        yvalues = spectrum(xbins)
-        return Spectrum(xbins, yvalues)
+    if xbins is not None: y_values = spectrum(xbins); return Spectrum(xbins, y_values)
     return spectrum
 
 
@@ -60,7 +53,6 @@ def common_abscissa(a, b):
     c = []
 
     while i < len(a):
-
         if a[i] < b[j]:
             c.append(float(a[i]))
             if i + 1 < len(a):
@@ -76,11 +68,14 @@ def common_abscissa(a, b):
         else:
             # c.append(float(a[i]))
             i += 1
+
     return c
 
 
 def wav2RGB(wavelength):
-    """http://codingmess.blogspot.com/2009/05/conversion-of-wavelength-in-nanometers.html"""
+    """
+    See: http://codingmess.blogspot.com/2009/05/conversion-of-wavelength-in-nanometers.html
+    """
     w = int(wavelength)
 
     # colour
@@ -128,7 +123,7 @@ def wav2RGB(wavelength):
 
 
 def fresnel_reflection(angle, n1, n2):
-    assert 0.0 <= angle <= 0.5 * np.pi, "The incident angle must be between 0 and 90 degrees to calculate Fresnel reflection."
+    assert 0.0 <= angle <= 0.5 * np.pi, "Incident angle must be between 0 and 90 degrees to calc. Fresnel reflection."
     # Catch TIR case
     if n2 < n1:
         if angle > np.arcsin(n2 / n1):
@@ -183,15 +178,20 @@ def fresnel_refraction(normal, vector, n1, n2):
 
 
 class Spectrum(object):
-    """A class that represents a spectral quantity e.g. absorption, emission or refractive index spectrum as a funcion of wavelength in nanometers."""
+    """
+    A class that represents a spectral quantity
+
+    e.g. absorption, emission or refractive index spectrum as a function of wavelength in nanometers.
+    """
 
     def __init__(self, x=None, y=None, file=None):
-        super(Spectrum, self).__init__()
         """
         Initialised with x and y which are array-like data of the same length. x must have units of wavelength
         (that is in nanometers), y can an arbitrary units. However, if the Spectrum is representing an
         absorption coefficient y must have units of (1/m).
+        :rtype: object
         """
+        super(Spectrum, self).__init__()
 
         if file is not None:
 
@@ -247,7 +247,12 @@ class Spectrum(object):
             self.pdfinv_lookup = interp1d(pdf, bins, bounds_error=False, fill_value=0.0)
 
     def __call__(self, nanometers):
-        """Returns the values of the Spectrum at the 'nanometers' value(s). An number is returned if nanometers is a number and numpy array is returned if nanometers if a list of a numpy array."""
+        """
+        Returns the values of the Spectrum at the 'nanometers' value(s).
+
+        An number is returned if nanometers is a number,
+        A numpy array is returned if nanometers if a list of a numpy array.
+        """
         # Check is the nanometers is a number
         b1 = type(nanometers) == FloatType
         b2 = type(nanometers) == IntType
@@ -258,18 +263,33 @@ class Spectrum(object):
         return self.value(nanometers)
 
     def value(self, nanometers):
-        """Returns the value of the spectrum at the specified wavelength (if the wavelength is outside the data range zero is returned)"""
+        """
+        Returns the value of the spectrum at the specified wavelength
+
+        If the wavelength is outside the data range zero is returned.
+        """
         return self.spectrum(nanometers)
 
     def probability_at_wavelength(self, nanometers):
-        """Returns the probability associated with the wavelength. This is found by computing the cumulative probabililty funcion of the spectrum which is unique for each value for each non-zero y values. If the wavelength is below the data range zero is returned, and if above one is returned."""
+        """
+        Returns the probability associated with the wavelength.
+
+        This is found by computing the cumulative probability function of the spectrum which is unique for each value
+        for non-zero y values.
+        If the wavelength is below the data range zero is returned, and if above one is returned.
+        """
         if nanometers > self.x.max():
             return 1.0
         else:
             return self.pdf_lookup(nanometers)
 
     def wavelength_at_probability(self, probability):
-        """Returns the wavelength associated with the specified probability. This is found my computing the inverse cumulative probabililty function (see probability_at_wavelength). The probabililty must be between zero and one (inclusive) otherwise a value error exception is raised."""
+        """
+        Returns the wavelength associated with the specified probability.
+
+        This is found by computing the inverse cumulative probability function (see probability_at_wavelength).
+        The probability must be between zero and one (inclusive) otherwise a value error exception is raised.
+        """
         if 0 <= probability <= 1:
             return self.pdfinv_lookup(probability)
         else:
@@ -335,11 +355,29 @@ class AngularSpectrum(object):
 
 
 class Material(object):
-    """A material than can absorb and emit photons objects. A photon is absorbed if a pathlength generated by sampling the Beer-Lambert Law for the photon is less than the pathlength to escape the container. The emission occurs weighted by the quantum_efficiency (a probabililty from 0 to 1). The emission wavelength must occur at a red-shifted value with respect to the absorbed photon. This is achieved by samping the emission spectrum from the photons wavelength upwards. The direction of the emitted photon is choosen uniformally from an isotropic distribution of angles."""
+    """
+    A material than can absorb and emit photons objects.
+
+    A photon is absorbed if a pathlength generated by sampling the Beer-Lambert Law for the photon is less than the
+    pathlength to escape the container. The emission occurs weighted by the quantum_efficiency
+    (a probabililty from 0 to 1).
+    The emission wavelength must occur at a red-shifted value with respect to the absorbed photon.
+    This is achieved by sampling the emission spectrum from the photons wavelength upwards.
+    The direction of the emitted photon is chosen uniformly from an isotropic distribution of angles.
+    """
 
     def __init__(self, absorption_data=None, constant_absorption=None, emission_data=None, quantum_efficiency=0.0,
                  refractive_index=1.0):
-        """The required arguments are the absorption_spectrum (a Spectrum object, with units 1/m/nm) and an emission_spetrum (a Spectrum object with units 1/nm). The quantum_efficiency is an optional argument with is the probablilty of emission. If quantum_efficiency is set to 0.0 the emission_spectrum is discarded and set to None."""
+        """
+        Creates a material
+
+        :param absorption_data: a Spectrum object, with units 1/m/nm
+        :param constant_absorption: alternative to spectrum if absorption is constant
+        :param emission_data: a Spectrum object with units 1/nm
+        :param quantum_efficiency: optional argument (probability of emission) If 0.0 the emission_spectrum is None
+        :param refractive_index: refractive index of material. Also check CompositeMaterial
+        :return:
+        """
 
         super(Material, self).__init__()
 
@@ -372,9 +410,7 @@ class Material(object):
                 raise IOError(
                     "PVTrace cannot process %s input given to the Material object. Please use the location of a text file (UTF-8 format) which contains spectral data as 2 columns of increasing wavelength (col#1 is the wavelength; col#2 is data).")
 
-        # --- 
-
-
+        # ---
 
         # Load absorption data
         if constant_absorption is not None:
@@ -407,7 +443,9 @@ class Material(object):
         self.refractive_index = refractive_index
 
     def absorption(self, photon):
-        """Returns the absorption coefficient experienced by the photon."""
+        """
+        Returns the absorption coefficient experienced by the photon.
+        """
         if not self.absorption_data:
             return False
 
@@ -420,7 +458,8 @@ class Material(object):
         Returns a 3 component direction vector with is choosen isotropically.
 
         ..note:: This method is overridden by subclasses to provide custom emission
-        direction properties."""
+        direction properties.
+        """
 
         # This method of calculating isotropic vectors is taken from GNU Scientific Library
         LOOP = True
@@ -439,7 +478,7 @@ class Material(object):
 
     def emission_wavelength(self, photon):
         """Returns a new emission wavelength for the photon."""
-        # The emitted photon must be red-shifted to consevration of energy
+        # The emitted photon must be red-shifted to conservation of energy
         lower_bound = self.emission_data.probability_at_wavelength(photon.wavelength)
         return self.emission_data.wavelength_at_probability(np.random.uniform(lower_bound, 1.))
 
@@ -454,7 +493,19 @@ class Material(object):
         return photon
 
     def trace(self, photon, free_pathlength):
-        """Will apply absorption and emission probabilities to the photon along its free path in the present geometrical container and return the result photon for tracing. The free_pathlength is the distance travelled in metres until the photon reaches the edge of the present container. It is for the calling object to decided how to proceed with the returned photon. For example, if the returned photon is in the volume of the container the same tracing procedure should be applied. However, if the photon reaches a face, reflection, refraction calculation should be applied etc. If the photon is lost, the photons active instance variables is set to False. It is for the calling object to check this parameter and act accordingly e.g. recording the lost photon and great a new photon to trace."""
+        """
+        Trace the photon through the material
+
+        Will apply absorption and emission probabilities to the photon along its free path in the present geometrical
+        container and return the result photon for tracing. The free_pathlength is the distance travelled in metres
+        until the photon reaches the edge of the present container. It is for the calling object to decided how to
+        proceed with the returned photon. For example, if the returned photon is in the volume of the container the
+        same tracing procedure should be applied.
+        However, if the photon reaches a face, reflection, refraction calculation should be applied etc.
+        If the photon is lost, the photons active instance variables is set to False.
+        It is for the calling object to check this parameter and act accordingly
+        e.g. recording the lost photon and great a new photon to trace.
+        """
 
         # Clear state using for collecting statistics
         photon.absorber_material = None
@@ -491,6 +542,7 @@ class Material(object):
             photon.position = photon.position + free_pathlength * photon.direction
             return photon
 
+
 class CompositeMaterial(Material):
     """
     A material that is composed from a homogeneous mix of multiple materials.
@@ -507,7 +559,7 @@ class CompositeMaterial(Material):
             print ""
             print "CompositeMaterial must be created with a value of refractive index which is an estimate of the" \
                   "effective medium of all materials which it contains. The individual refractive index of each" \
-                  "material is ignored when grouping mutiple material together using a composite material."
+                  "material is ignored when grouping multiple material together using a composite material."
             print ""
             print "For example try using, CompositeMaterial([pmma, dye1, dye2], refractive_index=1.5])."
             print ""
@@ -579,8 +631,8 @@ class CompositeMaterial(Material):
                     print "   * Re-emitted *"
                 photon.reabs += 1
                 photon.emitter_material = material
-                photon = material.emission(
-                    photon)  # Generates a new photon with red-shifted wavelength, new direction and polariation (if included in simulation)
+                # Generates a new photon with red-shifted wavelength, new direction and polarisation
+                photon = material.emission(photon)
                 return photon
 
             else:

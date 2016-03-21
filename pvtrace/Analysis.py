@@ -43,7 +43,7 @@ class Analysis(object):
         :param num_photons: number of photons to be divided by the total
         :rtype: string
         """
-        # N.B. This needs "from __future__ import division"
+        # This needs "from __future__ import division"
         return format((num_photons / self.tot) * 100, '.2f') + ' % (' + str(num_photons).rjust(6, ' ') + ')'
 
     def print_detailed(self):
@@ -160,20 +160,19 @@ class Analysis(object):
         print luminescent_photons_in_channels
         print luminescent_photons_in_channels / (lumi + luminescent_photons_in_channels)
 
-    def get_bounces(self, photon_list=None, correction=4):
+    def get_bounces(self, photon_list=None):
         """
         Average number of bounces per luminescent photon
 
         :param photon_list: array with uids of photons of interest (they are assumed to be fluorescent)
-        :param correction: correction to minimum steps (i.e. zero bounces)
         :return:
         """
-        # Fixme: better calculation of bounces (no correction but real path)
         bounces = []
         for photon in photon_list:
             pid = self.db.pid_from_uid(photon)
-            # print photon,' is photon whose pid ',pid
-            bounces.append(self.db.bounces_for_pid(pid=pid[0][0], correction=correction))
+            # [0] needed since itemize of db_call results in arrays
+            bounces.append(self.db.bounces_for_pid(pid=pid[0][0])[0])
+    # print("Array with bounces is ", bounces)
         y = np.bincount(bounces)
         x = np.linspace(0, max(bounces), num=max(bounces) + 1)
         return (x, y)
@@ -260,15 +259,15 @@ class Analysis(object):
         if len(uids) < 10:
             print "[bounces channel] The database doesn't have enough photons to generate this graph!"
         else:
-            data = self.get_bounces(photon_list=uids, correction=4)
+            data = self.get_bounces(photon_list=uids)
             xyplot(x=data[0], y=data[1], filename=os.path.join(prefix, 'bounces_channel'))
 
         print "Plotting bounces luminescent"
         uids = self.db.uids_luminescent()
-        if len(uids) < 10:
+        if len(uids) < 1:
             print "[bounces channel] The database doesn't have enough photons to generate this graph!"
         else:
-            data = self.get_bounces(photon_list=uids, correction=3)
+            data = self.get_bounces(photon_list=uids)
             xyplot(x=data[0], y=data[1], filename=os.path.join(prefix, 'bounces_all'))
 
     def saveDB(self, location=None):

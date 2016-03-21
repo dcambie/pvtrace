@@ -26,6 +26,9 @@ from __future__ import division
 
 from Geometry import *
 from Interpolation import interp1d, BilinearInterpolation
+from ConstructiveGeometry import CSGadd, CSGint, CSGsub
+from external.transformations import translation_matrix, rotation_matrix
+import external.transformations as tf
 from types import *
 import os
 

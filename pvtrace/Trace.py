@@ -13,10 +13,7 @@
 
 from __future__ import division
 
-import logging
-import os
 import subprocess
-import sys
 import time
 from copy import copy
 
@@ -26,12 +23,11 @@ import visual
 import Analysis
 import PhotonDatabase
 import external.pov as pov
-import external.transformations as tf
 from Devices import *
 from Visualise import Visualiser
 
+POVRAY_BINARY = ("pvengine.exe" if os.name == 'nt' else "pvtrace")
 
-POVRAY_BINARY = ("pvengine.exe" if os.name=='nt' else "pvtrace")
 
 # import multiprocessing
 # cpu_count = multiprocessing.cpu_count()
@@ -582,7 +578,7 @@ class Scene(object):
         f.close()
 
         # A for anti-aliasing, q is quality (1-11)
-        subprocess.call(POVRAY_BINARY+" +A +Q10 +H" + str(height) + " +W" + str(width) + " demo.pov", shell=True)
+        subprocess.call(POVRAY_BINARY + " +A +Q10 +H" + str(height) + " +W" + str(width) + " demo.pov", shell=True)
         # windows exe is "C:\Program Files\POV-Ray\v3.7\bin\pvengine64.exe"
         # Fixme: Find platform independent file opener (no internet access now)
         # os.system("gnome-open demo.png")
@@ -750,8 +746,10 @@ class Scene(object):
     sort = staticmethod(sort)
 
     def order_duplicates(objects, points, separations):
-        """Subroutine which might be called recursively by the sort fuction when the first element 
-        of the objects array is no the container objects after sorting."""
+        """
+        Subroutine which might be called recursively by the sort function when the first element
+        of the objects array is no the container objects after sorting.
+        """
 
         # If two intersections occur at the same points then the 
         # sort order won't always be correct. We need to sort by
@@ -760,7 +758,7 @@ class Scene(object):
         # (e.g.) a thin-film from thin-film could give [{b a} b c], this pattern,  we know the middle is point correct.
         # (e.g.) another possible example when using CGS objects [a b {c b} d].
         # (e.g.) [a {b a} b c] --> [a a b b c]
-        # (e.g.) need to make the sort algo always return [a a b b] or [a b b c].
+        # (e.g.) need to make the sort algorithm always return [a a b b] or [a b b c].
         # Find indices of same-separation points
         # import pdb; pdb.set_trace()
 
@@ -792,7 +790,9 @@ class Scene(object):
     order_duplicates = staticmethod(order_duplicates)
 
     def container(self, photon):
-        """Returns the inner most object that contains the photon."""
+        """
+        Returns the inner most object that contains the photon.
+        """
 
         # Ask each object if it contains the photon, if multiple object say yes we filter by separation to find the inner container.
         containers = []
@@ -817,7 +817,9 @@ class Scene(object):
 
 
 class Tracer(object):
-    """An object that will fire multiple photons through the scene."""
+    """
+    An object that will fire multiple photons through the scene.
+    """
 
     def __init__(self, scene=None, source=None, throws=1, steps=50, seed=None, use_visualiser=True, show_log=False,
                  background=(0.957, 0.957, 1), ambient=0.5, show_axis=True,
@@ -860,7 +862,7 @@ class Tracer(object):
 
         for obj in scene.objects:
             if obj != scene.bounds:
-                if not isinstance(obj.shape, CSGadd) and not isinstance(obj.shape, CSGint) \
+                if not isinstance(obj.shape, CSGadd) and not isinstance(obj.shape, CSGint)\
                         and not isinstance(obj.shape, CSGsub):
 
                     # import pdb; pdb.set_trace()
@@ -943,12 +945,10 @@ class Tracer(object):
             # import pdb; pdb.set_trace()
             # Delete last ray from visualiser
             # fixme: if channels are cylinder they will be removed from the view if this is active!
-            # if Visualiser.VISUALISER_ON:
-            #     for obj in self.visualiser.display.objects:
-            #         if obj.__class__ is visual.cylinder:
-            #             if obj.radius < 0.001:
-            #                 obj.visible = False
-
+            if Visualiser.VISUALISER_ON:
+                for obj in self.visualiser.display.objects:
+                    if obj.__class__ is visual.cylinder and obj.radius < 0.001:
+                        obj.visible = False
             # DB speed statistics
             # if throw == 0:
             #     then = time.clock()

@@ -16,6 +16,8 @@ from __future__ import division
 from Devices import *
 from Visualise import Visualiser
 import visual
+import logging
+import time
 import subprocess
 import os
 import external.pov as pov
@@ -594,7 +596,17 @@ class Scene(object):
             self.uuid = uuid
             self.working_dir = os.path.join(os.path.expanduser('~'),  'pvtrace_data', self.uuid )
         print "Working directory: ",self.working_dir
+        self.log = self.start_logging()
         self.stats = Analysis.Analysis(uuid = self.uuid)
+
+    def start_logging(self):
+        LOG_FILENAME = os.path.join(self.working_dir, 'output.log')
+        logging.basicConfig(filename=LOG_FILENAME,level=logging.DEBUG)
+        logger = logging.getLogger('pvtrace.trace')
+        logger.debug('*** NEW SIMULATION ***')
+        logger.info('UUID: '+self.uuid)
+        logger.debug('Filename:'+__file__)
+        logger.debug('Date/Time '+time.strftime("%c"))
 
     def get_working_dir(self):
         uuid = shortuuid.uuid()

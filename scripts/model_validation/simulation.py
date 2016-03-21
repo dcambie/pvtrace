@@ -1,19 +1,12 @@
 from __future__ import division
 # import subprocess
+import logging
 import time
 from Modules import *
-import logging
 
 # 1 unit = 1 m  Albeit not convenient, this assumption is deeply bounded in pvtrace's heart
 scene = Scene('LPVUDb2Rg9Ehe8SjHPFE6h')
-
-LOG_FILENAME = os.path.join(scene.working_dir, 'output.log')
-logging.basicConfig(filename=LOG_FILENAME,level=logging.DEBUG)
 logger = logging.getLogger('pvtrace')
-logger.debug('*** NEW SIMULATION ***')
-logger.info('UUID: '+scene.uuid)
-logger.debug('Filename:'+__file__)
-logger.debug('Date/Time '+time.strftime("%c"))
 
 # reactor = Reactor(reactor_name="5x5_6ch_squared", dye="Red305", dye_concentration=0.20, photocatalyst="MB", photocatalyst_concentration=0.0004)
 reactor = Reactor(reactor_name="5x5_6ch_squared", dye="Red305", dye_concentration=0.10, photocatalyst="Air", photocatalyst_concentration=0.0004)

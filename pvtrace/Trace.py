@@ -541,6 +541,7 @@ class Scene(object):
         >>> box.append_transform(tf.rotation_matrix(-np.pi/3,(0,1,0), point=(0,0,0)))
         >>> #S.add_object(CSGsub(myCylinder, box))
         >>> myPlane = FinitePlane()
+        >>> myPlane.name = 'Plane'
         >>> #myPlane.append_transform(tf.translation_matrix((0,0,9.9)))
         >>> S.add_object(myPlane)
         >>> #S.add_object(box)
@@ -576,7 +577,9 @@ class Scene(object):
         # f.close()
         # A for antialising, q is quality (1-11)
         subprocess.call("povray +A +Q10 +H" + str(height) + " +W" + str(width) + " demo.pov", shell=True)
-        os.system("gnome-open demo.png")
+        # windows exe is "C:\Program Files\POV-Ray\v3.7\bin\pvengine64.exe"
+        # Fixme: Find platform indipendent file opener (no internet access now)
+        # os.system("gnome-open demo.png")
 
     #        """
 
@@ -590,6 +593,7 @@ class Scene(object):
         else:
             self.uuid = uuid
             self.working_dir = os.path.join(os.path.expanduser('~'),  'pvtrace_data', self.uuid )
+        print "Working directory: ",self.working_dir
         self.stats = Analysis.Analysis(uuid = self.uuid)
 
     def get_working_dir(self):
@@ -1087,12 +1091,6 @@ class Tracer(object):
         db_final_location = os.path.join(self.scene.working_dir, 'db.sqlite')
         self.database.dump_to_file(db_final_location)
 
-
-
-# def stop(self):
-#        self.database.connection.commit()
-
 if __name__ == "__main__":
     import doctest
-
     doctest.testmod()

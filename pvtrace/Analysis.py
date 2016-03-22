@@ -180,7 +180,6 @@ class Analysis(object):
         :param photon_list: array with uids of photons of interest (they are assumed to be fluorescent)
         :return:
         """
-        import time
         bounces = []
         for photon in photon_list:
             bounces.append(self.db.bounces_for_uid(photon)[0])

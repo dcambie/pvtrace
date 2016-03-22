@@ -249,8 +249,8 @@ class Reactor(object):
 
             # 2. CHANNELS
             for i in range(1, 9):
-                channel = Channel(origin=(0.005, 0.007 + 0.005 * (i - 1), 0.001), size=(0.040, 0.001, 0.001),
-                                  shape="box")
+                channel = Channel(origin=(0.005, 0.007 + 0.005 * (i - 1), 0.001),
+                                  size=(0.040, 0.001, 0.001), shape="box")
                 channel.material = reaction_mixture
                 channel.name = "Channel" + str(i)
                 self.scene_obj.append(channel)

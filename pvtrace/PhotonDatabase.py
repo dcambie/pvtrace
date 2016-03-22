@@ -306,7 +306,7 @@ class PhotonDatabase(object):
         return itemise(self.cursor.execute("SELECT MAX(uid) FROM photon GROUP BY pid INTERSECT SELECT uid FROM state WHERE reaction = 1"))
     
     def uids_in_reactor_and_luminescent(self):
-        """Returns photons in reactor and luminescent One absorption is.the reactiorn mixture, so >1"""
+        """Returns photons in reactor and luminescent One absorption is.the reaction mixture, so >1"""
         return itemise(self.cursor.execute("SELECT MAX(uid) FROM photon GROUP BY pid INTERSECT SELECT uid FROM state WHERE reaction = 1 AND absorption_counter > 1"))
     
     def uids_luminescent(self):

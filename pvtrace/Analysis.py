@@ -84,23 +84,23 @@ class Analysis(object):
             self.log.info("\t" + surface + "\t" + self.percent(photons))
             luminescent += photons
 
-        print "Non radiative losses\t", self.percent(self.non_radiative)
+        self.log.info("Non radiative losses\t"+self.percent(self.non_radiative))
+        self.log.info("Solar photons:")
 
-        print "Solar photons (transmitted/reflected):"
         solar = 0
         for surface in apertures:
             photons = len(self.db.uids_out_bound_on_surface(surface, solar=True))
-            print "\t", surface, "\t", self.percent(photons)
+            self.log.info("\t"+surface+"\t"+self.percent(photons))
             solar += photons
 
-        print "Reactor's channel photons:"
-        luminescent_photons_in_channels = len(self.db.uids_in_reactor_and_luminescent())
+        self.log.info("Reactor's channel photons:")
+        photons_in_channels_luminescent = len(self.db.uids_in_reactor_and_luminescent())
         photons_in_channels_tot = len(self.db.uids_in_reactor())
+        photons_in_channels_direct = photons_in_channels_tot - photons_in_channels_luminescent
 
-        print 'Photons in channels (direct)     ', self.percent(
-            photons_in_channels_tot - luminescent_photons_in_channels)
-        print 'Photons in channels (luminescent)', self.percent(luminescent_photons_in_channels)
-        print 'Photons in channels (sum)        ', self.percent(photons_in_channels_tot)
+        self.log.info("Photons in channels (direct)\t"+self.percent(photons_in_channels_direct))
+        self.log.info("Photons in channels (luminescent)\t"+self.percent(photons_in_channels_luminescent))
+        self.log.info("Photons in channels (sum)\t"+self.percent(photons_in_channels_tot))
 
         if solar + luminescent + self.non_radiative + photons_in_channels_tot == self.tot:
             self.log.debug("Results sanity check OK!")
@@ -179,7 +179,8 @@ class Analysis(object):
 
     def history(self, photon_list=None):
         """
-        Extract from the DB  the trace of the give photons
+        Extract from the DB the trace of the given photon uid.
+        If a list of uids is provided it's splitted into individual
 
         :param photon_list: list of uids of photons to be investigated
         :return:

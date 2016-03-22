@@ -15,6 +15,7 @@ from  __future__ import division
 
 import warnings
 import logging
+import math
 from external.transformations import rotation_matrix
 import external.transformations as tf
 
@@ -349,7 +350,6 @@ class Channel(Register):
             self.shape = Cylinder(radius=radius, length=length)
 
             # For CSG first rotation then translation (assuming scaling is not needed)
-            import math
             if axis == 0:  # Z to X Rotation needed
                 self.shape.append_transform(tf.rotation_matrix(math.pi / 2.0, [0, 1, 0]))
             elif axis == 1:  # Z to Y Rotation needed

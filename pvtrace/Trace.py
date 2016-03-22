@@ -240,9 +240,8 @@ class Photon(object):
         self.intersection_counter += 1
 
         # edge = False
-        # if ray_on_surface and isinstance(intersection_object, LSC) and isinstance(self.container,
-        #                                                                           LSC) and self.container.shape.surface_identifier(
-        #     self.position) in edges:
+        # if ray_on_surface and isinstance(intersection_object, LSC) and isinstance(self.container, LSC)
+        #       and self.container.shape.surface_identifier(self.position) in edges:
         #     edge = self.container.shape.surface_identifier(self.position)
 
         # If we reach an reflective material then we don't need to follow
@@ -605,7 +604,6 @@ class Scene(object):
         logger = logging.getLogger('pvtrace.trace')
         logger.debug('*** NEW SIMULATION ***')
         logger.info('UUID: ' + self.uuid)
-        logger.debug('Filename:' + __file__)
         logger.debug('Date/Time ' + time.strftime("%c"))
         return logger
 

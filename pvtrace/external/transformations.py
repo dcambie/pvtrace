@@ -1768,7 +1768,12 @@ def angle_between_vectors(v0, v1, directed=True, axis=0):
 
 
 def inverse_matrix(matrix):
-    """Return inverse of square transformation matrix.
+    """
+    Return inverse of square transformation matrix.
+
+    :param matrix: Input matrix
+    :return: Inverse matrix
+    :rtype: matrix
 
     >>> M0 = random_rotation_matrix()
     >>> M1 = inverse_matrix(M0.T)
@@ -1778,7 +1783,6 @@ def inverse_matrix(matrix):
     ...     M0 = numpy.random.rand(size, size)
     ...     M1 = inverse_matrix(M0)
     ...     if not numpy.allclose(M1, numpy.linalg.inv(M0)): print(size)
-
     """
     return numpy.linalg.inv(matrix)
 

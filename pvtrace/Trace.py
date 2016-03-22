@@ -26,6 +26,7 @@ import PhotonDatabase
 import external.pov as pov
 from Devices import *
 from Visualise import Visualiser
+from visual import rate
 
 POVRAY_BINARY = ("pvengine.exe" if os.name == 'nt' else "pvtrace")
 
@@ -996,6 +997,7 @@ class Tracer(object):
 
     def start(self):
 
+        global b, b
         logged = 0
         db_num = 0
         for throw in range(0, self.throws):
@@ -1123,6 +1125,7 @@ class Tracer(object):
                     logged += 1
 
                 if Visualiser.VISUALISER_ON:
+                    visual.rate(100000)
                     a = b
 
                 step += 1

@@ -52,6 +52,8 @@ class Visualiser (object):
                 self.display.center = (self.display.center[0],self.display.center[1]+0.01,self.display.center[2])
             if s == '0':
                 self.display.center = (0.035,0.03,0)
+            if s == 'q':
+                Visualiser.VISUALISER_ON = False
 
     def __init__(self, background=None, ambient=None, show_axis=True):
         super(Visualiser, self).__init__()

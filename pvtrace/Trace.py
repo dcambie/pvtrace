@@ -413,7 +413,7 @@ class Photon(object):
                 # Specular reflection
                 self.direction = reflect_vector(normal, self.direction)
 
-                # Currently, polaristaion code only runs with Fresnel reflection.
+                # Currently, polarisation code only runs with Fresnel reflection.
                 if self.polarisation is not None:
 
                     ang = angle(old_direction, self.direction)
@@ -421,8 +421,9 @@ class Photon(object):
                         # Anti-parallel
                         self.polarisation = self.polarisation
                     else:
-                        # apply the rotation transformation the photon polarisation which aligns the before and after directions
-                        R = rotation_matrix_from_vector_alignment(before, self.direction)
+                        # Apply the rotation transformation to the photon polarisation
+                        # which aligns the before and after directions
+                        R = rotation_matrix_from_vector_alignment(old_direction, self.direction)
                         self.polarisation = transform_direction(self.polarisation, R)
 
                     assert cmp_floats(angle(self.direction, self.polarisation),
@@ -442,7 +443,8 @@ class Photon(object):
                         # Anti-parallel
                         self.polarisation *= -1.
                     else:
-                        # apply the rotation transformation the photon polarisation which aligns the before and after directions
+                        # Apply the rotation transformation to the photon polarisation
+                        # which aligns the before and after directions
                         R = rotation_matrix_from_vector_alignment(old_direction, self.direction)
                         self.polarisation = transform_direction(self.polarisation, R)
 
@@ -465,7 +467,6 @@ class Photon(object):
             # todo: use a v SC outer surface, face: ",edge
             #     return self
 
-
             self.propagate = True
             before = copy(self.direction)
             ang = angle(before, self.direction)
@@ -479,12 +480,14 @@ class Photon(object):
                         # Anti-parallel
                         self.polarisation = self.polarisation
                     else:
-                        # apply the rotation transformation the photon polarisation which aligns the before and after directions
+                        # Apply the rotation transformation to the photon polarisation
+                        # which aligns the before and after directions
                         R = rotation_matrix_from_vector_alignment(before, self.direction)
                         self.polarisation = transform_direction(self.polarisation, R)
                     assert cmp_floats(angle(self.direction, self.polarisation),
-                                      np.pi / 2), "Exit Pt. #3: Angle between photon direction and polarisation must be 90 degrees: theta=%s" % str(
-                        angle(self.direction, self.polarisation))
+                                      np.pi / 2), "Exit Pt. #3: Angle between photon direction and polarisation" \
+                                                  "must be 90 degrees: theta=%s"\
+                                                  % str(angle(self.direction, self.polarisation))
 
                 self.exit_device = self.container
                 self.previous_container = self.container
@@ -503,13 +506,16 @@ class Photon(object):
                         # Anti-parallel
                         self.polarisation = self.polarisation
                     else:
-                        # apply the rotation transformation the photon polarisation which aligns the before and after directions
+                        # Apply the rotation transformation to the photon polarisation
+                        # which aligns the before and after directions
                         R = rotation_matrix_from_vector_alignment(before, self.direction)
                         self.polarisation = transform_direction(self.polarisation, R)
-                        # apply the rotation transformation the photon polarisation which aligns the before and after directions
+                        # Apply the rotation transformation to the photon polarisation
+                        # which aligns the before and after directions
                     assert cmp_floats(angle(self.direction, self.polarisation),
-                                      np.pi / 2), "Exit Pt. #4: Angle between photon direction and polarisation must be 90 degrees: theta=%s" % str(
-                        angle(self.direction, self.polarisation))
+                                      np.pi / 2), "Exit Pt. #4: Angle between photon direction and polarisation" \
+                                                  "must be 90 degrees: theta=%s"\
+                                                  % str(angle(self.direction, self.polarisation))
 
             # DJF 13.5.2010: This was crashing the statistical collection because it meant that an incident ray,
             # hitting and transmitted, then lost would have bounds as the exit_device.

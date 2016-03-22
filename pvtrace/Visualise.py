@@ -51,15 +51,18 @@ class Visualiser (object):
             if s == '0':
                 self.display.center = (0.035,0.03,0)
 
-    def __init__(self, background=(0,0,0), ambient=1., show_axis=True):
+    def __init__(self, background=None, ambient=None, show_axis=True):
         super(Visualiser, self).__init__()
         if not Visualiser.VISUALISER_ON:
             return
 
-        self.display = visual.display(title='PVTrace', x=0, y=0, width=800, height=600, background=(0.957, 0.957, 1), ambient=0.5)
+        if background is None: background= (0.957, 0.957, 1)
+        if ambient is None: ambient = 0.5;
+        self.display = visual.display(title='PVTrace', x=0, y=0, width=800, height=600,
+                                      background=background, ambient=ambient)
         self.display.bind('keydown', self.keyInput)
         self.display.exit = False
-#        self.display.autocenter = True
+        # self.display.autocenter = True
         self.display.forward = vector(0,0.75,-0.5)
         self.display.center = (0.035,0.03,0)
 
@@ -85,7 +88,7 @@ class Visualiser (object):
             pos = org + 0.5*size
             # print "Visualiser: box position=%s, size=%s" % (str(pos), str(size))
             angle, direction, point = tf.rotation_from_matrix(box.transform)
-            # print "colour,", colour
+
             if np.allclose(np.array(colour), np.array([0,0,0])):
                 visual.box(pos=pos, size=size, material=material, opacity=opacity)
             else:
@@ -157,8 +160,7 @@ class Visualiser (object):
             colour = visual.color.blue
         visual.sphere(pos=point, radius=0.00012, color=geo.norm(colour), opacity=opacity, materiall=material)
         #visual.curve(pos=[point], radius=0.0005, color=geo.norm(colour))
-        
-        
+
     def addLine(self, start, stop, colour=None, opacity=1., material=None):
         if not Visualiser.VISUALISER_ON:
             return
@@ -187,7 +189,6 @@ class Visualiser (object):
         #import time
         #time.sleep(1)
 
-
     def addCSG(self, CSGobj, res,origin,extent, colour=None, opacity=1., material=None):
         """
         Visualise a CSG structure in a space subset defined by xmin, xmax, ymin, .... with division factor (i.e. ~ resolution) res
@@ -205,7 +206,6 @@ class Visualiser (object):
         """
         voxelextent = (res*(xmax-xmin), res*(ymax-ymin), res*(zmax-zmin))
         pex = voxelextent
-
 
         """
         Scan space
@@ -241,11 +241,9 @@ class Visualiser (object):
                 y = y + res*(ymax-ymin)
 
             x = x + res*(xmax-xmin)     
-            
-            
+
         print 'Complete.'
-    
-                
+
     def addCSGvoxel(self, box, colour, material=None, opacity=1.):
         """
         16/03/10: To visualise CSG objects

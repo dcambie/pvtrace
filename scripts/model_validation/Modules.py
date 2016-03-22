@@ -141,7 +141,8 @@ class Air(object):
     def __init__(self):
         self.solvent = "air"
 
-    def abs(self):
+    @staticmethod
+    def abs():
         # return Spectrum([0,1000], [0,0])
         return np.loadtxt(os.path.join(PVTDATA, "photocatalysts", 'Air.txt'))
 
@@ -178,8 +179,10 @@ class Red305(object):
             raise Exception('Missing data for dye absorption. Concentration and/or thickness unknown')
         # Red305 absorption spectrum (reference at 0.10 mg/g)
         absorption_data = np.loadtxt(os.path.join(PVTDATA, 'dyes', 'Red305_010mg_g_1m-1.txt'))
+
+        # PREVIOUS IMPLEMENTATION!
         # Absorbance at peak (ap)
-        ap = absorption_data[:, 1].max()
+        # ap = absorption_data[:, 1].max()
         # Linearity measured up to 0.15mg/g, then it bends as bit due to too high Abs values for spectrometer
         # (secondary peak still linear at 0.20mg/g)
         # device_abs_at_peak = 13.031 * self.concentration * (self.thickness / 0.003)
@@ -188,7 +191,8 @@ class Red305(object):
         # Note that in 'original' pvTrace, thin-film.py file np.log was used incorrectly (log10() intended, got ln())
         # phi = device_abs_at_peak / (ap * self.thickness)
 
-        # Abs at 525 = 7.94956*dye loading, 1.0067 is the correction factor between exp. data at 0.10 mg/g and theoretical value
+        # Abs at 525 = 7.94956*dye loading
+        # 1.0067 is the correction factor between exp. data at 0.10 mg/g and theoretical value
         phi = 1.006732182 * self.concentration/0.10
 
         print 'phi equals ', phi, ' (this should approximately be simulation conc/tabulated conc (i.e. 0.10mg/g)'
@@ -204,7 +208,7 @@ class Red305(object):
 
     @staticmethod
     def emission():
-        # fixme Add experimental data from pdms low concentration samples (not reabsorption redshifted)
+        # fixme Add experimental data from pdms low concentration samples (not reabsorption red-shifted)
         # emission_data = np.loadtxt(os.path.join(PVTDATA, "dyes", 'fluro-red-fit.ems.txt'))
         emission_data = np.loadtxt(os.path.join(PVTDATA, "dyes", 'Red305_ems_spectrum.txt'))
         return Spectrum(x=emission_data[:, 0], y=emission_data[:, 1])
@@ -215,6 +219,7 @@ class Reactor(object):
     Class that models the experimental device
     """
 
+    # noinspection PyPep8,PyPep8,PyPep8
     def __init__(self, reactor_name, dye, dye_concentration, photocatalyst=None, photocatalyst_concentration=0.001,
                  solvent=None):
 
@@ -224,8 +229,8 @@ class Reactor(object):
         else:
             self.photocat = Photocatalyst(photocatalyst, photocatalyst_concentration)
 
-        # Solvent is default for photocat or explicitly set
-        if solvent == None:
+        # Solvent is default for photocatalyst or explicitly set
+        if solvent is None:
             reaction_mixture = self.photocat.reactionMixture()
         else:
             reaction_mixture = self.photocat.reactionMixture(solvent)

@@ -10,6 +10,7 @@ import pvtrace
 # The database schema lives inside the pvtrace module directory
 DB_SCHEMA = os.path.join(os.path.dirname(pvtrace.__file__), "dbschema.sql")
 
+
 def counted(fn):
     def wrapper(*args, **kwargs):
         wrapper.called+= 1
@@ -18,8 +19,9 @@ def counted(fn):
     wrapper.__name__= fn.__name__
     return wrapper
 
+
 def itemise(array):
-    """Extracts redundent nested arrays from a parent array e.g. [(1,), (2,), (3,), (4,)] becomes (1,2,3,4)."""
+    """Extracts redundant nested arrays from a parent array e.g. [(1,), (2,), (3,), (4,)] becomes (1,2,3,4)."""
     new = []
     is_values = None
     is_points = None
@@ -41,7 +43,8 @@ def itemise(array):
                 raise ValueError, "All elements must of the array must be singleton arrays (i.e single elements arrays)."
     
     return new
-        
+
+
 class PhotonDatabase(object):
     """
     An object the wraps a mysql database.
@@ -163,13 +166,13 @@ class PhotonDatabase(object):
         # import apsw
         import sqlitebck
         if location is None:
-            file = os.path.join(os.path.expanduser('~'), 'pvtracedb.sql')
+            filename = os.path.join(os.path.expanduser('~'), 'pvtracedb.sql')
         else:
-            file = location
+            filename = location
 
-        file_connection = sql.connect(file)
+        file_connection = sql.connect(filename)
         sqlitebck.copy(self.connection, file_connection)
-        print "\r DB copy saved as ",file
+        print "\r DB copy saved as ",filename
 
     def add_db_file(self, filename=None,
                     tables=("state", "direction", "polarisation", "position", "surface_normal", "photon")):
@@ -203,25 +206,25 @@ class PhotonDatabase(object):
     def endpoint_uids(self):
         return itemise(self.cursor.execute('SELECT MAX(uid) FROM photon GROUP BY pid;').fetchall())
     
-    def endpoint_uids_for_object(self, object):
-        return itemise(self.cursor.execute("SELECT MAX(uid) FROM photon GROUP BY pid INTERSECT SELECT uid FROM state WHERE on_surface_obj=? OR container_obj=?" , (object, object)).fetchall())
+    def endpoint_uids_for_object(self, obj):
+        return itemise(self.cursor.execute("SELECT MAX(uid) FROM photon GROUP BY pid INTERSECT SELECT uid FROM state WHERE on_surface_obj=? OR container_obj=?" , (obj, obj)).fetchall())
     
     def endpoint_uids_for_surface(self, surface):
         return itemise(self.cursor.execute("SELECT MAX(uid) FROM photon GROUP BY pid INTERSECT SELECT uid FROM state WHERE surface_id=?;" , (surface,)).fetchall())
     
-    def endpoint_uids_for_object_and_surface(self, object, surface):
-        return itemise(self.cursor.execute("SELECT MAX(uid) FROM photon GROUP BY pid INTERSECT SELECT uid FROM state WHERE on_surface_obj=? AND surface_id=?;" , (object, surface)).fetchall())
+    def endpoint_uids_for_object_and_surface(self, obj, surface):
+        return itemise(self.cursor.execute("SELECT MAX(uid) FROM photon GROUP BY pid INTERSECT SELECT uid FROM state WHERE on_surface_obj=? AND surface_id=?;" , (obj, surface)).fetchall())
     
-    def endpoint_uids_outbound_for_object_and_surface(self, object, surface, luminescent=None, solar=None):
+    def endpoint_uids_outbound_for_object_and_surface(self, obj, surface, luminescent=None, solar=None):
         """For a surface_id will return all endpoint uid on an out bound direction. If keyword luminescent=True, 
         then only luminescent photons will be returned. If solar=True, the only solar photons will be 
         returned. If both are True then both types are returned i.e. the default behaviour. Setting the keyworks to any other value is ignored."""
         if luminescent == solar and luminescent is None:
-            return itemise(self.cursor.execute('SELECT MAX(uid) FROM photon GROUP BY pid HAVING uid IN (SELECT uid FROM state WHERE ray_direction_bound = "Out" AND on_surface_obj=? AND surface_id=? GROUP BY uid);', (object, surface)).fetchall())
+            return itemise(self.cursor.execute('SELECT MAX(uid) FROM photon GROUP BY pid HAVING uid IN (SELECT uid FROM state WHERE ray_direction_bound = "Out" AND on_surface_obj=? AND surface_id=? GROUP BY uid);', (obj, surface)).fetchall())
         elif luminescent:
-            return itemise(self.cursor.execute('SELECT MAX(uid) FROM photon GROUP BY pid HAVING uid IN (SELECT uid FROM state WHERE ray_direction_bound = "Out" AND on_surface_obj=? AND surface_id=? AND absorption_counter > 0 GROUP BY uid);', (object, surface)).fetchall())
+            return itemise(self.cursor.execute('SELECT MAX(uid) FROM photon GROUP BY pid HAVING uid IN (SELECT uid FROM state WHERE ray_direction_bound = "Out" AND on_surface_obj=? AND surface_id=? AND absorption_counter > 0 GROUP BY uid);', (obj, surface)).fetchall())
         elif solar:
-            return itemise(self.cursor.execute('SELECT MAX(uid) FROM photon GROUP BY pid HAVING uid IN (SELECT uid FROM state WHERE ray_direction_bound = "Out" AND on_surface_obj=? AND surface_id=? AND absorption_counter = 0 GROUP BY uid);', (object, surface)).fetchall())
+            return itemise(self.cursor.execute('SELECT MAX(uid) FROM photon GROUP BY pid HAVING uid IN (SELECT uid FROM state WHERE ray_direction_bound = "Out" AND on_surface_obj=? AND surface_id=? AND absorption_counter = 0 GROUP BY uid);', (obj, surface)).fetchall())
         else:
             print "Cannot return any uids for this question. Are you using the function uids_out_bound_on_surface correctly?"
             return []
@@ -229,8 +232,8 @@ class PhotonDatabase(object):
     def endpoint_uids_for_nonradiative_loss(self):
         return itemise(self.cursor.execute("SELECT uid FROM state WHERE surface_id = 'None' AND absorption_counter > 0 AND killed = 0 GROUP BY uid HAVING uid IN (SELECT MAX(uid) FROM photon group BY pid)").fetchall())
     
-    def endpoint_uids_for_nonradiative_loss_in_object(self, object):
-        return itemise(self.cursor.execute("SELECT uid FROM state WHERE container_obj=? AND surface_id = 'None' AND absorption_counter > 0 AND killed = 0 GROUP BY uid HAVING uid IN (SELECT MAX(uid) FROM photon group BY pid)", (object,)).fetchall())
+    def endpoint_uids_for_nonradiative_loss_in_object(self, obj):
+        return itemise(self.cursor.execute("SELECT uid FROM state WHERE container_obj=? AND surface_id = 'None' AND absorption_counter > 0 AND killed = 0 GROUP BY uid HAVING uid IN (SELECT MAX(uid) FROM photon group BY pid)", (obj,)).fetchall())
     
     def killed(self):
         """Returns the uid of killed photons (one that took too many steps to complete)."""
@@ -245,7 +248,7 @@ class PhotonDatabase(object):
         objects_keys = self.cursor.execute('SELECT DISTINCT(container_obj) FROM state GROUP BY container_obj;').fetchall()
         objects_keys = itemise(objects_keys)
         filtered_keys = []
-        # When rays are first created they are logged but they don't have a container_obj (it is assigend later).
+        # When rays are first created they are logged but they don't have a container_obj (it is assigned later).
         # Here we are remove 'None' from the hit object list, and also converting unicode strings to strings.
         for key in objects_keys:
             if key != 'None' or key != u'None' or key is not None:
@@ -265,9 +268,9 @@ class PhotonDatabase(object):
                 filtered_keys.append(str(key))
         return filtered_keys
     
-    def surfaces_with_records_for_object(self, object):
+    def surfaces_with_records_for_object(self, obj):
         """Returns a list of surface to 'object' that have been hit by a ray."""
-        keys = itemise(self.cursor.execute('SELECT DISTINCT surface_id FROM state WHERE uid IN (SELECT uid FROM surface_normal WHERE uid IN (SELECT MAX(uid) FROM photon GROUP BY pid)) INTERSECT SELECT DISTINCT surface_id FROM state WHERE container_obj=?;', (object,)).fetchall())
+        keys = itemise(self.cursor.execute('SELECT DISTINCT surface_id FROM state WHERE uid IN (SELECT uid FROM surface_normal WHERE uid IN (SELECT MAX(uid) FROM photon GROUP BY pid)) INTERSECT SELECT DISTINCT surface_id FROM state WHERE container_obj=?;', (obj,)).fetchall())
         
     def surface_normal_for_surface(self, surface_id, position_on_surface=None):
         """Returns a surface normal (vector) for a specified surface_id. If the surface is curved, you will need to specify the point on the surface."""
@@ -288,9 +291,14 @@ class PhotonDatabase(object):
             return []
         
     def uids_in_bound_on_surface(self, surface_id, luminescent=None, solar=None):
-        """For a surface_id will return all uid on an in bound direction. If keyword luminescent=True, 
-        then only luminescent photons will be returned. If solar=True, the only solar photons will be 
-        returned. If both are True then both types are returned i.e. the default behaviour. Setting the keyworks to any other value is ignored."""
+        """
+        For a surface_id will return all uid on an in bound direction.
+
+        If keyword luminescent=True, then only luminescent photons will be returned.
+        If solar=True, the only solar photons will be returned.
+        If both are True then both types are returned i.e. the default behaviour.
+        Setting the keywords to any other value is ignored.
+        """
         if luminescent == solar:
             return itemise(self.cursor.execute('SELECT MAX(uid) FROM photon GROUP BY pid HAVING uid IN (SELECT uid FROM state WHERE ray_direction_bound = "In" AND surface_id=? GROUP BY uid);', (surface_id,)).fetchall())
         elif luminescent:
@@ -405,7 +413,7 @@ if __name__ == "__main__":
         print 'No photons lost! :)'
         print type(db)
         print db.objects_with_records()
-    else :
+    else:
         print uid
         print db.wavelengthForUid(uid)
         print ""
@@ -441,7 +449,6 @@ if __name__ == "__main__":
     pylab.clf()
     
     print(data)
-    
     
     '''print "Plotting edge"
     uid = db.uids_out_bound_on_surface('left', luminescent=True) + db.uids_out_bound_on_surface('right', luminescent=True) + db.uids_out_bound_on_surface('near', luminescent=True) + db.uids_out_bound_on_surface('far', luminescent=True)

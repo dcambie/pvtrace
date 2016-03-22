@@ -33,9 +33,9 @@ from types import *
 import os
 
 
-def load_spectrum(file, xbins=None):
-    assert os.path.exists(file) == True, "File '%s' does not exist." % file
-    spectrum = Spectrum(file=file)
+def load_spectrum(filename, xbins=None):
+    assert os.path.exists(filename) == True, "File '%s' does not exist." % filename
+    spectrum = Spectrum(filename=filename)
 
     # Truncate the spectrum using the xbins
     if xbins is not None: y_values = spectrum(xbins); return Spectrum(xbins, y_values)
@@ -83,33 +83,33 @@ def wav2RGB(wavelength):
 
     # colour
     if 380 <= w < 440:
-        R = -(w - 440.) / (440. - 350.)
-        G = 0.0
-        B = 1.0
+        red = -(w - 440.) / (440. - 350.)
+        green = 0.0
+        blue = 1.0
     elif 440 <= w < 490:
-        R = 0.0
-        G = (w - 440.) / (490. - 440.)
-        B = 1.0
+        red = 0.0
+        green = (w - 440.) / (490. - 440.)
+        blue = 1.0
     elif 490 <= w < 510:
-        R = 0.0
-        G = 1.0
-        B = -(w - 510.) / (510. - 490.)
+        red = 0.0
+        green = 1.0
+        blue = -(w - 510.) / (510. - 490.)
     elif 510 <= w < 580:
-        R = (w - 510.) / (580. - 510.)
-        G = 1.0
-        B = 0.0
+        red = (w - 510.) / (580. - 510.)
+        green = 1.0
+        blue = 0.0
     elif 580 <= w < 645:
-        R = 1.0
-        G = -(w - 645.) / (645. - 580.)
-        B = 0.0
+        red = 1.0
+        green = -(w - 645.) / (645. - 580.)
+        blue = 0.0
     elif 645 <= w <= 780:
-        R = 1.0
-        G = 0.0
-        B = 0.0
+        red = 1.0
+        green = 0.0
+        blue = 0.0
     else:
-        R = 0.0
-        G = 0.0
-        B = 0.0
+        red = 0.0
+        green = 0.0
+        blue = 0.0
 
     # intensity correction
     if 380 <= w < 420:
@@ -122,21 +122,21 @@ def wav2RGB(wavelength):
         SSS = 0.0
     SSS *= 255
 
-    return [int(SSS * R), int(SSS * G), int(SSS * B)]
+    return [int(SSS * red), int(SSS * green), int(SSS * blue)]
 
 
-def fresnel_reflection(angle, n1, n2):
-    assert 0.0 <= angle <= 0.5 * np.pi, "Incident angle must be between 0 and 90 degrees to calc. Fresnel reflection."
+def fresnel_reflection(incident_angle, n1, n2):
+    assert 0.0 <= incident_angle <= 0.5 * np.pi, "Incident angle must be between 0 and 90 degrees to calc. Fresnel reflection."
     # Catch TIR case
     if n2 < n1:
-        if angle > np.arcsin(n2 / n1):
+        if incident_angle > np.arcsin(n2 / n1):
             return 1.0
 
-    Rs1 = n1 * np.cos(angle) - n2 * np.sqrt(1 - (n1 / n2 * np.sin(angle)) ** 2)
-    Rs2 = n1 * np.cos(angle) + n2 * np.sqrt(1 - (n1 / n2 * np.sin(angle)) ** 2)
+    Rs1 = n1 * np.cos(incident_angle) - n2 * np.sqrt(1 - (n1 / n2 * np.sin(incident_angle)) ** 2)
+    Rs2 = n1 * np.cos(incident_angle) + n2 * np.sqrt(1 - (n1 / n2 * np.sin(incident_angle)) ** 2)
     Rs = (Rs1 / Rs2) ** 2
-    Rp1 = n1 * np.sqrt(1 - (n1 / n2 * np.sin(angle)) ** 2) - n2 * np.cos(angle)
-    Rp2 = n1 * np.sqrt(1 - (n1 / n2 * np.sin(angle)) ** 2) + n2 * np.cos(angle)
+    Rp1 = n1 * np.sqrt(1 - (n1 / n2 * np.sin(incident_angle)) ** 2) - n2 * np.cos(incident_angle)
+    Rp2 = n1 * np.sqrt(1 - (n1 / n2 * np.sin(incident_angle)) ** 2) + n2 * np.cos(incident_angle)
     Rp = (Rp1 / Rp2) ** 2
     return 0.5 * (Rs + Rp)
 
@@ -187,7 +187,7 @@ class Spectrum(object):
     e.g. absorption, emission or refractive index spectrum as a function of wavelength in nanometers.
     """
 
-    def __init__(self, x=None, y=None, file=None):
+    def __init__(self, x=None, y=None, filename=None):
         """
         Initialised with x and y which are array-like data of the same length. x must have units of wavelength
         (that is in nanometers), y can an arbitrary units. However, if the Spectrum is representing an
@@ -196,12 +196,12 @@ class Spectrum(object):
         """
         super(Spectrum, self).__init__()
 
-        if file is not None:
+        if filename is not None:
 
             try:
-                data = np.loadtxt(file)
+                data = np.loadtxt(filename)
             except Exception as e:
-                print "Failed to load data from file, %s", str(file)
+                print "Failed to load data from file, %s", str(filename)
                 print e
                 exit(1)
 
@@ -298,12 +298,12 @@ class Spectrum(object):
         else:
             raise ValueError('A probability must be between 0 and 1 inclusive')
 
-    def write(self, file=None):
+    def write(self, filename=None):
         if file is not None:
             data = np.zeros((len(self.x), 2))
             data[:, 0] = self.x
             data[:, 1] = self.y
-            np.savetxt(file, data)
+            np.savetxt(filename, data)
 
     def __add__(self, other):
         if other is None:
@@ -458,7 +458,7 @@ class Material(object):
 
     def emission_direction(self):
         """
-        Returns a 3 component direction vector with is choosen isotropically.
+        Returns a 3 component direction vector with is chosen isotropically.
 
         ..note:: This method is overridden by subclasses to provide custom emission
         direction properties.
@@ -569,6 +569,8 @@ class CompositeMaterial(Material):
             raise ValueError
         self.refractive_index = refractive_index
         self.silent = silent
+        # These parameters are dynamically set to those of the relative material within self.trace()
+        self.emission, self.absorption, self.quantum_efficiency = None
 
     def all_absorption_coefficients(self, nanometers):
         """Returns and array of all the the materials absorption coefficients at the specified wavelength."""

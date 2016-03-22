@@ -27,6 +27,7 @@ class Analysis(object):
             self.working_dir = os.path.join(os.path.expanduser('~'), 'pvtrace_data', self.uuid)
             self.graph_dir = os.path.join(self.working_dir, 'graphs')
         self.log = logging.getLogger('pvtrace.analysis')
+        self.photon_generated, self.photon_killed, self.tot, self.non_radiative = 0
 
     def add_db(self, database):
         self.db = database
@@ -143,9 +144,9 @@ class Analysis(object):
         faces = edges + apertures
 
         lumi = 0
-        for surface in edges:
+        for surface in faces:
             photons = len(self.db.uids_out_bound_on_surface(surface, luminescent=True))
-            lumi = lumi + photons
+            lumi += photons
             print photons
         print "\n"
 
@@ -175,7 +176,7 @@ class Analysis(object):
     # print("Array with bounces is ", bounces)
         y = np.bincount(bounces)
         x = np.linspace(0, max(bounces), num=max(bounces) + 1)
-        return (x, y)
+        return x, y
 
     def history(self, photon_list=None):
         """
@@ -247,10 +248,10 @@ class Analysis(object):
             data = self.db.wavelengthForUid(uid)
             histogram(data=data, filename=os.path.join(prefix, 'plot-lsc-reflected'))
 
-        print "Plotting trasmitted"
+        print "Plotting transmitted"
         uids = self.db.uids_out_bound_on_surface('bottom', solar=True)
         if len(uids) < 10:
-            print "[plot-lsc-trasmitted] The database doesn't have enough photons to generate this graph!"
+            print "[plot-lsc-transmitted] The database doesn't have enough photons to generate this graph!"
         else:
             data = self.db.wavelengthForUid(uids)
             histogram(data=data, filename=os.path.join(prefix, 'plot-lsc-trasmitted'))
@@ -275,7 +276,7 @@ class Analysis(object):
         self.db.dump_to_file(location)
 
 
-def histogram(data, filename, range=(350, 700)):
+def histogram(data, filename, wavelength_range=(350, 700)):
     """
     Create an histogram with the cumulative frequency of photons at different wavelength
 
@@ -295,10 +296,10 @@ def histogram(data, filename, range=(350, 700)):
     # hist = np.histogram(data, bins=100, range=range)
     # hist = np.histogram(data, bins=np.linspace(400, 800, num=101))
     # print "hist is ",hist
-    if range is None:
+    if wavelength_range is None:
         plt.hist(data, histtype='stepfilled')
     else:
-        plt.hist(data, np.linspace(range[0], range[1], num=101), histtype='stepfilled')
+        plt.hist(data, np.linspace(wavelength_range[0], wavelength_range[1], num=101), histtype='stepfilled')
     for extension in suffixes:
         location = saving_location + "." + extension
         print location

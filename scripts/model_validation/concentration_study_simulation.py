@@ -20,11 +20,7 @@ for conc in range(0,40):
     for obj in reactor.scene_obj:
         scene.add_object(obj)
 
-    # Ask python that the directory of this script file is and use it as the location of the database file
-    pwd = os.getcwd()
-    dbfile = os.path.join(pwd, 'pvtracedb.sql')  # <--- the name of the database file, with "pvtracedb" overwrite is implied
-
-    trace = Tracer(scene=scene, source=reactor.source, seed=None, throws=20000, database_file=dbfile, use_visualiser=False, show_log=false, show_axis=True)
+    trace = Tracer(scene=scene, source=reactor.source, seed=None, throws=20000, use_visualiser=False, show_log=false, show_axis=True)
     # Run simulation
 #    trace.start()
 

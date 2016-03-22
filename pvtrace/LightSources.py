@@ -21,7 +21,7 @@ from Geometry import Cylinder, FinitePlane, transform_point, transform_direction
 from Trace import Photon
 
 
-def random_spherecial_vector():
+def random_spherical_vector():
     # This method of calculating isotropic vectors is taken from GNU Scientific Library
     LOOP = True
     while LOOP:
@@ -63,7 +63,7 @@ class SimpleSource(object):
         if self.use_random_polarisation:
 
             # Randomise rotation angle around xy-plane, the transform from +z to the direction of the photon
-            vec = random_spherecial_vector()
+            vec = random_spherical_vector()
             vec[2] = 0.
             vec = norm(vec)
             R = rotation_matrix_from_vector_alignment(self.direction, [0., 0., 1.])
@@ -73,7 +73,7 @@ class SimpleSource(object):
             photon.polarisation = None
 
         photon.id = self.throw
-        self.log.debug('Emitted photon ' + self.throw)
+        self.log.debug('Emitted photon ' + str(self.throw))
         self.throw += 1
         return photon
 
@@ -151,7 +151,7 @@ class PlanarSource(object):
 
 class LensSource(object):
     """
-    A source where photons generated in a plane are focused on a line with space tolerance given by variable "focussize".
+    A source where photons generated in a plane are focused on a line with space tolerance given by variable "focussize"
     The focus line should be perpendicular to the plane normal and aligned with the z-axis. 
     """
 
@@ -268,7 +268,7 @@ class CylindricalSource(object):
         self.length = length
         self.throw = 0
         self.source_id = "CylindricalSource_" + str(id(self))
-        self.log = logging.getLogger('pvtrace.cylindircalsource')
+        self.log = logging.getLogger('pvtrace.cylindricalsource')
 
     def translate(self, translation):
         self.shape.append_transform(tf.translation_matrix(translation))

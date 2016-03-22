@@ -239,7 +239,11 @@ def rotation_matrix_from_vector_alignment(before, after):
 
 
 class Ray(object):
-    """A ray in the global cartesian frame."""
+    """
+    A ray in the global cartesian frame.
+
+    It has two "private" attributes, __position and __direction as np.array of 3D coordinates
+    """
 
     def __init__(self, position=None, direction=None):
         if position is None:
@@ -267,6 +271,8 @@ class Ray(object):
     def behind(self, point):
         """
         Returns True is if 'point' is behind the ray location.
+
+        Used in Scene.sort()
 
         :param point: A cartesian point
         :return: boolean
@@ -328,11 +334,26 @@ class Intersection(object):
     def __cmp__(self, other):
         return cmp(self.separation, other.separation)
 
+"""
+Objects need to implement:
+
+ALL:
+intersection(self, ray)         Used in Scene.intersection()
+
+3D-shapes:
+
+__init__ (self, transform)
+append_transform(self, new_transform)
+contains(point)
+on_surface(self, point)
+surface_identifier(self, surface_point, assert_on_surface)
+surface_normal
+"""
 
 class Plane(object):
     """
-    A infinite plane going though the origin point along the positive z axis.
-    At 4x4 transformation matrix can be applied to the generated other planes.
+    An infinite plane going though the origin point along the positive z axis.
+    A 4x4 transformation matrix can be applied to generate other planes.
     """
 
     def __init__(self, transform=None):
@@ -640,7 +661,12 @@ class Box(object):
 
     def surface_identifier(self, surface_point, assert_on_surface=True):
         """
-        Returns an unique identifier that specifies the surface which holds the surface_points.
+        Returns an unique identifier that specifies the box surface which holds the surface_points.
+
+        :param surface_point: Point to be checked on surface
+        :param assert_on_surface: Assert point on surface (die if false)
+        :return: name of surface
+
         self.on_surface(surface_point) must return True, otherwise an assert error is thrown.
         Example, for a Box with origin=(X,Y,Z), and size=(L,W,H) has the identifiers:
         "left":(X,y,z)
@@ -1093,7 +1119,7 @@ class Cylinder(object):
 
         :param surface_point: Point to be checked on surface
         :param assert_on_surface: Assert point on surface (die if false)
-        :return:
+        :return: name of surface
         """
         local_point = transform_point(surface_point, tf.inverse_matrix(self.transform))
 

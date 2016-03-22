@@ -76,30 +76,31 @@ class Photon(object):
         self.absorption_counter = 0
         self.intersection_counter = 0
         self.reaction = False
+        self.previous_container = None
 
     def __copy__(self):
-        copy = Photon()
-        copy.wavelength = self.wavelength
-        copy.ray = Ray(direction=self.direction, position=self.position)
-        copy.active = self.active
-        copy.container = self.container
-        copy.exit_material = self.exit_material
-        copy.exit_device = self.exit_device
-        copy.scene = self.scene
-        copy.propagate = self.propagate
-        copy.visualiser = self.visualiser
-        copy.absorption_counter = self.absorption_counter
-        copy.intersection_counter = self.intersection_counter
-        copy.polarisation = self.polarisation
-        copy.show_log = self.show_log
-        copy.reabs = self.reabs
-        copy.id = self.id
-        copy.source = self.source
-        copy.absorber_material = self.absorber_material
-        copy.emitter_material = self.emitter_material
-        copy.on_surface_object = self.on_surface_object
-        copy.reaction = self.reaction
-        return copy
+        photon_copy = Photon()
+        photon_copy.wavelength = self.wavelength
+        photon_copy.ray = Ray(direction=self.direction, position=self.position)
+        photon_copy.active = self.active
+        photon_copy.container = self.container
+        photon_copy.exit_material = self.exit_material
+        photon_copy.exit_device = self.exit_device
+        photon_copy.scene = self.scene
+        photon_copy.propagate = self.propagate
+        photon_copy.visualiser = self.visualiser
+        photon_copy.absorption_counter = self.absorption_counter
+        photon_copy.intersection_counter = self.intersection_counter
+        photon_copy.polarisation = self.polarisation
+        photon_copy.show_log = self.show_log
+        photon_copy.reabs = self.reabs
+        photon_copy.id = self.id
+        photon_copy.source = self.source
+        photon_copy.absorber_material = self.absorber_material
+        photon_copy.emitter_material = self.emitter_material
+        photon_copy.on_surface_object = self.on_surface_object
+        photon_copy.reaction = self.reaction
+        return photon_copy
 
     def __deepcopy__(self):
         return copy(self)
@@ -382,7 +383,7 @@ class Photon(object):
                 return self
 
             if isinstance(intersection_object, Coating):
-                # Coating reflection (can be specular or lambertian)
+                # Coating reflection (can be specular or Lambertian)
                 self.direction = intersection_object.reflectivity.reflected_direction(self, normal)
             else:
                 # Specular reflection
@@ -401,13 +402,14 @@ class Photon(object):
                         self.polarisation = transform_direction(self.polarisation, R)
 
                     assert cmp_floats(angle(self.direction, self.polarisation),
-                                      np.pi / 2), "Exit Pt. #1: Angle between photon direction and polarisation must be 90 degrees: theta=%s" % str(
-                        np.degrees(angle(self.direction, self.polarisation)))
+                                      np.pi / 2), "Exit Pt. #1:Angle between photon direction and polarisation" \
+                                                  "must be 90 degrees: theta=%s" %\
+                                                  str(np.degrees(angle(self.direction, self.polarisation)))
 
             self.propagate = False
             self.exit_device = self.container
 
-            # invert polaristaion if n1 < n2
+            # invert polarisation if n1 < n2
             if self.container.material.refractive_index < next_containing_object.material.refractive_index:
 
                 if self.polarisation is not None:
@@ -421,17 +423,19 @@ class Photon(object):
                         self.polarisation = transform_direction(self.polarisation, R)
 
                     assert cmp_floats(angle(self.direction, self.polarisation),
-                                      np.pi / 2), "Exit Pt. #2: Angle between photon direction and polarisation must be 90 degrees: theta=%s" % str(
-                        angle(self.direction, self.polarisation))
+                                      np.pi / 2), "Exit Pt. #2: Angle between photon direction and polarisation" \
+                                                  "must be 90 degrees: theta=%s"\
+                                                  % str(angle(self.direction, self.polarisation))
 
             if self.exit_device == self.scene.bounds or self.exit_device is None:
                 self.exit_device = intersection_object
-            assert self.exit_device != self.scene.bounds, "The object the ray hit before hitting the bounds is the bounds, this can't be right"
+            assert self.exit_device != self.scene.bounds, "The object the ray hit before hitting the bounds" \
+                                                          "is the bounds. This can't be right."
             return self
 
         else:
             # photon is refracted through interface
-            # TODO WISH: count photons leaving channels without being absorbed (to measure channel absorption efficiency with different concentration)
+            # TODO WISH: count photons leaving channels without being absorbed
 
             # Hackish way to account for LSC edge reflectors (0.95 hardcoded for now)
             # todo: use a v SC outer surface, face: ",edge
@@ -618,28 +622,32 @@ class Scene(object):
         else:  # The probability of this to happen is extremely low\
             self.get_working_dir()
 
-    def add_object(self, object):
-        """Adds a new object to the scene. NB the new object must have a unique name otherwise this operation will fail."""
-        if len(object.name) == 0:
-            raise ValueError(
-                'The name of the object being added to the scene is blanck, please give you scene (i.e. Devices) a name by doing: my_device.name="my unique name".')
+    def add_object(self, object_to_add):
+        """
+        Adds a new object to the scene. NB the new object must have a unique name otherwise this operation will fail.
+        """
+        if len(object_to_add.name) == 0:
+            raise ValueError('The name of the object being added to the scene is blank, please give your scene'
+                             'element (i.e. Devices) a name by doing: my_device.name="my unique name".')
 
         names = []
         for obj in self.objects:
             names.append(obj.name)
         names = set(names)
         count = len(names)
-        names.add(object.name)
+        names.add(object_to_add.name)
         if count == len(names):
             # The name of the new object is a duplicate
-            raise ValueError(
-                "The name of the object being added, '%s' is not unique. All seem objects (i.e. Devices) must have unique name. You can change the name easily by doing: my_device.name='my unique name'.",
-                object.name)
-        self.objects.append(object)
+            raise ValueError("The name of the object being added, '%s' is not unique. All seem objects (i.e. Devices)"
+                             "must have unique name. You can change the name easily by doing:"
+                             "my_device.name='my unique name'.", object_to_add.name)
+        self.objects.append(object_to_add)
 
     def intersection(self, ray):
         """
-        Returns a ray of intersection points and associated objects in no particular order.
+        Returns the intersection points and associated objects of a ray in no particular order.
+
+        :param ray: Ray to be evaluated for intersections
         """
         points = []
         intersection_objects = []

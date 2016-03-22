@@ -338,6 +338,9 @@ class PhotonDatabase(object):
         last_uid_for_pid = max(self.uids_for_pid(pid))
         return itemise(self.cursor.execute('SELECT absorption_counter FROM state WHERE uid=?', (last_uid_for_pid,)))
 
+    def bounces_for_uid(self, uid):
+        return itemise(self.cursor.execute('SELECT absorption_counter FROM state WHERE uid=?', (uid,)))
+
     def uids_nonradiative_losses(self):
         return itemise(self.cursor.execute("SELECT uid FROM state WHERE reaction = 0 AND surface_id = 'None' AND absorption_counter > 0 AND killed = 0 GROUP BY uid HAVING uid IN (SELECT MAX(uid) FROM photon group BY pid)").fetchall())
     

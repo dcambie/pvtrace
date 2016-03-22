@@ -237,7 +237,7 @@ class Photon(object):
 
 
         # Here we trace the ray through a Material
-        self = self.container.material.trace(self, separation(self.position, intersection))
+        self.container.material.trace(self, separation(self.position, intersection))
 
         # Lost in material?
         # Photon has been re-absorbed but NOT re-emitted, i.e. is inactive
@@ -655,10 +655,10 @@ class Scene(object):
 
         if not os.path.exists(working_dir):
             os.makedirs(working_dir)
-            self.uuid = uuid
+            self.uuid = try_uuid
             return working_dir
         elif try_uuid == 'overwrite_me':
-            self.uuid = uuid
+            self.uuid = try_uuid
             return working_dir
         else:
             print "Error: working dir "+str(working_dir)+" already existing!"

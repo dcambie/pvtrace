@@ -180,12 +180,11 @@ class Analysis(object):
         :param photon_list: array with uids of photons of interest (they are assumed to be fluorescent)
         :return:
         """
+        import time
         bounces = []
         for photon in photon_list:
-            pid = self.db.pid_from_uid(photon)
-            # [0] needed since itemize of db_call results in arrays
-            bounces.append(self.db.bounces_for_pid(pid=pid[0][0])[0])
-    # print("Array with bounces is ", bounces)
+            bounces.append(self.db.bounces_for_uid(photon)[0])
+
         y = np.bincount(bounces)
         x = np.linspace(0, max(bounces), num=max(bounces) + 1)
         return x, y

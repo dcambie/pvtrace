@@ -30,7 +30,9 @@ import external.transformations as tf
 class Visualiser (object):
     """
     Visualiser a class that converts project geometry objects into vpython objects and draws them.
+
     It can be used pragmatically: just add objects as they are created and the changes will update in the display.
+    Note: the Scene can be controlled with ASWD keys
     """
     VISUALISER_ON = True
     if not VISUAL_INSTALLED:
@@ -62,7 +64,6 @@ class Visualiser (object):
                                       background=background, ambient=ambient)
         self.display.bind('keydown', self.keyInput)
         self.display.exit = False
-        # self.display.autocenter = True
         self.display.forward = vector(0,0.75,-0.5)
         self.display.center = (0.035,0.03,0)
 
@@ -74,38 +75,39 @@ class Visualiser (object):
             visual.label(pos=(0, .08, 0), text='Y', background=visual.color.green, linecolor=visual.color.green)
             visual.label(pos=(0, 0, .07), text='Z', background=visual.color.blue, linecolor=visual.color.blue)
     
-    def addBox(self, box, colour=None, opacity=1., material=visual.materials.plastic):
+    def addBox(self, box_to_add, colour=None, opacity=1., material=visual.materials.plastic):
         if not Visualiser.VISUALISER_ON:
             return
-        if isinstance(box, geo.Box):
+        if isinstance(box_to_add, geo.Box):
             if colour is None:
                 colour = visual.color.red
-            org = geo.transform_point(box.origin, box.transform)
-            ext = geo.transform_point(box.extent, box.transform)
+            org = geo.transform_point(box_to_add.origin, box_to_add.transform)
+            ext = geo.transform_point(box_to_add.extent, box_to_add.transform)
             # print "Visualiser: box origin=%s, extent=%s" % (str(org), str(ext))
-            size = np.abs(ext - org)
+            box_size = np.abs(ext - org)
             
-            pos = org + 0.5*size
-            # print "Visualiser: box position=%s, size=%s" % (str(pos), str(size))
-            angle, direction, point = tf.rotation_from_matrix(box.transform)
+            pos = org + 0.5*box_size
+            # print "Visualiser: box position=%s, box_size=%s" % (str(pos), str(box_size))
+            angle, direction, point = tf.rotation_from_matrix(box_to_add.transform)
 
             if np.allclose(np.array(colour), np.array([0,0,0])):
-                visual.box(pos=pos, size=size, material=material, opacity=opacity)
+                visual.box(pos=pos, size=box_size, material=material, opacity=opacity)
             else:
-                visual.box(pos=pos, size=size, color=colour, materials=material, opacity=opacity)
+                visual.box(pos=pos, size=box_size, color=colour, materials=material, opacity=opacity)
     
-    def addSphere(self, sphere, colour=None, opacity=1., material=visual.materials.plastic):
+    def addSphere(self, sphere_to_add, colour=None, opacity=1., material=visual.materials.plastic):
         """docstring for addSphere"""
         if not Visualiser.VISUALISER_ON:
             return
         
-        if isinstance(sphere, geo.Sphere):
+        if isinstance(sphere_to_add, geo.Sphere):
             if colour is None:
                 colour = visual.color.red
-            if np.allclose(np.array(colour), np.array([0,0,0])):
-                visual.sphere(pos=sphere.centre, radius=sphere.radius, opacity=opacity, material=material)
+            if np.allclose(np.array(colour), np.array([0, 0, 0])):
+                visual.sphere(pos=sphere_to_add.centre, radius=sphere_to_add.radius, opacity=opacity, material=material)
             else:
-                visual.sphere(pos=sphere.centre, radius=sphere.radius, color=geo.norm(colour), opacity=opacity, material=material)
+                visual.sphere(pos=sphere_to_add.centre, radius=sphere_to_add.radius, color=geo.norm(colour),
+                              opacity=opacity, material=material)
             
     def addFinitePlane(self, plane, colour=None, opacity=1., material=visual.materials.plastic):
         if not Visualiser.VISUALISER_ON:
@@ -174,8 +176,7 @@ class Visualiser (object):
             return
         if colour is None:
             colour = visual.color.blue
-        # FIXME temporary code for blue channels (when cylindric in shape)
-        # colour = visual.color.blue
+
         #angle, direction, point = tf.rotation_from_matrix(cylinder.transform)
         #axis = direction * cylinder.length
         position = geo.transform_point([0,0,0], cylinder.transform)
@@ -185,13 +186,13 @@ class Visualiser (object):
         #print axis, "Cylinder:axis"
         #print colour, "Cylinder:colour"
         #print cylinder.radius, "Cylinder:radius"
-        visual.cylinder(pos=position, axis=axis, color=colour, radius=cylinder.radius, opacity=opacity, length = cylinder.length, material=material)
-        #import time
-        #time.sleep(1)
+        visual.cylinder(pos=position, axis=axis, color=colour, radius=cylinder.radius, opacity=opacity,
+                        length=cylinder.length, material=material)
 
     def addCSG(self, CSGobj, res,origin,extent, colour=None, opacity=1., material=None):
         """
-        Visualise a CSG structure in a space subset defined by xmin, xmax, ymin, .... with division factor (i.e. ~ resolution) res
+        Visualise a CSG structure in a space subset defined by xmin, xmax, ymin,
+        and with division factor (i.e. ~ resolution) res
         """
 
         xmin = origin[0]

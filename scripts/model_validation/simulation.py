@@ -10,7 +10,7 @@ scene = Scene('overwrite_me')
 logger = logging.getLogger('pvtrace')
 
 # reactor = Reactor(reactor_name="5x5_6ch_squared", dye="Red305", dye_concentration=0.20, photocatalyst="MB", photocatalyst_concentration=0.0004)
-reactor = Reactor(reactor_name="5x5_slab", dye="Red305", dye_concentration=0.10, photocatalyst="MB", photocatalyst_concentration=0.0004)
+reactor = Reactor(reactor_name="5x5_slab", dye="Red305", dye_concentration=0.20, photocatalyst="MB", photocatalyst_concentration=0.0004)
 logger.info('Reactor volume (calculated): '+str(reactor.reaction_volume*1000000)+' mL')
 
 # reactor = Reactor(name="5x5_0ch", dye="Red305", dye_concentration=0.20)
@@ -20,7 +20,7 @@ for obj in reactor.scene_obj:
 # Doesn't save DB file but uses RAM disk for faster simulation
 # file = os.path.join(os.path.expanduser("~"),"pvtracedb.sql")
 # file = None
-trace = Tracer(scene=scene, source=reactor.source, seed=None, throws=50, use_visualiser=True,
+trace = Tracer(scene=scene, source=reactor.source, seed=None, throws=500, use_visualiser=False,
                show_log=False, show_axis=True, show_counter=False, db_split=True)
 trace.show_lines = true
 trace.show_path = false

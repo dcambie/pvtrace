@@ -20,7 +20,7 @@ for obj in reactor.scene_obj:
 # Doesn't save DB file but uses RAM disk for faster simulation
 # file = os.path.join(os.path.expanduser("~"),"pvtracedb.sql")
 # file = None
-trace = Tracer(scene=scene, source=reactor.source, seed=None, throws=500, use_visualiser=False,
+trace = Tracer(scene=scene, source=reactor.source, seed=None, throws=5, use_visualiser=False,
                show_log=False, show_axis=True, show_counter=False, db_split=True)
 trace.show_lines = true
 trace.show_path = false
@@ -39,6 +39,10 @@ logger.debug('Simulation Ended (time: '+str(toc)+', elapsed: '+str(toc-tic)+' s)
 scene.stats.print_detailed()
 #stats.print_excel()
 scene.stats.create_graphs()
+plane = Plane()
+plane.name= 'base for render'
+# scene.add_object(plane)
+# scene.pov_render(camera_position=(-0.05, 0.025, 0.05), camera_target=(0.025, 0.025, 0), height=1080, width=1920)
 #stats.history()
 #stats.saveDB()
 

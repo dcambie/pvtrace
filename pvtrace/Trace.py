@@ -575,7 +575,7 @@ class Scene(object):
     A collection of objects. All intersection points can be found or a ray can be traced through.
     """
 
-    def pov_render(self, camera_position=(0, 0, -10), camera_target=(0, 0, 0), height=2400, width=3200):
+    def pov_render(self, camera_position=(0, 0, 0.1), camera_target=(0, 0, 0), height=2400, width=3200):
         """
         Pov thing
 
@@ -1121,9 +1121,10 @@ class Tracer(object):
                         # self.database.log(photon)
                         # except:
                         #    entering_photon.container.log_in_volume(entering_photon)
-                    # assert logged == throw, "Logged (%s) and thorw (%s) not equal" % (str(logged), str(throw))
+                    # assert logged == throw, "Logged (%s) and throw (%s) are not equal" % (str(logged), str(throw))
                     logged += 1
 
+                # Needed since VPyhton6
                 if Visualiser.VISUALISER_ON:
                     visual.rate(100000)
                     a = b
@@ -1173,5 +1174,4 @@ class Tracer(object):
 
 if __name__ == "__main__":
     import doctest
-
     doctest.testmod()

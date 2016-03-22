@@ -26,43 +26,50 @@ import Geometry as geo
 import ConstructiveGeometry as csg
 import external.transformations as tf
 
-def keyInput(evt):
-    s = evt.key
-    if len(s) == 1:
-        if s == 'd':
-            self.display.center = (self.display.center[0]+0.01,self.display.center[1],self.display.center[2])
-        if s == 's':
-            self.display.center = (self.display.center[0],self.display.center[1]-0.01,self.display.center[2])
-        if s == 'a':
-            self.display.center = (self.display.center[0]-0.01,self.display.center[1],self.display.center[2])
-        if s == 'w':
-            self.display.center = (self.display.center[0],self.display.center[1]+0.01,self.display.center[2])
 
 class Visualiser (object):
-    """Visualiser a class that converts project geometry objects into vpython objects and draws them. It can be used programmatically: just add objects as they are created and the changes will update in the display."""
+    """
+    Visualiser a class that converts project geometry objects into vpython objects and draws them.
+    It can be used pragmatically: just add objects as they are created and the changes will update in the display.
+    """
     VISUALISER_ON = True
     if not VISUAL_INSTALLED:
         VISUALISER_ON = False
-    
+
+    def keyInput(self, evt):
+        s = evt.key
+
+        if len(s) == 1:
+            if s == 'd':
+                self.display.center = (self.display.center[0]+0.01,self.display.center[1],self.display.center[2])
+            if s == 's':
+                self.display.center = (self.display.center[0],self.display.center[1]-0.01,self.display.center[2])
+            if s == 'a':
+                self.display.center = (self.display.center[0]-0.01,self.display.center[1],self.display.center[2])
+            if s == 'w':
+                self.display.center = (self.display.center[0],self.display.center[1]+0.01,self.display.center[2])
+            if s == '0':
+                self.display.center = (0.035,0.03,0)
+
     def __init__(self, background=(0,0,0), ambient=1., show_axis=True):
         super(Visualiser, self).__init__()
         if not Visualiser.VISUALISER_ON:
             return
 
         self.display = visual.display(title='PVTrace', x=0, y=0, width=800, height=600, background=(0.957, 0.957, 1), ambient=0.5)
+        self.display.bind('keydown', self.keyInput)
         self.display.exit = False
 #        self.display.autocenter = True
         self.display.forward = vector(0,0.75,-0.5)
         self.display.center = (0.035,0.03,0)
-        # scene.bind('keydown', keyInput)
 
         if show_axis:
             visual.curve(pos=[(0,0,0), (.08,0,0)], radius=0.0005, color=visual.color.red)
             visual.curve(pos=[(0,0,0), (0,.07,0)], radius=0.0005, color=visual.color.green)
             visual.curve(pos=[(0,0,0), (0,0,.08)], radius=0.0005, color=visual.color.blue)
-            visual.label(pos=(.09, 0, 0), text='X', linecolor=visual.color.red)
-            visual.label(pos=(0, .08, 0), text='Y', linecolor=visual.color.green)
-            visual.label(pos=(0, 0, .07), text='Z', linecolor=visual.color.blue)
+            visual.label(pos=(.09, 0, 0), text='X', background=visual.color.red, linecolor=visual.color.red)
+            visual.label(pos=(0, .08, 0), text='Y', background=visual.color.green, linecolor=visual.color.green)
+            visual.label(pos=(0, 0, .07), text='Z', background=visual.color.blue, linecolor=visual.color.blue)
     
     def addBox(self, box, colour=None, opacity=1., material=visual.materials.plastic):
         if not Visualiser.VISUALISER_ON:

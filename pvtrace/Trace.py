@@ -14,6 +14,7 @@
 from __future__ import division
 
 import subprocess
+import os
 import time
 from copy import copy
 
@@ -37,12 +38,29 @@ def remove_duplicates(the_list):
     return [x for x in l if l.count(x) == 1]
 
 
+def file_opener(file_path):
+    """
+    Opens a give file with the system default application
+
+    :param file_path: File to be open
+    :return:
+    """
+    if os.name == 'nt':
+        os.startfile(file_path)
+    elif os.name == 'posix':
+        subprocess.call(('xdg-open', file_path))
+    elif sys.platform.startswith('darwin'):
+        subprocess.call(('open', file_path))
+    else:
+        assert "unknown platform!"
+
+
 class Photon(object):
     """
     A generic photon class.
     """
 
-    def __init__(self, wavelength=555, position=[.0, .0, .0], direction=[.0, .0, 1.], active=True, show_log=True):
+    def __init__(self, wavelength=555, position=None, direction=None, active=True, show_log=True):
         """
         All arguments are optional because a photon is created with default values. The possible arguments are:
         wavelength -- The photon wavelength in nanometers (float).
@@ -54,6 +72,7 @@ class Photon(object):
         """
 
         self.wavelength = wavelength
+        # Note that Ray can correctly handle None as arguments
         self.ray = Ray(np.array(position), np.array(direction))
         self.active = active
         self.killed = False
@@ -582,9 +601,7 @@ class Scene(object):
 
         # A for anti-aliasing, q is quality (1-11)
         subprocess.call(POVRAY_BINARY + " +A +Q10 +H" + str(height) + " +W" + str(width) + " demo.pov", shell=True)
-        # windows exe is "C:\Program Files\POV-Ray\v3.7\bin\pvengine64.exe"
-        # Fixme: Find platform independent file opener (no internet access now)
-        # os.system("gnome-open demo.png")
+        file_opener("demo.png")
 
     #        """
 

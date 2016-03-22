@@ -592,18 +592,17 @@ class Scene(object):
         super(Scene, self).__init__()
         self.bounds = Bounds()  # Create boundaries to world and apply to scene
         self.objects = [self.bounds]
-        if uuid is None:
-            self.uuid = ''
-            self.working_dir = self.get_working_dir()
-        else:
-            self.uuid = uuid
-            self.working_dir = os.path.join(os.path.expanduser('~'), 'pvtrace_data', self.uuid)
+        self.uuid = None
+        self.working_dir = self.get_working_dir(uuid)
         print "Working directory: ", self.working_dir
         self.log = self.start_logging()
         self.stats = Analysis.Analysis(uuid=self.uuid)
 
     def start_logging(self):
         LOG_FILENAME = os.path.join(self.working_dir, 'output.log')
+
+        # Create file if needed and truncate if already existing
+        open(LOG_FILENAME, 'w').close()
         logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG)
         logger = logging.getLogger('pvtrace.trace')
         logger.debug('*** NEW SIMULATION ***')
@@ -611,15 +610,23 @@ class Scene(object):
         logger.debug('Date/Time ' + time.strftime("%c"))
         return logger
 
-    def get_working_dir(self):
-        uuid = shortuuid.uuid()
-        working_dir = os.path.join(os.path.expanduser('~'), 'pvtrace_data', uuid)
+    def get_working_dir(self, uuid=None):
+        if uuid is None:
+            try_uuid = shortuuid.uuid()
+        else:
+            try_uuid = uuid
+
+        working_dir = os.path.join(os.path.expanduser('~'), 'pvtrace_data', try_uuid)
 
         if not os.path.exists(working_dir):
             os.makedirs(working_dir)
             self.uuid = uuid
             return working_dir
-        else:  # The probability of this to happen is extremely low\
+        elif try_uuid == 'overwrite_me':
+            self.uuid = uuid
+            return working_dir
+        else:
+            print "Error: working dir "+str(working_dir)+" already existing!"
             self.get_working_dir()
 
     def add_object(self, object_to_add):

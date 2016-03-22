@@ -232,6 +232,10 @@ class Spectrum(object):
             self.y = np.zeros(len(self.x), dtype=np.float32)
             self.y[indx] = np.array(yval, dtype=np.float32)
 
+        # Check for negative values
+        for y in self.y:
+            assert float(y) >= 0, "Spectrum has negative values!"
+
         # Make the 'spectrum'
         self.spectrum = interp1d(self.x, self.y, bounds_error=False, fill_value=0.0)
 
@@ -570,7 +574,9 @@ class CompositeMaterial(Material):
         self.refractive_index = refractive_index
         self.silent = silent
         # These parameters are dynamically set to those of the relative material within self.trace()
-        self.emission, self.absorption, self.quantum_efficiency = None
+        self.emission = None
+        self.absorption = None
+        self.quantum_efficiency = None
 
     def all_absorption_coefficients(self, nanometers):
         """Returns and array of all the the materials absorption coefficients at the specified wavelength."""

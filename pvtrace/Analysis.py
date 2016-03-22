@@ -6,6 +6,15 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 
+plt.switch_backend('Qt4Agg')
+"""
+Changing the backend is important on Windows, since the default one results in the following error:
+PyEval_RestoreThread: NULL tstate
+
+That error could be circumvented calling .quit() and .destroy() on the graph element.
+Using Qt4 as backend requires PyQt4 but keeps the code platform independent without inflating platform-specific code
+"""
+
 
 class Analysis(object):
     """
@@ -27,7 +36,10 @@ class Analysis(object):
             self.working_dir = os.path.join(os.path.expanduser('~'), 'pvtrace_data', self.uuid)
             self.graph_dir = os.path.join(self.working_dir, 'graphs')
         self.log = logging.getLogger('pvtrace.analysis')
-        self.photon_generated, self.photon_killed, self.tot, self.non_radiative = 0
+        self.photon_generated = None
+        self.photon_killed = None
+        self.tot = None
+        self.non_radiative = None
 
     def add_db(self, database):
         self.db = database
@@ -266,7 +278,7 @@ class Analysis(object):
 
         print "Plotting bounces luminescent"
         uids = self.db.uids_luminescent()
-        if len(uids) < 1:
+        if len(uids) < 10:
             print "[bounces channel] The database doesn't have enough photons to generate this graph!"
         else:
             data = self.get_bounces(photon_list=uids)

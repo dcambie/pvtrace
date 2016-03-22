@@ -71,9 +71,14 @@ class Photon(object):
         container  -- The geometrical object within which the ray is located.
         """
 
+        if position is not None:
+            position = np.array(position)
+        if direction is not None:
+            direction = np.array(direction)
+        # Note that Ray can correctly handle None as arguments, but not NoneType (result of np.array(None))
+        self.ray = Ray(position, direction)
+
         self.wavelength = wavelength
-        # Note that Ray can correctly handle None as arguments
-        self.ray = Ray(np.array(position), np.array(direction))
         self.active = active
         self.killed = False
         self.container = None
@@ -531,14 +536,13 @@ def povObj(obj, colour=None):
     if type(obj) == Coating:
         return povObj(obj.shape)
     if type(obj) == LSC:
-        #       maxindex = obj.material.emission.y.argmax()
-        #       wavelength = obj.material.emission.x[maxindex]
-        #       colour = wav2RGB(633)#FIXME since it's just for rendering and I'm having trouble with the two lines above just set lSc color manually
-        #       print colour # value is [255, 47, 0]
+        # maxindex = obj.material.emission.y.argmax()
+        # wavelength = obj.material.emission.x[maxindex]
+        # colour = wav2RGB(633)
+        # print color # value is [255, 47, 0]
+        # Red for LSC is now hardcoded :(
         colour = [236, 13, 36]
-        colour = pov.Pigment(
-            color=(colour[0] / 255, colour[1] / 255, colour[2] / 255, 0.85))  # 0.85 is transparency value
-        print "found lsc"
+        colour = pov.Pigment(color=(colour[0] / 255, colour[1] / 255, colour[2] / 255, 0.85))  # 0.85 is transparency
         return povObj(obj.shape, colour=colour)
     if type(obj) == Plane:
         return pov.Plane((0, 0, 1), 0, white, matrix=M)
@@ -565,9 +569,17 @@ class Scene(object):
     """
 
     def pov_render(self, camera_position=(0, 0, -10), camera_target=(0, 0, 0), height=2400, width=3200):
-        """Pov thing
-        >>> S = Scene('LHF4b3gTFVqpsXcuVYCzd3')
-        Working directory:  D:\Users\dcambie\pvtrace_data\LHF4b3gTFVqpsXcuVYCzd3
+        """
+        Pov thing
+
+        :param camera_position: position of the camera
+        :param camera_target:  aim for camera
+        :param height: output render image height size in pixels
+        :param width: output render image width size in pixels
+        :return: Creates the render image but returns nothing
+
+        >>> S = Scene('overwrite_me')
+        Working directory:  D:\Users\dcambie\pvtrace_data\overwrite_me
         >>> L, W, D = 1, 1, 1
         >>> box = Box(origin=(-L/2., -W/2.,-D/2.), extent=(L/2, W/2, D/2))
         >>> box.name = 'box'
@@ -648,7 +660,9 @@ class Scene(object):
 
     def add_object(self, object_to_add):
         """
-        Adds a new object to the scene. NB the new object must have a unique name otherwise this operation will fail.
+        Adds a new object to the scene.
+
+        :param object_to_add: object to be added. Needs a unique name!
         """
         if len(object_to_add.name) == 0:
             raise ValueError('The name of the object being added to the scene is blank, please give your scene'
@@ -691,14 +705,16 @@ class Scene(object):
     def sort(points, objects, ray, container=None, remove_ray_intersection=True, show_log=False):
         """
         Returns points and objects sorted by separation from the ray position.
-        
-        points : a list of intersection points as returned by scene.intersection(ray)
-        objects : a list of objects as returned by scene.intersection(ray)
-        ray : a ray with global coordinate frame
-        remove_ray_intersection=True  (optional): if the ray is on an intersection points remove this point from both lists
+
+        :param points: a list of intersection points as returned by scene.intersection(ray)
+        :param objects: a list of objects as returned by scene.intersection(ray)
+        :param ray: a ray with global coordinate frame
+        :param container: the container
+        :param remove_ray_intersection: if the ray is on an intersection points remove this point from both lists
+        :param show_log: if true objects and points are printed to stout (*very* verbose, set a low throw!)
         """
 
-        # filter arrays for intersection points that are ahead of the ray's direction
+        # Filter arrays for intersection points that are ahead of the ray's direction
         # also if the ray is on an intersection already remove it (optional)
         for i in range(0, len(points)):
 
@@ -727,7 +743,6 @@ class Scene(object):
 
         assert len(points) > 0, "No intersection points can be found with the scene."
 
-        # import pdb; pdb.set_trace()
         # sort the intersection points arrays by separation from the ray's position
         separations = []
         for point in points:
@@ -735,7 +750,7 @@ class Scene(object):
         sorted_indices = np.argsort(separations)
         separations.sort()
 
-        # Sort accoring to sort_indices array
+        # Sort according to sort_indices array
         points_copy = list(points)
         objects_copy = list(objects)
         for i in range(0, len(points)):
@@ -753,7 +768,8 @@ class Scene(object):
         # Now perform container check on ordered duplicates
         if container is not None:
             if objects[0] != container and len(objects) > 1:
-                # The first object in the array must be the container so there is an order problem -- assumes container object is an index 1!
+                # The first object in the array must be the container so there is an order problem
+                # assumes container object is an index 1!
                 obj = objects[1]
                 objects[1] = objects[0]
                 objects[0] = obj
@@ -778,19 +794,21 @@ class Scene(object):
     def order_duplicates(objects, points, separations):
         """
         Subroutine which might be called recursively by the sort function when the first element
-        of the objects array is no the container objects after sorting.
+        of the objects array is not the container objects after sorting.
+
+        :param objects: a list of objects as returned by scene.intersection(ray)
+        :param points: a list of intersection points as returned by scene.intersection(ray)
+        :param separations:
         """
 
-        # If two intersections occur at the same points then the 
-        # sort order won't always be correct. We need to sort by
-        # noticing the order of the points that could be sorted.
+        # If two intersections occur at the same points then the sort order won't always be correct.
+        # We need to sort by noticing the order of the points that could be sorted.
         # (e.g.) a thin-film from air could give [a {b a} b], this pattern, we know the first point is correct.
         # (e.g.) a thin-film from thin-film could give [{b a} b c], this pattern,  we know the middle is point correct.
         # (e.g.) another possible example when using CGS objects [a b {c b} d].
         # (e.g.) [a {b a} b c] --> [a a b b c]
         # (e.g.) need to make the sort algorithm always return [a a b b] or [a b b c].
         # Find indices of same-separation points
-        # import pdb; pdb.set_trace()
 
         if (len(objects)) > 2:
             common = []
@@ -822,9 +840,12 @@ class Scene(object):
     def container(self, photon):
         """
         Returns the inner most object that contains the photon.
+
+        :param photon: the contained photon
         """
 
-        # Ask each object if it contains the photon, if multiple object say yes we filter by separation to find the inner container.
+        # Ask each object if it contains the photon.
+        # If multiple object return true we filter by separation to find the inner container.
         containers = []
         for obj in self.objects:
             if obj.shape.contains(photon.position):
@@ -835,12 +856,14 @@ class Scene(object):
         elif len(containers) == 1:
             return containers[0]
         else:
-            # We cast the ray forward and make intersections with the possible containers, the inner container has the closest intersection point
+            # We cast the ray forward and make intersections with the possible containers
+            # The inner container is individuated by the closest intersection point
             separations = []
             for obj in containers:
                 intersection_point = obj.shape.intersection(photon)
-                assert len(
-                    intersection_point) == 1, "A primitive containing object can only have one intersection point with a line when the origin of the test ray is contained by the object."
+                assert len(intersection_point) == 1, "A primitive containing object can only have one" \
+                                                     "intersection point with a line when the origin of the test ray" \
+                                                     "is contained by the object."
                 separations.append(separation(photon.position, intersection_point[0]))
             min_index = np.array(separations).argmin()
             return containers[min_index]
@@ -850,7 +873,6 @@ class Tracer(object):
     """
     An object that will fire multiple photons through the scene.
     """
-
     def __init__(self, scene=None, source=None, throws=1, steps=50, seed=None, use_visualiser=True, show_log=False,
                  background=(0.957, 0.957, 1), ambient=0.5, show_axis=True,
                  show_counter=False, db_split=None):
@@ -882,7 +904,6 @@ class Tracer(object):
         self.dumped = []  # Keeps a list with filenames of dumped db (if db_split is True and throws>split_num
         # After 20k photons performance decrease is greater than 20% (compared vs. first photon simulated)
 
-
         np.random.seed(self.seed)
         if not use_visualiser:
             Visualiser.VISUALISER_ON = False
@@ -908,7 +929,8 @@ class Tracer(object):
                         material = visual.materials.wood
                         colour = visual.color.blue
                         opacity = 1.
-                    # Dario's edit: this is BAD and breaks multiple lSC colours in the same scene. sorry :(
+                    # Dario's edit: LSC color set to red/
+                    # this breaks multiple lSC colours in the same scene. sorry :)
                     elif isinstance(obj, LSC):
                         material = visual.materials.plastic
                         colour = visual.color.red
@@ -920,7 +942,6 @@ class Tracer(object):
                         material = visual.materials.plastic
 
                     elif isinstance(obj, Coating):
-
                         colour = visual.color.white
                         opacity = 0.5
                         material = visual.materials.plastic
@@ -939,11 +960,11 @@ class Tracer(object):
                         opacity = 0.5
                         material = visual.materials.plastic
                     else:
-
+                        # This excludes CompositeMaterial, even if the material with highest abs. could be used.
                         if not hasattr(obj.material, 'all_absorption_coefficients'):
                             try:
-                                maxindex = obj.material.emission_data.y.argmax()
-                                wavelength = obj.material.emission_data.x[maxindex]
+                                max_index = obj.material.emission_data.y.argmax()
+                                wavelength = obj.material.emission_data.x[max_index]
                                 colour = norm(wav2RGB(wavelength))
                             except:
                                 colour = (0.2, 0.2, 0.2)
@@ -951,7 +972,7 @@ class Tracer(object):
                             opacity = 0.5
                             material = visual.materials.plastic
                         else:
-                            # It is possible to processes the most likley colour of a spectrum in a better way than this!
+                            # It is possible to processes the most likely colour of a spectrum in a better way than this
                             colour = (0.2, 0.2, 0.2)
                             opacity = 0.5
                             material = visual.materials.plastic

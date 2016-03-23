@@ -523,7 +523,7 @@ class Material(object):
             photon.position = photon.position + free_pathlength * photon.direction
             return photon
         # Assuming the material has a uniform absorption coefficient we generated a random path length weigthed by the material absorption coefficient.
-        sampled_pathlength = -np.log(1 - np.random.uniform()) / self.absorption(photon)
+        sampled_pathlength = -np.log10(1 - np.random.uniform()) / self.absorption(photon)
 
         # Photon absorbed.
         if sampled_pathlength < free_pathlength:
@@ -559,7 +559,7 @@ class CompositeMaterial(Material):
     """
 
     def __init__(self, materials, refractive_index=None, silent=False):
-        """Initalised by a list or array of material objects."""
+        """Initialised by a list or array of material objects."""
         super(CompositeMaterial, self).__init__()
         self.materials = materials
         if refractive_index is None:
@@ -593,12 +593,13 @@ class CompositeMaterial(Material):
         Traces the photon in the CompositeMaterial. See the analogous behaviour in Material
 
         Will apply absorption and emission probabilities to the photon along its free path in the present geometrical
-        container and return the result photon for tracing. See help(material.trace) for how this is done for a single
-        material because the same principle applies. The ensemble absorption coefficient is found for the specified
-        photon to determine if absorption occurs. The absorbed material itself is found at random from a distribution
-        weighted by each of the component absorption coefficients. The resultant photon is returned with possibly
-        a new position, direction and wavelength. If the photon is absorbed and not emitted the photon is returned but
-        its active property is set to False.
+        container and return the result photon for tracing.
+        See help(material.trace) for how this is done for a single material because the same principle applies.
+        The ensemble absorption coefficient is found for the specified photon to determine if absorption occurs.
+        The absorbed material itself is found at random from a distribution weighted by each of the component
+        absorption coefficients.
+        The resultant photon is returned with possibly a new position, direction and wavelength.
+        If the photon is absorbed and not emitted the photon is returned but its active property is set to False.
         """
 
         # Clear state using for collecting statistics
@@ -610,7 +611,7 @@ class CompositeMaterial(Material):
         # print 'At ',photon.wavelength,' nm the absorption of the materials are:',absorptions
         absorption_coefficient = absorptions.sum()
         # See WolframAlpha "-ln(1-x)/y from x=0 to 1 from y=0 to 2"
-        sampled_pathlength = -np.log(1 - np.random.uniform()) / absorption_coefficient
+        sampled_pathlength = -np.log10(1 - np.random.uniform()) / absorption_coefficient
         # print "sampled is: ",sampled_pathlength
 
         # Absorption occurs.

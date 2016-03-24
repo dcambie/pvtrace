@@ -46,7 +46,7 @@ plane.name= 'base for render'
 # scene.add_object(plane)
 # scene.pov_render(camera_position=(-0.05, 0.025, 0.05), camera_target=(0.025, 0.025, 0), height=1080, width=1920)
 #stats.history()
-#stats.saveDB()
+#stats.save_db()
 
 
 sys.exit(0)

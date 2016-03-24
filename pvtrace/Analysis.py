@@ -79,7 +79,6 @@ class Analysis(object):
         # print "\t Photon efficiency \t", (luminescent_edges + luminescent_apertures) * 100 / thrown, "%"
         # print "\t Optical efficiency \t", luminescent_edges * 100 / thrown, "%"
 
-
         self.log.info("Technical details:")
         self.log.info("\t Generated \t" + str(self.photon_generated))
         self.log.info("\t Killed \t" + str(self.photon_killed))
@@ -97,13 +96,13 @@ class Analysis(object):
             self.log.info("\t" + surface + "\t" + self.percent(photons))
             luminescent += photons
 
-        self.log.info("Non radiative losses\t"+self.percent(self.non_radiative))
+        self.log.info("Non radiative losses\t" + self.percent(self.non_radiative))
         self.log.info("Solar photons:")
 
         solar = 0
         for surface in apertures:
             photons = len(self.db.uids_out_bound_on_surface(surface, solar=True))
-            self.log.info("\t"+surface+"\t"+self.percent(photons))
+            self.log.info("\t" + surface + "\t" + self.percent(photons))
             solar += photons
 
         self.log.info("Reactor's channel photons:")
@@ -111,9 +110,9 @@ class Analysis(object):
         photons_in_channels_tot = len(self.db.uids_in_reactor())
         photons_in_channels_direct = photons_in_channels_tot - photons_in_channels_luminescent
 
-        self.log.info("Photons in channels (direct)\t"+self.percent(photons_in_channels_direct))
-        self.log.info("Photons in channels (luminescent)\t"+self.percent(photons_in_channels_luminescent))
-        self.log.info("Photons in channels (sum)\t"+self.percent(photons_in_channels_tot))
+        self.log.info("Photons in channels (direct)\t" + self.percent(photons_in_channels_direct))
+        self.log.info("Photons in channels (luminescent)\t" + self.percent(photons_in_channels_luminescent))
+        self.log.info("Photons in channels (sum)\t" + self.percent(photons_in_channels_tot))
 
         if solar + luminescent + self.non_radiative + photons_in_channels_tot == self.tot:
             self.log.debug("Results sanity check OK!")
@@ -155,10 +154,10 @@ class Analysis(object):
         apertures = ['top', 'bottom']
         faces = edges + apertures
 
-        lumi = 0
+        luminescent_surfaces = 0
         for surface in faces:
             photons = len(self.db.uids_out_bound_on_surface(surface, luminescent=True))
-            lumi += photons
+            luminescent_surfaces += photons
             print photons
         print "\n"
 
@@ -171,7 +170,7 @@ class Analysis(object):
 
         print photons_in_channels_tot - luminescent_photons_in_channels
         print luminescent_photons_in_channels
-        print luminescent_photons_in_channels / (lumi + luminescent_photons_in_channels)
+        print luminescent_photons_in_channels / (luminescent_surfaces + luminescent_photons_in_channels)
 
     def get_bounces(self, photon_list=None):
         """
@@ -191,80 +190,58 @@ class Analysis(object):
     def history(self, photon_list=None):
         """
         Extract from the DB the trace of the given photon uid.
-        If a list of uids is provided it's splitted into individual
+        If a list of uids is provided it's split into individual
 
         :param photon_list: list of uids of photons to be investigated
-        :return:
         """
         # FIXME : this is still missing
         for photon in photon_list:
             pid = self.db.pid_from_uid(photon)
+        pass
 
     def create_graphs(self, prefix=''):
         """
         Generate a series of graphs on photons stored in self.db
+
+        :param prefix:
+        :return:
         """
-        print "Plotting reactor..."
+        self.log.debug("Analysis.create_graphs() called with prefix=" + prefix)
 
         if hasattr(self, 'uuid'):
             prefix = self.graph_dir
             try:
                 os.stat(prefix)
-            except:
+            except OSError:
                 os.mkdir(prefix)
 
-        uid = self.db.uids_in_reactor()
-        if len(uid) < 10:
-            print "[plot-reactor] The database doesn't have enough photons to generate this graph!"
-        else:
-            data = self.db.wavelengthForUid(uid)
-            histogram(data=data, filename=os.path.join(prefix, 'plot-reactor'))
-
-        print "Plotting reactor luminescent..."
-        uid = self.db.uids_in_reactor_and_luminescent()
-        if len(uid) < 10:
-            print "[plot-reactor-luminescent] The database doesn't have enough photons to generate this graph!"
-        else:
-            data = self.db.wavelengthForUid(uid)
-            histogram(data=data, filename=os.path.join(prefix, 'plot-reactor-luminescent'))
-
-        print "Plotting concentrated photons (luminescent leaving at LSC edges)"
         edges = ['left', 'near', 'far', 'right']
-        uid = []
-        for surface in edges:
-            uid += self.db.uids_out_bound_on_surface(surface, luminescent=True)
-        if len(uid) < 10:
-            print "[plot-lsc-edges] The database doesn't have enough photons to generate this graph!"
-        else:
-            data = self.db.wavelengthForUid(uid)
-            histogram(data=data, filename=os.path.join(prefix, 'plot-lsc-edges'))
-
-        print "Plotting escaped photons (luminescent leaving at top/bottom)"
         apertures = ['top', 'bottom']
-        uid = []
+
+        uids_luminescent_sum_edges = []
+        for surface in edges:
+            uids_luminescent_sum_edges += self.db.uids_out_bound_on_surface(surface, luminescent=True)
+
+        uids_luminescent_sum_apertures = []
         for surface in apertures:
-            uid += self.db.uids_out_bound_on_surface(surface, luminescent=True)
-        if len(uid) < 10:
-            print "[plot-lsc-apertures] The database doesn't have enough photons to generate this graph!"
-        else:
-            data = self.db.wavelengthForUid(uid)
-            histogram(data=data, filename=os.path.join(prefix, 'plot-lsc-apertures'))
+            uids_luminescent_sum_apertures += self.db.uids_out_bound_on_surface(surface, luminescent=True)
 
-        print "Plotting reflected"
-        uid = self.db.uids_out_bound_on_surface('top', solar=True)
-        if len(uid) < 10:
-            print "[plot-lsc-reflected] The database doesn't have enough photons to generate this graph!"
-        else:
-            data = self.db.wavelengthForUid(uid)
-            histogram(data=data, filename=os.path.join(prefix, 'plot-lsc-reflected'))
+        graphs = {
+            'reactor-total': self.db.uids_in_reactor(),
+            'reactor-luminescent': self.db.uids_in_reactor_and_luminescent(),
+            'lsc-edges': uids_luminescent_sum_edges,
+            'lsc-apertures': uids_luminescent_sum_apertures,
+            'lsc-reflected': self.db.uids_out_bound_on_surface('top', solar=True),
+            'lsc-transmitted': self.db.uids_out_bound_on_surface('bottom', solar=True)}
 
-        print "Plotting transmitted"
-        uids = self.db.uids_out_bound_on_surface('bottom', solar=True)
-        if len(uids) < 10:
-            print "[plot-lsc-transmitted] The database doesn't have enough photons to generate this graph!"
-        else:
-            data = self.db.wavelengthForUid(uids)
-            histogram(data=data, filename=os.path.join(prefix, 'plot-lsc-trasmitted'))
+        for plot, uid in graphs.iteritems():
+            if len(uid) < 100:
+                self.log.info('[' + plot + "] The database doesn't have enough photons to generate this graph!")
+            else:
+                data = self.db.wavelengthForUid(uid)
+                file_path = os.path.join(prefix, plot)
+                histogram(data=data, filename=file_path)
+                self.log.info('[' + plot + "] Plot saved to " + file_path)
 
         print "Plotting bounces luminescent to channels"
         uids = self.db.uids_in_reactor_and_luminescent()
@@ -282,7 +259,7 @@ class Analysis(object):
             data = self.get_bounces(photon_list=uids)
             xyplot(x=data[0], y=data[1], filename=os.path.join(prefix, 'bounces_all'))
 
-    def saveDB(self, location=None):
+    def save_db(self, location=None):
         self.db.dump_to_file(location)
 
 
@@ -292,11 +269,11 @@ def histogram(data, filename, wavelength_range=(350, 700)):
 
     :param data: List with photons' wavelengths
     :param filename: Filename for the exported file. Will be saved in home/pvtrace_export/filenam (+.png appended)
-    :return: None
+    :param wavelength_range : range of wavelength to be plotted (X axis)
     """
 
     home = os.path.expanduser('~')
-    if filename.find(home) <> -1:
+    if filename.find(home) != -1:
         saving_location = filename
     else:
         saving_location = os.path.join(home, "pvtrace_export", filename)
@@ -329,7 +306,7 @@ def xyplot(x, y, filename):
     """
 
     home = os.path.expanduser('~')
-    if filename.find(home) <> -1:
+    if filename.find(home) != -1:
         saving_location = filename
     else:
         saving_location = os.path.join(home, "pvtrace_export", filename)

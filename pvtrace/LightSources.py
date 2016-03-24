@@ -16,20 +16,22 @@ import logging
 import numpy as np
 
 import external.transformations as tf
-from Geometry import Cylinder, FinitePlane, transform_point, transform_direction, rotation_matrix_from_vector_alignment, \
-    norm
+from Geometry import Cylinder, FinitePlane, transform_point, transform_direction, norm, \
+    rotation_matrix_from_vector_alignment
 from Trace import Photon
 
 
+# noinspection PyUnboundLocalVariable,PyUnboundLocalVariable,PyUnboundLocalVariable
 def random_spherical_vector():
-    # This method of calculating isotropic vectors is taken from GNU Scientific Library
-    LOOP = True
-    while LOOP:
+    """
+    This method of calculating isotropic vectors is taken from GNU Scientific Library
+    """
+    loop = True
+    while loop:
         x = -1. + 2. * np.random.uniform()
         y = -1. + 2. * np.random.uniform()
         s = x ** 2 + y ** 2
-        if s <= 1.0:
-            LOOP = False
+        loop = False if s <= 1.0 else True
 
     z = -1. + 2. * s
     a = 2 * np.sqrt(1 - s)
@@ -37,19 +39,23 @@ def random_spherical_vector():
     y *= a
     return np.array([x, y, z])
 
+# Every lightsource class MUST implement a photon method returning a photon
+
 
 class SimpleSource(object):
-    """A light source that will generate photons of a single colour, direction and position."""
+    """
+    A light source that will generate photons of a single colour, direction and position.
+    """
 
-    def __init__(self, position=[0., 0., 0.], direction=[0., 0., 1.], wavelength=555., use_random_polarisation=False):
+    def __init__(self, position=None, direction=None, wavelength=555., use_random_polarisation=False):
         super(SimpleSource, self).__init__()
-        self.position = np.array(position)
-        self.direction = np.array(direction)
+        self.position = np.array(position) if position is not None else [0., 0., 0.]
+        self.direction = np.array(direction) if direction is not None else [0., 0., 1.]
         self.wavelength = wavelength
         self.use_random_polarisation = use_random_polarisation
         self.throw = 0
         self.source_id = "SimpleSource_" + str(id(self))
-        self.log = logging.getLogger('pvtrace.simplesource')
+        self.log = logging.getLogger('pvtrace.simple_source')
 
     def photon(self):
         photon = Photon()
@@ -66,25 +72,27 @@ class SimpleSource(object):
             vec = random_spherical_vector()
             vec[2] = 0.
             vec = norm(vec)
-            R = rotation_matrix_from_vector_alignment(self.direction, [0., 0., 1.])
-            photon.polarisation = transform_direction(vec, R)
+            r = rotation_matrix_from_vector_alignment(self.direction, [0., 0., 1.])
+            photon.polarisation = transform_direction(vec, r)
 
         else:
             photon.polarisation = None
 
         photon.id = self.throw
-        self.log.debug('Emitted photon ' + str(self.throw))
+        self.log.debug('Emitted photon (pid: ' + str(self.throw)+')')
         self.throw += 1
         return photon
 
 
 class Laser(object):
-    """A light source that will generate photons of a single colour, direction and position."""
+    """
+    A light source that will generate photons of a single colour, direction and position.
+    """
 
-    def __init__(self, position=[0, 0, 0], direction=[0, 0, 1], wavelength=555, polarisation=None):
+    def __init__(self, position=None, direction=None, wavelength=555, polarisation=None):
         super(Laser, self).__init__()
-        self.position = np.array(position)
-        self.direction = np.array(direction)
+        self.position = np.array(position) if position is not None else [0., 0., 0.]
+        self.direction = np.array(direction) if direction is not None else [0., 0., 1.]
         self.wavelength = wavelength
         assert polarisation is not None, "Polarisation of the Laser is not set."
         self.polarisation = np.array(polarisation)
@@ -101,6 +109,7 @@ class Laser(object):
         photon.wavelength = self.wavelength
         photon.polarisation = self.polarisation
         photon.id = self.throw
+        self.log.debug('Emitted photon (pid: ' + str(self.throw)+')')
         self.throw += 1
         return photon
 
@@ -120,7 +129,7 @@ class PlanarSource(object):
         self.direction = direction
         self.throw = 0
         self.source_id = "PlanarSource_" + str(id(self))
-        self.log = logging.getLogger('pvtrace.planarsource')
+        self.log = logging.getLogger('pvtrace.planar_source')
 
     def translate(self, translation):
         self.plane.append_transform(tf.translation_matrix(translation))
@@ -131,14 +140,13 @@ class PlanarSource(object):
     def photon(self):
         photon = Photon()
         photon.source = self.source_id
-        photon.id = self.throw
-        self.throw += 1
+
         # Create a point which is on the surface of the finite plane in it's local frame
         x = np.random.uniform(0., self.length)
         y = np.random.uniform(0., self.width)
         local_point = (x, y, 0.)
 
-        # Transform the direciton
+        # Transform the direction
         photon.position = transform_point(local_point, self.plane.transform)
         photon.direction = self.direction
         photon.active = True
@@ -146,25 +154,29 @@ class PlanarSource(object):
             photon.wavelength = self.spectrum.wavelength_at_probability(np.random.uniform())
         else:
             photon.wavelength = self.wavelength
+
+        photon.id = self.throw
+        self.log.debug('Emitted photon (pid: ' + str(self.throw)+')')
+        self.throw += 1
         return photon
 
 
 class LensSource(object):
     """
-    A source where photons generated in a plane are focused on a line with space tolerance given by variable "focussize"
+    A source where photons generated in a plane are focused on a line with space tolerance given by variable focus_size
     The focus line should be perpendicular to the plane normal and aligned with the z-axis. 
     """
 
-    def __init__(self, spectrum=None, wavelength=555, linepoint=(0, 0, 0), linedirection=(0, 0, 1), focussize=0,
-                 planeorigin=(-1, -1, -1), planeextent=(-1, 1, 1)):
+    def __init__(self, spectrum=None, wavelength=555, line_point=(0, 0, 0), line_direction=(0, 0, 1), focus_size=0,
+                 plane_origin=(-1, -1, -1), plane_extent=(-1, 1, 1)):
         super(LensSource, self).__init__()
         self.spectrum = spectrum
         self.wavelength = wavelength
-        self.planeorigin = planeorigin
-        self.planeextent = planeextent
-        self.linepoint = np.array(linepoint)
-        self.linedirection = np.array(linedirection)
-        self.focussize = focussize
+        self.plane_origin = plane_origin
+        self.plane_extent = plane_extent
+        self.line_point = np.array(line_point)
+        self.line_direction = np.array(line_direction)
+        self.focus_size = focus_size
         self.throw = 0
         self.source_id = "LensSource_" + str(id(self))
         self.log = logging.getLogger('pvtrace.lens')
@@ -172,22 +184,20 @@ class LensSource(object):
     def photon(self):
         photon = Photon()
         photon.source = self.source_id
-        photon.id = self.throw
-        self.throw += 1
 
         # Position
-        x = np.random.uniform(self.planeorigin[0], self.planeextent[0])
-        y = np.random.uniform(self.planeorigin[1], self.planeextent[1])
-        z = np.random.uniform(self.planeorigin[2], self.planeextent[2])
+        x = np.random.uniform(self.plane_origin[0], self.plane_extent[0])
+        y = np.random.uniform(self.plane_origin[1], self.plane_extent[1])
+        z = np.random.uniform(self.plane_origin[2], self.plane_extent[2])
         photon.position = np.array((x, y, z))
 
         # Direction
-        focuspoint = np.array((0., 0., 0.))
-        focuspoint[0] = self.linepoint[0] + np.random.uniform(-self.focussize, self.focussize)
-        focuspoint[1] = self.linepoint[1] + np.random.uniform(-self.focussize, self.focussize)
-        focuspoint[2] = photon.position[2]
+        focus_point = np.array((0., 0., 0.))
+        focus_point[0] = self.line_point[0] + np.random.uniform(-self.focus_size, self.focus_size)
+        focus_point[1] = self.line_point[1] + np.random.uniform(-self.focus_size, self.focus_size)
+        focus_point[2] = photon.position[2]
 
-        direction = focuspoint - photon.position
+        direction = focus_point - photon.position
         modulus = (direction[0] ** 2 + direction[1] ** 2 + direction[2] ** 2) ** 0.5
         photon.direction = direction / modulus
 
@@ -197,51 +207,51 @@ class LensSource(object):
         else:
             photon.wavelength = self.wavelength
 
+        photon.id = self.throw
+        self.log.debug('Emitted photon (pid: ' + str(self.throw)+')')
+        self.throw += 1
         return photon
 
 
 class LensSourceAngle(object):
     """
-    A source where photons generated in a plane are focused on a line with space tolerance given by variable "focussize".
+    A source where photons generated in a plane are focused on a line with space tolerance given by variable focus_size
     The focus line should be perpendicular to the plane normal and aligned with the z-axis. 
-    For this lense an additional z-boost is added (Angle of incidence in z-direction).
+    For this lens an additional z-boost is added (Angle of incidence in z-direction).
     """
 
-    def __init__(self, spectrum=None, wavelength=555, linepoint=(0, 0, 0), linedirection=(0, 0, 1), angle=0,
-                 focussize=0, planeorigin=(-1, -1, -1), planeextent=(-1, 1, 1)):
+    def __init__(self, spectrum=None, wavelength=555, line_point=(0, 0, 0), line_direction=(0, 0, 1), angle=0,
+                 focus_size=0, plane_origin=(-1, -1, -1), plane_extent=(-1, 1, 1)):
         super(LensSourceAngle, self).__init__()
         self.spectrum = spectrum
         self.wavelength = wavelength
-        self.planeorigin = planeorigin
-        self.planeextent = planeextent
-        self.linepoint = np.array(linepoint)
-        self.linedirection = np.array(linedirection)
-        self.focussize = focussize
+        self.plane_origin = plane_origin
+        self.plane_extent = plane_extent
+        self.line_point = np.array(line_point)
+        self.line_direction = np.array(line_direction)
+        self.focus_size = focus_size
         self.angle = angle
         self.throw = 0
         self.source_id = "LensSourceAngle_" + str(id(self))
-        self.log = logging.getLogger('pvtrace.lenssourceangle')
+        self.log = logging.getLogger('pvtrace.lens_source_angle')
 
     def photon(self):
         photon = Photon()
 
-        photon.id = self.throw
-        self.throw += 1
-
         # Position
-        x = np.random.uniform(self.planeorigin[0], self.planeextent[0])
-        y = np.random.uniform(self.planeorigin[1], self.planeextent[1])
+        x = np.random.uniform(self.plane_origin[0], self.plane_extent[0])
+        y = np.random.uniform(self.plane_origin[1], self.plane_extent[1])
         boost = y * np.tan(self.angle)
-        z = np.random.uniform(self.planeorigin[2], self.planeextent[2]) - boost
+        z = np.random.uniform(self.plane_origin[2], self.plane_extent[2]) - boost
         photon.position = np.array((x, y, z))
 
         # Direction
-        focuspoint = np.array((0., 0., 0.))
-        focuspoint[0] = self.linepoint[0] + np.random.uniform(-self.focussize, self.focussize)
-        focuspoint[1] = self.linepoint[1] + np.random.uniform(-self.focussize, self.focussize)
-        focuspoint[2] = photon.position[2] + boost
+        focus_point = np.array((0., 0., 0.))
+        focus_point[0] = self.line_point[0] + np.random.uniform(-self.focus_size, self.focus_size)
+        focus_point[1] = self.line_point[1] + np.random.uniform(-self.focus_size, self.focus_size)
+        focus_point[2] = photon.position[2] + boost
 
-        direction = focuspoint - photon.position
+        direction = focus_point - photon.position
         modulus = (direction[0] ** 2 + direction[1] ** 2 + direction[2] ** 2) ** 0.5
         photon.direction = direction / modulus
 
@@ -251,6 +261,9 @@ class LensSourceAngle(object):
         else:
             photon.wavelength = self.wavelength
 
+        photon.id = self.throw
+        self.log.debug('Emitted photon (pid: ' + str(self.throw)+')')
+        self.throw += 1
         return photon
 
 
@@ -268,7 +281,7 @@ class CylindricalSource(object):
         self.length = length
         self.throw = 0
         self.source_id = "CylindricalSource_" + str(id(self))
-        self.log = logging.getLogger('pvtrace.cylindricalsource')
+        self.log = logging.getLogger('pvtrace.cylindrical_source')
 
     def translate(self, translation):
         self.shape.append_transform(tf.translation_matrix(translation))
@@ -279,8 +292,6 @@ class CylindricalSource(object):
     def photon(self):
         photon = Photon()
         photon.source = self.source_id
-        photon.id = self.throw
-        self.throw += 1
 
         # Position of emission
         phi = np.random.uniform(0., 2 * np.pi)
@@ -313,36 +324,37 @@ class CylindricalSource(object):
         # Further initialisation
         photon.active = True
 
+        photon.id = self.throw
+        self.log.debug('Emitted photon (pid: ' + str(self.throw)+')')
+        self.throw += 1
         return photon
 
 
 class PointSource(object):
     """
-    A point source that emits randomly in solid angle specified by phimin, ..., thetamax
+    A point source that emits randomly in solid angle specified by phi_min, ..., theta_max
     """
 
-    def __init__(self, spectrum=None, wavelength=555, center=(0., 0., 0.), phimin=0, phimax=2 * np.pi, thetamin=0,
-                 thetamax=np.pi):
+    def __init__(self, spectrum=None, wavelength=555, center=(0., 0., 0.), phi_min=0, phi_max=2 * np.pi, theta_min=0,
+                 theta_max=np.pi):
         super(PointSource, self).__init__()
         self.spectrum = spectrum
         self.wavelength = wavelength
         self.center = center
-        self.phimin = phimin
-        self.phimax = phimax
-        self.thetamin = thetamin
-        self.thetamax = thetamax
+        self.phi_min = phi_min
+        self.phi_max = phi_max
+        self.theta_min = theta_min
+        self.theta_max = theta_max
         self.throw = 0
         self.source_id = "PointSource_" + str(id(self))
-        self.log = logging.getLogger('pvtrace.pointsource')
+        self.log = logging.getLogger('pvtrace.point_source')
 
     def photon(self):
         photon = Photon()
         photon.source = self.source_id
-        photon.id = self.throw
-        self.throw += 1
 
-        phi = np.random.uniform(self.phimin, self.phimax)
-        theta = np.random.uniform(self.thetamin, self.thetamax)
+        phi = np.random.uniform(self.phi_min, self.phi_max)
+        theta = np.random.uniform(self.theta_min, self.theta_max)
 
         x = np.cos(phi) * np.sin(theta)
         y = np.sin(phi) * np.sin(theta)
@@ -362,6 +374,9 @@ class PointSource(object):
 
         photon.active = True
 
+        photon.id = self.throw
+        self.log.debug('Emitted photon (pid: ' + str(self.throw)+')')
+        self.throw += 1
         return photon
 
 
@@ -370,36 +385,34 @@ class RadialSource(object):
     A point source that emits at discrete angles theta(i) and phi(i)
     """
 
-    def __init__(self, spectrum=None, wavelength=555, center=(0., 0., 0.), phimin=0, phimax=2 * np.pi, thetamin=0,
-                 thetamax=np.pi, spacing=20):
+    def __init__(self, spectrum=None, wavelength=555, center=(0., 0., 0.), phi_min=0, phi_max=2 * np.pi, theta_min=0,
+                 theta_max=np.pi, spacing=20):
         super(RadialSource, self).__init__()
         self.spectrum = spectrum
         self.wavelength = wavelength
         self.center = center
-        self.phimin = phimin
-        self.phimax = phimax
-        self.thetamin = thetamin
-        self.thetamax = thetamax
+        self.phi_min = phi_min
+        self.phi_max = phi_max
+        self.theta_min = theta_min
+        self.theta_max = theta_max
         self.spacing = spacing
         self.throw = 0
         self.source_id = "RadialSource_" + str(id(self))
-        self.log = logging.getLogger('pvtrace.radialsource')
+        self.log = logging.getLogger('pvtrace.radial_source')
 
     def photon(self):
         photon = Photon()
 
         photon.source = self.source_id
-        photon.id = self.throw
-        self.throw += 1
 
-        intphi = np.random.randint(1, self.spacing + 1)
-        inttheta = np.random.randint(1, self.spacing + 1)
+        int_phi = np.random.randint(1, self.spacing + 1)
+        int_theta = np.random.randint(1, self.spacing + 1)
 
-        phi = intphi * (self.phimax - self.phimin) / self.spacing
-        if self.thetamin == self.thetamax:
-            theta = self.thetamin
+        phi = int_phi * (self.phi_max - self.phi_min) / self.spacing
+        if self.theta_min == self.theta_max:
+            theta = self.theta_min
         else:
-            theta = inttheta * (self.thetamax - self.thetamin) / self.spacing
+            theta = int_theta * (self.theta_max - self.theta_min) / self.spacing
 
         x = np.cos(phi) * np.sin(theta)
         y = np.sin(phi) * np.sin(theta)
@@ -419,4 +432,7 @@ class RadialSource(object):
 
         photon.active = True
 
+        photon.id = self.throw
+        self.log.debug('Emitted photon (pid: ' + str(self.throw)+')')
+        self.throw += 1
         return photon

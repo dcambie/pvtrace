@@ -63,13 +63,14 @@ class Photon(object):
 
     def __init__(self, wavelength=555, position=None, direction=None, active=True, show_log=True):
         """
-        All arguments are optional because a photon is created with default values. The possible arguments are:
-        wavelength -- The photon wavelength in nanometers (float).
-        position   -- The photon position in cartesian coordinates (3 elements) is array-like quantity in units of metres.
-        direction  -- The photon Cartesian direction vector (3 elements), a normalised vector is array-like.
-        phase      -- This is not yet implemented.
-        active   -- Boolean indicating if the ray has or has not been lost (e.g. absorbed in a material)
-        container  -- The geometrical object within which the ray is located.
+        Initialize the photon.
+
+        All arguments are optional because a photon is created with default values.
+        :param wavelength: the photon wavelength in nanometers (float).
+        :param position: the photon position in cartesian coordinates is an array-like quantity in units of metres
+        :param direction: the photon Cartesian direction vector (3 elements), a normalised vector is array-like
+        :param active: boolean indicating if the ray has or has not been lost (e.g. absorbed in a material)
+        :param show_log: print verbose output on photon fate during tracing
         """
 
         if position is not None:
@@ -233,9 +234,9 @@ class Photon(object):
         #    self.previous_container = self.container
         #    self.container = intersection_object
         #    self.exit_device = intersection_object
-        #    assert self.exit_device != self.scene.bounds, "The object the ray hit before hitting the bounds is the bounds, this can't be right."
+        #    assert self.exit_device != self.scene.bounds, "The object the ray hit before hitting the bounds
+        #                                                   is the bounds itself, this can't be right."
         #    return self
-
 
         # Here we trace the ray through a Material
         self.container.material.trace(self, separation(self.position, intersection))
@@ -323,15 +324,18 @@ class Photon(object):
             initialised_internally = True
 
             if len(same_pt_indices) == 2:
-                # Internal interface for the case for 2 material-material interfaces which are touching (i.e. not travelling through air)
+                # Internal interface for the case for 2 material-material interfaces which are touching
+                # (i.e. not travelling through air)
                 for obj in intersection_objects:
                     if obj.shape.on_surface(intersection) and obj != self.container:
                         next_containing_object = obj
             else:
-                # hitting internal interface -- for the case where the boundary materials are NOT touching (i.e. we are leaving an material embedded in another)
+                # hitting internal interface -- for the case where the boundary materials are NOT touching
+                # (i.e. we are leaving an material embedded in another)
                 next_containing_object = self.scene.container(self)
 
-            assert self.container != next_containing_object, "The current container cannot also be the next containing object after the ray is propagated."
+            assert self.container != next_containing_object, "The current container cannot also be the next" \
+                                                             "containing object after the ray is propagated."
 
             # Calculate interface reflectivity
             if isinstance(intersection_object, Coating):
@@ -927,7 +931,8 @@ class Tracer(object):
                     if isinstance(obj, RayBin):
                         # checkerboard = ( (0,0.01,0,0.01), (0.01,0,0.01,0), (0,0.01,0,1), (0.01,0,0.01,0) )
                         # checkerboard = ( (0,1,0,1), (1,0,1,0), (0,1,0,1), (1,0,1,0) )
-                        # material = visual.materials.texture(data=checkerboard, mapping="rectangular", interpolate=False)
+                        # material = visual.materials.texture(data=checkerboard, mapping="rectangular",
+                        #                                     interpolate=False)
                         material = visual.materials.wood
                         colour = visual.color.blue
                         opacity = 1.
@@ -1098,7 +1103,8 @@ class Tracer(object):
 
                     # Record photon that has made it to the bounds
                     if step == 0:
-                        if self.show_log: print "   * Photon hit scene bounds without previous intersections (maybe reconsider light source position?)*"
+                        if self.show_log: print "   * Photon hit scene bounds without previous intersections" \
+                                                " (maybe reconsider light source position?) *"
                     else:
                         if self.show_log: print "   * Reached Bounds *"
                         photon.exit_device.log(photon)

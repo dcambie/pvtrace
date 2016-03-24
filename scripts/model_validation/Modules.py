@@ -58,6 +58,7 @@ class SolarSimulator(object):
         spectrum_file = os.path.join(PVTDATA, 'sources', 'Oriel_solar_sim.txt')
 
         self.spectrum = load_spectrum(spectrum_file, xbins=np.arange(350, 700))
+
         self.source = PlanarSource(direction=(0, 0, -1), spectrum=self.spectrum, length=parameters[0],
                                    width=parameters[1])
         self.source.name = 'Solar simulator Michael (small)'

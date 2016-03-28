@@ -39,6 +39,7 @@ def load_spectrum(filename, xbins=None):
 
     # Truncate the spectrum using the xbins
     return spectrum if xbins is None else Spectrum(xbins, spectrum(xbins))
+    # return spectrum if xbins is None else Spectrum(x=xbins, y=spectrum)
 
 
 def common_abscissa(a, b):

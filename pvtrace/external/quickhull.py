@@ -296,7 +296,7 @@ def qhull3d(vertices, precision = 0.0001, verbose = False):
         C{precision}.
     :param verbose: Print information about what the algorithm is doing. Only
         useful for debugging.
-    :return: A list cointaining the extreme points of C{vertices}, and
+    :return: A list containing the extreme points of C{vertices}, and
         a list of triangle indices containing the triangles that connect
         all extreme points.
     """

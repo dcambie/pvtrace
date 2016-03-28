@@ -256,8 +256,9 @@ class Analysis(object):
         if len(uids) < 10:
             print "[bounces channel] The database doesn't have enough photons to generate this graph!"
         else:
-            data = self.get_bounces(photon_list=uids)
-            xyplot(x=data[0], y=data[1], filename=os.path.join(prefix, 'bounces_all'))
+            pass
+            # data = self.get_bounces(photon_list=uids)
+            # xyplot(x=data[0], y=data[1], filename=os.path.join(prefix, 'bounces_all'))
 
     def save_db(self, location=None):
         self.db.dump_to_file(location)

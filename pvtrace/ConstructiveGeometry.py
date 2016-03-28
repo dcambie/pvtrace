@@ -110,7 +110,7 @@ class CSGadd(object):
                 ADDtwo__intersections[i] = new_point
 
         """
-        Only intersection points NOT containted in resp. other structure relevant
+        Only intersection points NOT contained in resp. other structure relevant
         """
         ADDone_intersections = []
         ADDtwo_intersections = []

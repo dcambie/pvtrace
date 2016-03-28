@@ -1002,7 +1002,7 @@ class Tracer(object):
 
     def start(self):
 
-        global b, b
+        global a, b
         logged = 0
         db_num = 0
         for throw in range(0, self.throws):
@@ -1086,14 +1086,14 @@ class Tracer(object):
                 # print "Step number:", step
                 if Visualiser.VISUALISER_ON:
                     b = list(photon.position)
-                    if self.show_lines and photon.active == True:
+                    if self.show_lines and photon.active:
                         self.visualiser.addLine(a, b, colour=wav2RGB(photon.wavelength))
 
-                    if self.show_path and photon.active == True:
+                    if self.show_path and photon.active:
                         self.visualiser.addSmallSphere(b)
 
                 # import pdb; pdb.set_trace()
-                if photon.active == False and photon.container == self.scene.bounds:
+                if not photon.active and photon.container == self.scene.bounds:
 
                     # import pdb; pdb.set_trace()
                     if Visualiser.VISUALISER_ON:

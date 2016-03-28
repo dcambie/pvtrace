@@ -40,8 +40,8 @@ def itemise(array):
                 new.append(item)
             
             if is_values == is_points:
-                raise "All elements must of the array must be singleton arrays (i.e. single element arrays)", ValueError
-    
+                raise Exception("All elements must of the array must be singleton arrays (i.e. single element arrays)")(ValueError)
+
     return new
 
 
@@ -102,7 +102,7 @@ class PhotonDatabase(object):
             exit(1)
 
     def load(self, dbfile):
-        """Loads and exisiting photon database into memory from a dbfile path."""
+        """Loads and existing photon database into memory from a dbfile path."""
         self.connection = sql.connect(dbfile)
         self.cursor = self.connection.cursor()
 

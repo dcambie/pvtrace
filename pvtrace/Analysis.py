@@ -231,7 +231,7 @@ class Analysis(object):
 
         # noinspection PyCompatibility
         for plot, uid in six.iteritems(graphs):
-            if len(uid) < 100:
+            if len(uid) < 10:
                 self.log.info('[' + plot + "] The database doesn't have enough photons to generate this graph!")
             else:
                 data = self.db.wavelengthForUid(uid)
@@ -242,15 +242,16 @@ class Analysis(object):
         print("Plotting bounces luminescent to channels")
         uids = self.db.uids_in_reactor_and_luminescent()
         if len(uids) < 10:
-            print("[bounces channel] The database doesn't have enough photons to generate this graph!")
+            self.log.info("[bounces channel] The database doesn't have enough photons to generate this graph!")
         else:
             data = self.get_bounces(photon_list=uids)
-            xyplot(x=data[0], y=data[1], filename=os.path.join(prefix, 'bounces_channel'))
+            file_path = os.path.join(prefix, 'bounces channel')
+            xyplot(x=data[0], y=data[1], filename=file_path)
+            self.log.info("[bounces channel] Plot saved to " + file_path)
 
-        print("Plotting bounces luminescent")
         uids = self.db.uids_luminescent()
         if len(uids) < 10:
-            print("[bounces channel] The database doesn't have enough photons to generate this graph!")
+            self.log.info("[bounces channel] The database doesn't have enough photons to generate this graph!")
         else:
             pass
             # data = self.get_bounces(photon_list=uids)
@@ -259,7 +260,7 @@ class Analysis(object):
     def save_db(self, location=None):
         self.db.dump_to_file(location)
 
-
+# fixme: move this to Spectrum
 def histogram(data, filename, wavelength_range=(350, 700)):
     """
     Create an histogram with the cumulative frequency of photons at different wavelength
@@ -316,3 +317,13 @@ def xyplot(x, y, filename):
         os.chmod(location, 0o777)
         print('Plot saved in ', location, '!')
     plt.clf()
+
+
+class Analysis2(object):
+    """
+    Class for analysis of results, based on the dict storage of elements in the scene.
+    Can also be applied to old database data
+
+    Idea: just use uuid and save everything in that folder,
+    given uuid the class loads previous results if folder exists nad create the folder if not
+    """

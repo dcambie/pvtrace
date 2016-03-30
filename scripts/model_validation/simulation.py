@@ -23,7 +23,7 @@ for obj in reactor.scene_obj:
 # Doesn't save DB file but uses RAM disk for faster simulation
 # file = os.path.join(os.path.expanduser("~"),"pvtracedb.sql")
 # file = None
-trace = Tracer(scene=scene, source=reactor.source, seed=None, throws=50, use_visualiser=False,
+trace = Tracer(scene=scene, source=reactor.source, seed=None, throws=100, use_visualiser=False,
                show_log=False, show_axis=True, show_counter=False, db_split=False)
 trace.show_lines = True
 trace.show_path = False

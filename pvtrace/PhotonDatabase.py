@@ -388,7 +388,7 @@ class PhotonDatabase(object):
     def uids_in_reactor_and_luminescent(self):
         """Returns photons in reactor and luminescent One absorption is.the reaction mixture, so >1"""
         return itemise(self.cursor.execute(
-            "SELECT MAX(uid) FROM photon GROUP BY pid INTERSECT"
+            "SELECT MAX(uid) FROM photon GROUP BY pid INTERSECT "
             "SELECT uid FROM state WHERE reaction = 1 AND absorption_counter > 1"))
     
     def uids_luminescent(self):
@@ -419,7 +419,7 @@ class PhotonDatabase(object):
     def uids_nonradiative_losses(self):
         return itemise(self.cursor.execute(
             "SELECT uid FROM state WHERE reaction = 0 AND surface_id = 'None' AND absorption_counter > 0 AND killed = 0"
-            "GROUP BY uid HAVING uid IN (SELECT MAX(uid) FROM photon group BY pid)").fetchall())
+            " GROUP BY uid HAVING uid IN (SELECT MAX(uid) FROM photon group BY pid)").fetchall())
     
     def value_for_table_column_uid(self, table, column, uid):
         """Returns values from the database index my table, column and row, where the row is uniquely defined using the photon uid. 

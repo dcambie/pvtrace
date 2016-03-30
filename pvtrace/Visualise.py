@@ -15,9 +15,9 @@ from __future__ import division
 try:
     import visual
     VISUAL_INSTALLED = True
-    print "Python module visual is installed..."
+    print("Python module visual is installed...")
 except:
-    print "Python module visual is not installed... telling all Visualiser object to not render."
+    print("Python module visual is not installed... telling all Visualiser object to not render.")
     VISUAL_INSTALLED = False
 
 from visual import *

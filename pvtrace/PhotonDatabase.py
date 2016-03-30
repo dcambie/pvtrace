@@ -74,7 +74,7 @@ class PhotonDatabase(object):
             
             # print "Attempting to creating database dbfile...", self.file
             try:
-                file(self.file, 'w').close()
+                open(self.file, 'w+')
             except:
                 raise IOError("Could not create file, %s" % self.file)
             

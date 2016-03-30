@@ -17,7 +17,7 @@ from external import pov
 from external import quickhull
 from external import mathutils
 
-print "pvtrace pre-flight checks..."
+print("pvtrace pre-flight checks...")
 from Materials import *
 from Devices import *
 from Geometry import *
@@ -30,7 +30,7 @@ from Interpolation import *
 import os
 import sys
 # Module constants -- location of the data folder
-#print sys.path
+# print(sys.path)
 for path in sys.path:
     if path.find('pvtrace') != -1:
         pvtrace_containing_directory = path
@@ -39,5 +39,5 @@ while pvtrace_containing_directory.find('pvtrace') != -1:
     pvtrace_containing_directory = os.path.abspath(os.path.join(pvtrace_containing_directory, '..'))
 
 PVTDATA = os.path.join(pvtrace_containing_directory, 'pvtrace', 'data')
-print "Pvtrace data directory:"
-print PVTDATA
+print("Pvtrace data directory:")
+print(PVTDATA)

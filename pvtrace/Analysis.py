@@ -1,10 +1,12 @@
-from __future__ import division
+from __future__ import division, print_function
 
 import logging
 import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+
+import six
 
 plt.switch_backend('Qt4Agg')
 """
@@ -69,15 +71,8 @@ class Analysis(object):
 
         self.log.debug('Print_detailed() called on DB with ' + str(self.photon_generated) + ' photons')
 
-        # print 'obj ', self.db.objects_with_records()
-        # print 'surfaces ', self.db.surfaces_with_records()
-
-        # obj_w_records = self.db.objects_with_records()
-        # for obj in obj_w_records:
-        #     print 'OBJ ', obj, ' was hit on: ', self.db.surfaces_with_records_for_object(obj)
-
-        # print "\t Photon efficiency \t", (luminescent_edges + luminescent_apertures) * 100 / thrown, "%"
-        # print "\t Optical efficiency \t", luminescent_edges * 100 / thrown, "%"
+        # print('obj ', self.db.objects_with_records())
+        # print('surfaces ', self.db.surfaces_with_records())
 
         self.log.info("Technical details:")
         self.log.info("\t Generated \t" + str(self.photon_generated))
@@ -144,11 +139,11 @@ class Analysis(object):
 
         :return:None
         """
-        print self.photon_generated
-        print self.photon_killed
-        print self.tot
-        print self.non_radiative
-        print "\n"
+        print(self.photon_generated)
+        print(self.photon_killed)
+        print(self.tot)
+        print(self.non_radiative)
+        print("\n")
 
         edges = ['left', 'near', 'far', 'right']
         apertures = ['top', 'bottom']
@@ -158,19 +153,19 @@ class Analysis(object):
         for surface in faces:
             photons = len(self.db.uids_out_bound_on_surface(surface, luminescent=True))
             luminescent_surfaces += photons
-            print photons
-        print "\n"
+            print(photons)
+        print("\n")
 
         for surface in apertures:
-            print len(self.db.uids_out_bound_on_surface(surface, solar=True))
-        print "\n"
+            print(len(self.db.uids_out_bound_on_surface(surface, solar=True)))
+        print("\n")
 
         luminescent_photons_in_channels = len(self.db.uids_in_reactor_and_luminescent())
         photons_in_channels_tot = len(self.db.uids_in_reactor())
 
-        print photons_in_channels_tot - luminescent_photons_in_channels
-        print luminescent_photons_in_channels
-        print luminescent_photons_in_channels / (luminescent_surfaces + luminescent_photons_in_channels)
+        print(photons_in_channels_tot - luminescent_photons_in_channels)
+        print(luminescent_photons_in_channels)
+        print(luminescent_photons_in_channels / (luminescent_surfaces + luminescent_photons_in_channels))
 
     def get_bounces(self, photon_list=None):
         """
@@ -234,7 +229,8 @@ class Analysis(object):
             'lsc-reflected': self.db.uids_out_bound_on_surface('top', solar=True),
             'lsc-transmitted': self.db.uids_out_bound_on_surface('bottom', solar=True)}
 
-        for plot, uid in graphs.iteritems():
+        # noinspection PyCompatibility
+        for plot, uid in six.iteritems(graphs):
             if len(uid) < 100:
                 self.log.info('[' + plot + "] The database doesn't have enough photons to generate this graph!")
             else:
@@ -243,18 +239,18 @@ class Analysis(object):
                 histogram(data=data, filename=file_path)
                 self.log.info('[' + plot + "] Plot saved to " + file_path)
 
-        print "Plotting bounces luminescent to channels"
+        print("Plotting bounces luminescent to channels")
         uids = self.db.uids_in_reactor_and_luminescent()
         if len(uids) < 10:
-            print "[bounces channel] The database doesn't have enough photons to generate this graph!"
+            print("[bounces channel] The database doesn't have enough photons to generate this graph!")
         else:
             data = self.get_bounces(photon_list=uids)
             xyplot(x=data[0], y=data[1], filename=os.path.join(prefix, 'bounces_channel'))
 
-        print "Plotting bounces luminescent"
+        print("Plotting bounces luminescent")
         uids = self.db.uids_luminescent()
         if len(uids) < 10:
-            print "[bounces channel] The database doesn't have enough photons to generate this graph!"
+            print("[bounces channel] The database doesn't have enough photons to generate this graph!")
         else:
             pass
             # data = self.get_bounces(photon_list=uids)
@@ -290,7 +286,6 @@ def histogram(data, filename, wavelength_range=(350, 700)):
         plt.hist(data, np.linspace(wavelength_range[0], wavelength_range[1], num=101), histtype='stepfilled')
     for extension in suffixes:
         location = saving_location + "." + extension
-        print location
         plt.savefig(location)
         os.chmod(location, 0o777)
     plt.clf()
@@ -319,5 +314,5 @@ def xyplot(x, y, filename):
         location = saving_location + "." + extension
         plt.savefig(location)
         os.chmod(location, 0o777)
-        print 'Plot saved in ', location, '!'
+        print('Plot saved in ', location, '!')
     plt.clf()

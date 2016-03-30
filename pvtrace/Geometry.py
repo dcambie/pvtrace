@@ -11,7 +11,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import division
+from __future__ import division, print_function
 
 import numpy as np
 
@@ -129,6 +129,9 @@ def separation(beginning, end):
 
 
 def magnitude(vector):
+    """
+    https://en.wikipedia.org/wiki/Magnitude_(mathematics)#Vector_spaces
+    """
     return np.sqrt(np.dot(np.array(vector), np.array(vector)))
 
 
@@ -309,31 +312,6 @@ class Ray(object):
     direction = property(getDirection, setDirection)
     position = property(getPosition, setPosition)
 
-
-class Intersection(object):
-    """
-    Defines the intersection between a ray and a geometrical objects.
-    """
-
-    def __init__(self, ray, point, receiver):
-        """
-        An intersection is defined as the point that a ray and receiver meet.
-        This class is simply a wrapper for these details.
-        Intersection objects can be sorted with respect to their separations (distance from the ray.position
-        to the point of intersection), this length is returned with intersection_obj.separation.
-        """
-        super(Intersection, self).__init__()
-        self.ray = ray
-        self.point = point
-        self.receiver = receiver
-        self.separation = separation(point, ray.position)
-
-    def __str__(self):
-        return str(' point ' + str(self.point) + ' receiver ' + str(self.receiver))
-
-    def __cmp__(self, other):
-        return cmp(self.separation, other.separation)
-
 """
 Objects need to implement:
 
@@ -349,6 +327,7 @@ on_surface(self, point)
 surface_identifier(self, surface_point, assert_on_surface)
 surface_normal
 """
+
 
 class Plane(object):
     """
@@ -1569,5 +1548,5 @@ if __name__ == "__main__":
         R = rotation_matrix_from_vector_alignment(V1, V2)
         R2 = rotation_matrix(np.pi, [1, 0, 0])
         V3 = transform_direction(V1, R)
-        print R2
-        print cmp_points(V2, V3)
+        print(R2)
+        print(cmp_points(V2, V3))

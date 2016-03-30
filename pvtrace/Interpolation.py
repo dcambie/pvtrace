@@ -373,21 +373,3 @@ class BilinearInterpolation(object):
                 for sub_xvalue in xvalue:
                     constructed_list.append(self(sub_xvalue, yvalue))
                 return np.array(constructed_list)
-
-
-if False:
-    # Some wavelength points
-    x = np.array([400.,600.,601,1000.])
-    
-    # Some angle values
-    y = np.array([0., np.pi/4, np.pi/2])
-    
-    # Some reflectivity values
-    z = np.array([[0.,1e-9,1.-1e-9,1.], [0.,1e-9,1.-1e-9,1.], [0.,1e-9,1.-1e-9,1.]])
-    #             rads @ 400nm,    rads @ 600nm,        rads @ 601m,             rads @ 1000nm     
-    z = np.array([[0.,0.,0.],      [1e-9,1e-9,1e-9],     [1-1e-9,1-1e-9,1-1e-9],  [1.,1.,1.]])
-    # print z.shape
-    
-    z_i = BilinearInterpolation(x,y,z)
-    print z_i(610,0.1)
-    

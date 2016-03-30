@@ -11,7 +11,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import division
+from __future__ import division, print_function
 
 import subprocess
 import os
@@ -185,7 +185,7 @@ class Photon(object):
         assert self.container is not None, "Container of ray cannot be found."
 
         # import pdb; pdb.set_trace()
-        intersection_points, intersection_objects = Scene.sort(intersection_points, intersection_objects, self,
+        intersection_points, intersection_objects = self.scene.sort(intersection_points, intersection_objects, self,
                                                                container=self.container, show_log=self.show_log)
 
         # find current intersection point and object -- should be zero if the list is sorted!
@@ -227,7 +227,6 @@ class Photon(object):
         #    self.previous_container = self.container
         #    self.container = self.scene.container(self)
         #    return self
-
 
         # Here we determine if the Coating has been hit
         # if isinstance(intersection_object, Coating) and intersection_object.shape.on_surface(self.position):
@@ -283,7 +282,7 @@ class Photon(object):
         # import pudb; pudb.set_trace()
         if isinstance(intersection_object, Face):
             self.exit_device = intersection_object
-            print "FACE EXISTS"
+            print("FACE EXISTS")
 
             # Now change the properties of the photon according to what your surface does
             random_number = np.random.random_sample()
@@ -571,7 +570,7 @@ def povObj(obj, colour=None):
     if type(obj) == Channel:
         colour = pov.Pigment(color=(0, 0, 0.5, 1))  # BLUE (rgb/255)
         return povObj(obj.shape, colour=colour)
-    print "Uncaught object type! TYPE:", type(obj), " VALUE: ", obj
+    print("Uncaught object type! TYPE:", type(obj), " VALUE: ", obj)
 
 
 class Scene(object):
@@ -634,7 +633,7 @@ class Scene(object):
         self.objects = [self.bounds]
         self.uuid = None
         self.working_dir = self.get_working_dir(uuid)
-        print "Working directory: ", self.working_dir
+        print("Working directory: ", self.working_dir)
         self.log = self.start_logging()
         self.stats = Analysis.Analysis(uuid=self.uuid)
 
@@ -643,7 +642,8 @@ class Scene(object):
 
         # Create file if needed and truncate if already existing
         open(LOG_FILENAME, 'w').close()
-        logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG)
+        # logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG)
+        logging.basicConfig(filename=LOG_FILENAME, level=logging.INFO)
         logger = logging.getLogger('pvtrace.trace')
         logger.debug('*** NEW SIMULATION ***')
         logger.info('UUID: ' + self.uuid)
@@ -666,7 +666,7 @@ class Scene(object):
             self.uuid = try_uuid
             return working_dir
         else:
-            print "Error: working dir "+str(working_dir)+" already existing!"
+            print("Error: working dir "+str(working_dir)+" already existing!")
             self.get_working_dir()
 
     def add_object(self, object_to_add):
@@ -713,7 +713,7 @@ class Scene(object):
             return None, None
         return points, intersection_objects
 
-    def sort(points, objects, ray, container=None, remove_ray_intersection=True, show_log=False):
+    def sort(self, points, objects, ray, container=None, remove_ray_intersection=True, show_log=False):
         """
         Returns points and objects sorted by separation from the ray position.
 
@@ -770,9 +770,9 @@ class Scene(object):
         del points_copy
         del objects_copy
 
-        if show_log:
-            print objects
-            print points
+        if self.log.isEnabledFor(logging.DEBUG):
+            self.log("Obj: \t" + str(objects))
+            self.log("Points: \t" + str(points))
 
         objects, points, separations = Scene.order_duplicates(objects, points, separations)
 
@@ -799,8 +799,6 @@ class Scene(object):
                 separations[1::] = trim_sep
 
         return points, objects
-
-    sort = staticmethod(sort)
 
     def order_duplicates(objects, points, separations):
         """
@@ -892,7 +890,7 @@ class Tracer(object):
         self.source = source
         self.throws = throws
         self.steps = steps
-        self.totalsteps = 0
+        self.total_steps = 0
         self.seed = seed
         self.killed = 0
         self.database = PhotonDatabase.PhotonDatabase(None)
@@ -1001,14 +999,13 @@ class Tracer(object):
         self.show_normals = False
 
     def start(self):
-
         global a, b
         logged = 0
         db_num = 0
         for throw in range(0, self.throws):
             # import pdb; pdb.set_trace()
             # Delete last ray from visualiser
-            # fixme: if channels are cylinder they will be removed from the view if this is active!
+            # fixme: if channels are cylindrical in shape they will be removed from the view if this is active!
             if Visualiser.VISUALISER_ON:
                 for obj in self.visualiser.display.objects:
                     if obj.__class__ is visual.cylinder and obj.radius < 0.001:
@@ -1023,9 +1020,8 @@ class Tracer(object):
             #     print
             #     then = now
 
-            if self.show_log:
-                print "Photon number:", throw
-            elif self.show_counter:
+            self.scene.log.debug("Photon number: "+str(throw))
+            if self.show_counter:
                 sys.stdout.write('\r Photon number: ' + str(throw))
                 sys.stdout.flush()
 
@@ -1052,7 +1048,8 @@ class Tracer(object):
                         # Is the ray heading towards or out of a surface?
                         normal = photon.exit_device.shape.surface_normal(photon.ray, acute=False)
                         rads = angle(normal, photon.ray.direction)
-                        # print photon.exit_device.shape.surface_identifier(photon.position), 'normal', normal, 'ray dir', photon.direction, 'angle' , np.degrees(rads)
+                        # print(photon.exit_device.shape.surface_identifier(photon.position),
+                        #       'normal', normal, 'ray dir', photon.direction, 'angle' , np.degrees(rads))
                         if rads < np.pi / 2:
                             bound = "Out"
                             # print "OUT"
@@ -1061,7 +1058,6 @@ class Tracer(object):
                             # print "IN"
 
                         self.database.log(photon, surface_normal=photon.exit_device.shape.surface_normal(photon),
-                                          on_surface_obj=photon.on_surface_object,
                                           surface_id=photon.exit_device.shape.surface_identifier(photon.position),
                                           ray_direction_bound=bound, emitter_material=photon.emitter_material,
                                           absorber_material=photon.absorber_material)
@@ -1103,10 +1099,10 @@ class Tracer(object):
 
                     # Record photon that has made it to the bounds
                     if step == 0:
-                        if self.show_log: print "   * Photon hit scene bounds without previous intersections" \
-                                                " (maybe reconsider light source position?) *"
+                        self.scene.log.debug("   * Photon hit scene bounds without previous intersections "
+                                             "(maybe reconsider light source position?) *")
                     else:
-                        if self.show_log: print "   * Reached Bounds *"
+                        self.scene.log.debug("   * Reached Bounds *")
                         photon.exit_device.log(photon)
                         # self.database.log(photon)
 
@@ -1120,7 +1116,7 @@ class Tracer(object):
                     photon.container.log(photon)
                     self.database.log(photon)
                     if entering_photon.container == photon.scene.bounds:
-                        if self.show_log: print "   * Photon hit scene bounds without previous intersections *"
+                        self.scene.log.debug("   * Photon hit scene bounds without previous intersections *")
                     else:
                         # try:
                         entering_photon.container.log(entering_photon)
@@ -1136,14 +1132,13 @@ class Tracer(object):
                     a = b
 
                 step += 1
-                self.totalsteps += 1
+                self.total_steps += 1
                 if step >= self.steps:
                     # We need to kill the photon because it is bouncing around in a locked path
                     self.killed += 1
                     photon.killed = True
                     self.database.log(photon)
-                    if self.show_log:
-                        print "   * Reached Max Steps *"
+                    self.scene.log.debug("   * Reached Max Steps *")
 
             # Split DB if needed
             if self.db_split and throw % self.split_num == 0 and throw > 0:

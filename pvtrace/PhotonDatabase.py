@@ -1,4 +1,4 @@
-from __future__ import division
+from __future__ import division, print_function
 import numpy as np
 import sqlite3 as sql
 import inspect
@@ -95,10 +95,8 @@ class PhotonDatabase(object):
             dbfile = open(os.path.abspath(DB_SCHEMA), "r")
             for line in dbfile:
                 self.cursor.execute(line)
-        except Exception as inst:
-            print "Could not load DB schema file. (", DB_SCHEMA, ")"
-            print type(inst)
-            print inst
+        except Exception:
+            print("Could not load DB schema file. (", DB_SCHEMA, ")")
             exit(1)
 
     def load(self, dbfile):
@@ -106,7 +104,7 @@ class PhotonDatabase(object):
         self.connection = sql.connect(dbfile)
         self.cursor = self.connection.cursor()
 
-    def log(self, photon, surface_normal=None, on_surface_obj=None, surface_id=None, ray_direction_bound=None,
+    def log(self, photon, surface_normal=None, surface_id=None, ray_direction_bound=None,
             emitter_material=None, absorber_material=None):
         """
         Adds a new row to the database. NB Every time this function is called the uid of the photon is incremented.
@@ -179,7 +177,7 @@ class PhotonDatabase(object):
 
         file_connection = sql.connect(filename)
         sqlitebck.copy(self.connection, file_connection)
-        print "\r DB copy saved as ", filename
+        print("\r DB copy saved as ", filename)
 
     def add_db_file(self, filename=None,
                     tables=("state", "direction", "polarisation", "position", "surface_normal", "photon")):
@@ -252,8 +250,8 @@ class PhotonDatabase(object):
                 'ray_direction_bound = "Out" AND on_surface_obj=? AND surface_id=? AND absorption_counter = 0'
                 'GROUP BY uid);', (obj, surface)).fetchall())
         else:
-            print "Cannot return any uids for this question." \
-                  "Are you using the function uids_out_bound_on_surface correctly?"
+            print("Cannot return any uids for this question." \
+                  "Are you using the function uids_out_bound_on_surface correctly?")
             return []
 
     def endpoint_uids_for_nonradiative_loss(self):
@@ -337,7 +335,7 @@ class PhotonDatabase(object):
                 'SELECT MAX(uid) FROM photon GROUP BY pid HAVING uid IN (SELECT uid FROM state WHERE ray_direction_bound = "Out" AND surface_id=? AND absorption_counter = 0 GROUP BY uid);',
                 (surface_id,)).fetchall())
         else:
-            print "Cannot return any uids for this question. Are you using the function uids_out_bound_on_surface correctly?"
+            print("Cannot return any uids for this question. Are you using the function uids_out_bound_on_surface correctly?")
             return []
 
     def uids_in_bound_on_surface(self, surface_id, luminescent=None, solar=None):
@@ -362,7 +360,7 @@ class PhotonDatabase(object):
                 'SELECT MAX(uid) FROM photon GROUP BY pid HAVING uid IN (SELECT uid FROM state WHERE ray_direction_bound = "In" AND surface_id=? AND absorption_counter = 0 GROUP BY uid);',
                 (surface_id,)).fetchall())
         else:
-            print "Cannot return any uids for this question. Are you using the function uids_in_bound_on_surface correctly?"
+            print("Cannot return any uids for this question. Are you using the function uids_in_bound_on_surface correctly?")
             return []
     
     def uids_in_reactor(self):
@@ -417,7 +415,7 @@ class PhotonDatabase(object):
                     col_header += ', '
             return self.cursor.execute("SELECT (?) FROM ? WHERE uid = ?", (col_headers, table, uid)).fetchall()
         else:
-            print "Cannot return any uids for this question. Are you using the function value_for_table_column_uid correctly?"
+            print("Cannot return any uids for this question. Are you using the function value_for_table_column_uid correctly?")
             return []
 
     def directionForUid(self, uid):
@@ -454,115 +452,3 @@ class PhotonDatabase(object):
             cmd = "SELECT wavelength FROM photon WHERE uid IN (%s)" % (items,)
             values = itemise(self.cursor.execute(cmd).fetchall())
             return values
-
-
-if __name__ == "__main__":
-    import PhotonDatabase
-    import os
-    import numpy as np
-    import pylab
-    
-    # DRIVE exists only on Windows, using user data folder is more interoperable (Linux here!) [D.]
-    # drive = os.path.splitdrive(os.path.expanduser("~"))[0]
-    drive = os.path.expanduser("~")
-    database_file = os.path.join(drive, "tmp", "pvtracedb.sql")
-    
-    if not os.path.exists(os.path.split(database_file)[0]):
-        os.makedirs(os.path.split(database_file)[0])
-    db = PhotonDatabase.PhotonDatabase()
-    db.load(database_file)
-    
-    uid = db.uids_nonradiative_losses()
-    if len(uid) == 0:
-        print 'No photons lost! :)'
-        print type(db)
-        print db.objects_with_records()
-    else:
-        print uid
-        print db.wavelengthForUid(uid)
-        print ""
-        print db.positionForUid(uid)
-        print ""
-        print db.directionForUid(uid)
-        print ""
-        print db.polarisationForUid(uid)
-        
-        print "Plotting Test"
-        data = db.wavelengthForUid(uid)
-        hist = np.histogram(data, bins=np.linspace(300, 800, num=100))
-        pylab.hist(data, bins=np.linspace(300, 800, num=100), histtype='stepfilled')
-        pylab.savefig(os.path.join(drive, "tmp", "plot-test.pdf"))
-        pylab.clf()
-    
-    print "Plotting reactor..."
-    uid = db.uids_in_reactor()
-    # print "Photons in channels array is: ",uid
-    data = db.wavelengthForUid(uid)
-    hist = np.histogram(data, bins=np.linspace(300, 800, num=100))
-    pylab.hist(data, 100, histtype='stepfilled')
-    pylab.savefig(os.path.join(drive, "tmp", "plot-reactor.png"))
-    pylab.clf()
-    
-    print "Plotting reactor luminescent..."
-    uid = db.uids_in_reactor_and_luminescent()
-    # print "Photons in channels array is: ",uid
-    data = db.wavelengthForUid(uid)
-    hist = np.histogram(data, bins=np.linspace(300, 800, num=100))
-    pylab.hist(data, 100, histtype='stepfilled')
-    pylab.savefig(os.path.join(drive, "tmp", "plot-reactor-luminescent.png"))
-    pylab.clf()
-    
-    print(data)
-    
-    '''print "Plotting edge"
-    uid = db.uids_out_bound_on_surface('left', luminescent=True) + db.uids_out_bound_on_surface('right', luminescent=True) + db.uids_out_bound_on_surface('near', luminescent=True) + db.uids_out_bound_on_surface('far', luminescent=True)
-    print uid
-    data = db.wavelengthForUid(uid)
-    hist = np.histogram(data, bins=np.linspace(300,800,num=100))
-    pylab.hist(data, 100, histtype='stepfilled')
-    pylab.savefig(os.path.join(drive,"tmp","plot-edge.pdf"))
-    pylab.clf()
-    
-    print "Plotting polar"
-    for id in ['left','right', 'near', 'far']:
-        data = []
-        norm = db.surface_normal_for_surface(id)
-        print "Surface", id, "Normal", norm
-        uids = db.uids_out_bound_on_surface(id, luminescent=True)
-        
-        for item in uids:
-            k = db.directionForUid(item)
-            rads = pvtrace.angle(norm, k)
-            deg = np.degrees(rads)
-            data.append(deg)
-    
-    bins = np.linspace(0,360,num=100)
-    hist = np.histogram(data, bins=bins)
-    pylab.hist(data, 100, histtype='stepfilled')
-    pylab.savefig(os.path.join(drive,"tmp",'plot-polar.pdf'))
-    pylab.clf()
-    
-    print "Plotting escape"
-    uid = db.uids_out_bound_on_surface('top', luminescent=True) + db.uids_out_bound_on_surface('bottom', luminescent=True)
-    print uid
-    data = db.wavelengthForUid(uid)
-    hist, bin_edges = np.histogram(data, bins=np.linspace(300,800,num=10))
-    pylab.hist(data, len(bin_edges), histtype='stepfilled')
-    pylab.savefig(os.path.join(drive,"tmp",'plot-escape.pdf'))
-    pylab.clf()
-    
-    print "Plotting reflected"
-    uid = db.uids_out_bound_on_surface('bottom', solar=True)
-    data = db.wavelengthForUid(uid)
-    hist, bin_edges = np.histogram(data, bins=np.linspace(300,800,num=10))
-    pylab.hist(data, len(bin_edges), histtype='stepfilled')
-    pylab.savefig(os.path.join(drive,"tmp",'plot-reflected.pdf'))
-    pylab.clf()
-    
-    uid = db.uids_out_bound_on_surface('top', solar=True)
-    data = db.wavelengthForUid(uid)
-    hist, bin_edges = np.histogram(data, bins=np.linspace(300,800,num=10))
-    pylab.hist(data, len(bin_edges), histtype='stepfilled')
-    pylab.savefig(os.path.join(drive,"tmp",'plot-transmitted.pdf'))
-    pylab.clf()
-    '''

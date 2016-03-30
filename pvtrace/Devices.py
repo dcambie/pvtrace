@@ -422,13 +422,3 @@ class Face(Register):
         self.material = None
         self.name = "FACE"
 
-
-if False:
-    origin = (0, 0, 0)
-    size = (10, 2, 3)
-    axis = np.argmax(size)
-    lenght = np.amax(size)
-    radius = np.average(np.delete(size, axis))
-    print "asse", axis, "lenght", lenght, "radius", radius
-    # Z TO Y
-    append_transform(tf.rotation_matrix(math.pi / 2.0, [0, 0, 1]))

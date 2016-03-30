@@ -1,4 +1,3 @@
-from __future__ import division
 # pvtrace is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 3 of the License, or
@@ -11,14 +10,16 @@ from __future__ import division
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+from __future__ import division, print_function
+
 from pvtrace import *
 import numpy as np
 import os
 
-# PVTDATA = '/home/dario/pvtrace/data' # Hack needed for running simulations on /tmp from VM
 
 # Print lamp data to export folder?
-print_lamp = true
+print_lamp = False
 
 
 class LightSource(object):
@@ -114,7 +115,7 @@ class Photocatalyst(object):
         elif solvent == 'water':
             n = 1.33
         else:
-            print "Unknown solvent. Water assumed as worst scenario (n=1.33)"
+            print("Unknown solvent. Water assumed as worst scenario (n=1.33)")
             n = 1.33
 
         # Reaction mixture as abortive medium with no emission
@@ -199,7 +200,7 @@ class Red305(object):
         # 1.0067 is the correction factor between exp. data at 0.10 mg/g and theoretical value
         phi = 1.006732182 * self.concentration/0.10
 
-        print 'phi equals ', phi, ' (this should approximately be simulation conc/tabulated conc (i.e. 0.10mg/g)'
+        print('phi equals ', phi, ' (this should approximately be simulation conc/tabulated conc (i.e. 0.10mg/g)')
         # Applying correction to spectrum
         absorption_data[:, 1] = absorption_data[:, 1] * phi
 

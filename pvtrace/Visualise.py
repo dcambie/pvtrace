@@ -11,7 +11,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import division
+from __future__ import division, print_function
 try:
     import visual
     VISUAL_INSTALLED = True
@@ -140,11 +140,11 @@ class Visualiser (object):
             return
         if isinstance(convex, geo.Convex):
             if colour is None:
-                print "Color is none"
+                print("Color is none")
                 visual.convex(pos=convex.points, color=geo.norm([0.1,0.1,0.1]), material=material)
             else:
                 #import pdb; pdb.set_trace()
-                print "Colour is", geo.norm(colour)
+                print("Color is", geo.norm(colour))
                 visual.convex(pos=convex.points, color=geo.norm(colour), material=material)
                 
     def addRay(self, ray, colour=None, opacity=1., material=None):
@@ -218,7 +218,7 @@ class Visualiser (object):
         y = ymin
         z = zmin
         
-        print 'Visualisation of ', CSGobj.reference, ' started...'
+        print('Visualisation of ', CSGobj.reference, ' started...')
             
         while x < xmax:
 
@@ -245,7 +245,7 @@ class Visualiser (object):
 
             x = x + res*(xmax-xmin)     
 
-        print 'Complete.'
+        print('Complete.')
 
     def addCSGvoxel(self, box, colour, material=None, opacity=1.):
         """

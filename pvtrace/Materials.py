@@ -11,7 +11,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import division
+from __future__ import division, print_function
 
 # try:
 # import scipy as sp
@@ -203,8 +203,8 @@ class Spectrum(object):
             try:
                 data = np.loadtxt(filename)
             except Exception as e:
-                print "Failed to load data from file, %s", str(filename)
-                print e
+                print("Failed to load data from file, %s", str(filename))
+                print(e)
                 exit(1)
 
             self.x = np.array(data[:, 0], dtype=np.float32)
@@ -248,7 +248,7 @@ class Spectrum(object):
             # Convert the (x,y) point pairs to a histogram of bins and frequencies
             bins = np.hstack([self.x, 2 * self.x[-1] - self.x[-2]])
         except IndexError:
-            print "Index Error from array, ", self.x
+            print("Index Error from array, ", self.x)
 
         cdf = np.cumsum(self.y)
         if not (max(cdf) == 0):
@@ -571,13 +571,11 @@ class CompositeMaterial(Material):
         super(CompositeMaterial, self).__init__()
         self.materials = materials
         if refractive_index is None:
-            print ""
-            print "CompositeMaterial must be created with a value of refractive index which is an estimate of the" \
+            print("")
+            print("CompositeMaterial must be created with a value of refractive index which is an estimate of the" \
                   "effective medium of all materials which it contains. The individual refractive index of each" \
-                  "material is ignored when grouping multiple material together using a composite material."
-            print ""
-            print "For example try using, CompositeMaterial([pmma, dye1, dye2], refractive_index=1.5])."
-            print ""
+                  "material is ignored when grouping multiple material together using a composite material.\n")
+            print("For example try using, CompositeMaterial([pmma, dye1, dye2], refractive_index=1.5]).\n")
             raise ValueError
         self.refractive_index = refractive_index
         self.silent = silent
@@ -648,7 +646,7 @@ class CompositeMaterial(Material):
             # Emission occurs.
             if np.random.uniform() < material.quantum_efficiency:
                 if not self.silent:
-                    print "   * Re-emitted *"
+                    print("   * Re-emitted *")
                 photon.reabs += 1
                 photon.emitter_material = material
                 # Generates a new photon with red-shifted wavelength, new direction and polarisation
@@ -657,7 +655,7 @@ class CompositeMaterial(Material):
 
             else:
                 if not self.silent:
-                    print "   * Photon Lost *"
+                    print("   * Photon Lost *")
                 # Emission does not occur. Now set active = False ans return
                 photon.active = False
                 return photon

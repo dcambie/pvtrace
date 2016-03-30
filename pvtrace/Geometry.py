@@ -15,9 +15,9 @@ from __future__ import division, print_function
 
 import numpy as np
 
-import external.transformations as tf
-from external.quickhull import qhull3d
-from external.transformations import translation_matrix, rotation_matrix
+import pvtrace.external.transformations as tf
+from pvtrace.external.quickhull import qhull3d
+from pvtrace.external.transformations import translation_matrix, rotation_matrix
 
 
 def cmp_floats(a, b):

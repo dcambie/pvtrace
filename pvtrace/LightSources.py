@@ -15,10 +15,10 @@ import logging
 
 import numpy as np
 
-import external.transformations as tf
-from Geometry import Cylinder, FinitePlane, transform_point, transform_direction, norm, \
+import pvtrace.external.transformations as tf
+from pvtrace.Geometry import Cylinder, FinitePlane, transform_point, transform_direction, norm, \
     rotation_matrix_from_vector_alignment
-from Trace import Photon
+from pvtrace.Trace import Photon
 
 
 # noinspection PyUnboundLocalVariable,PyUnboundLocalVariable,PyUnboundLocalVariable

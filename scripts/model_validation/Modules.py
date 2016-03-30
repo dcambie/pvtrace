@@ -282,8 +282,6 @@ class Reactor(object):
             # 2. CHANNELS
             # Geometry of channels: origin and sizes in mm
             geometry = []
-            # Note: inlet and outlet have a 1 um LSC before endings to prevent surface overlaps
-            # todo: check if inlet and outlet protruding out of LSC also cause problems
             # @formatter:off
             #        ORIGIN:  X      Y    Z  L:   X     Y   Z
             geometry.append(((   0,  5.00, 1), (10.0, 1.0, 1)))  # Inlet, bigger for the first 10 mm

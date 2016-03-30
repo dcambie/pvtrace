@@ -135,9 +135,14 @@ A random shape
 #
 # ***** END LICENSE BLOCK *****
 
-from mathutils import *
-from itertools import izip
+from pvtrace.external import mathutils
 import operator
+
+# Python2.7 and 3.5 compatibility
+try:
+    from itertools import izip
+except ImportError:  #python3.x
+    izip = zip
 
 # adapted from
 # http://en.literateprograms.org/Quickhull_(Python,_arrays)

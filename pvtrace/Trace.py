@@ -589,7 +589,6 @@ class Scene(object):
         :return: Creates the render image but returns nothing
 
         >>> S = Scene('overwrite_me')
-        Working directory:  D:\Users\dcambie\pvtrace_data\overwrite_me
         >>> L, W, D = 1, 1, 1
         >>> box = Box(origin=(-L/2., -W/2.,-D/2.), extent=(L/2, W/2, D/2))
         >>> box.name = 'box'

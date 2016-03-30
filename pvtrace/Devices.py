@@ -16,11 +16,10 @@ from  __future__ import division
 import warnings
 import logging
 import math
-from external.transformations import rotation_matrix
-import external.transformations as tf
+from pvtrace.external.transformations import rotation_matrix
+import pvtrace.external.transformations as tf
 
-
-from Materials import *
+from pvtrace.Materials import *
 
 
 class Register(object):
@@ -129,13 +128,39 @@ class Register(object):
             return 0
         return len(self.store['loss'])
 
-    def spectrum(self, shape, surface_point, bound):
+    def spectrum(self, surface_names=()):
         """
         Returns the counts histogram (bins,counts) for object
-
         """
-        # Todo: 21-3-16 CD Check how this performs compared with DB query
+        wavelengths = []
 
+        entries = []
+        for surface in surface_names:
+            if self.store.has_key(surface):
+                entries += self.store[surface]
+
+        if len(entries) == 0:
+            return None
+
+        for entry in entries:
+            wavelengths.append(float(entry[1]))
+
+        if len(wavelengths) is 0:
+            return None
+
+        wavelengths = np.array(wavelengths)
+        print(wavelengths)
+
+        if len(wavelengths) is 1:
+            bins = np.arange(np.floor(wavelengths[0] - 1), np.ceil(wavelengths[0] + 2))
+            freq, bins = np.histogram(wavelengths, bins=bins)
+        else:
+            bins = np.arange(np.floor(wavelengths.min() - 1), np.ceil(wavelengths.max() + 2))
+            freq, bins = np.histogram(wavelengths, bins=bins)
+        return Spectrum(bins[0:-1], freq)
+    """
+    def spectrum(self, shape, surface_point, bound):
+        Returns the counts histogram (bins,counts) for object
         wavelengths = []
         key = shape.surface_identifier(surface_point)
         if not self.store.has_key(key):
@@ -161,7 +186,7 @@ class Register(object):
             bins = np.arange(np.floor(wavelengths.min() - 1), np.ceil(wavelengths.max() + 2))
             freq, bins = np.histogram(wavelengths, bins=bins)
         return Spectrum(bins[0:-1], freq)
-
+    """
     def reabs(self, shape, surface_point, bound):
         """
         16/03/10: Returns list where list[i+1] contains number of surface photons that experienced i re-absorptions;
@@ -193,7 +218,7 @@ class Register(object):
     def loss_reabs(self):
         """
         16/03/10: Returns list where list[i+1] contains number of LOST photons that experienced i re-absorptions;
-        Length of list is ten by default (=> photons with up to 9 re-absorptions recorded), but is extended if necessary.        
+        Length of list is ten by default (=> photons with up to 9 re-absorptions recorded), but is extended if necessary
         """
 
         if not self.store.has_key('loss'):

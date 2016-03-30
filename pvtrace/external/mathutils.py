@@ -37,7 +37,12 @@
 #
 # ***** END LICENSE BLOCK *****
 
-from itertools import izip
+# Python2.7 and 3.5 compatibility
+try:
+    from itertools import izip
+except ImportError:  #python3.x
+    izip = zip
+
 import logging
 import operator
 

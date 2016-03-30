@@ -11,9 +11,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from Geometry import Box, Cylinder, Ray, cmp_points, separation
-from external.transformations import translation_matrix, rotation_matrix
-import external.transformations as tf
+from pvtrace.Geometry import Box, Cylinder, Ray, cmp_points, separation
+from pvtrace.external.transformations import translation_matrix, rotation_matrix
+import pvtrace.external.transformations as tf
 import numpy as np
 
 def transform_point(point, transform):

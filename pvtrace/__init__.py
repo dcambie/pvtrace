@@ -17,14 +17,14 @@ from pvtrace.external import pov
 from pvtrace.external import quickhull
 from pvtrace.external import mathutils
 
-from Materials import *
-from Devices import *
-from Geometry import *
-from ConstructiveGeometry import *
-from LightSources import *
-from Visualise import *
-from Trace import *
-from Interpolation import *
+from pvtrace.Materials import *
+from pvtrace.Devices import *
+from pvtrace.Geometry import *
+from pvtrace.ConstructiveGeometry import *
+from pvtrace.LightSources import *
+from pvtrace.Visualise import *
+from pvtrace.Trace import *
+from pvtrace.Interpolation import *
 
 import os
 import sys

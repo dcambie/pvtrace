@@ -24,11 +24,11 @@ from __future__ import division, print_function
 #        print exception
 #        print "It seems that you don't have interpolate... bugger... Python FAIL."
 
-from Geometry import *
-from Interpolation import interp1d, BilinearInterpolation
-from ConstructiveGeometry import CSGadd, CSGint, CSGsub
-from external.transformations import translation_matrix, rotation_matrix
-import external.transformations as tf
+from pvtrace.Geometry import *
+from pvtrace.Interpolation import interp1d, BilinearInterpolation
+from pvtrace.ConstructiveGeometry import CSGadd, CSGint, CSGsub
+from pvtrace.external.transformations import translation_matrix, rotation_matrix
+import pvtrace.external.transformations as tf
 import math
 from types import *
 import os

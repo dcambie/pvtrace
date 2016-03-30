@@ -16,13 +16,17 @@ from pvtrace.external.transformations import translation_matrix, rotation_matrix
 import pvtrace.external.transformations as tf
 import numpy as np
 
+
 def transform_point(point, transform):
-    return np.array(np.dot(transform, np.matrix(np.concatenate((point, [1.]))).transpose()).transpose()[0,0:3]).squeeze()
+    return np.array(np.dot(transform,
+                           np.matrix(np.concatenate((point, [1.]))).transpose()).transpose()[0, 0:3]).squeeze()
+
 
 def transform_direction(direction, transform):
     angle, axis, point = tf.rotation_from_matrix(transform)
     rotation_transform = tf.rotation_matrix(angle, axis)
-    return np.array(np.dot(rotation_transform, np.matrix(np.concatenate((direction, [1.]))).transpose()).transpose()[0,0:3]).squeeze()
+    return np.array(np.dot(rotation_transform,
+                           np.matrix(np.concatenate((direction, [1.]))).transpose()).transpose()[0, 0:3]).squeeze()
 
    
 class CSGadd(object):
@@ -32,7 +36,6 @@ class CSGadd(object):
     """
 
     def __init__(self, ADDone, ADDtwo):
-
         super(CSGadd, self).__init__()
         self.ADDone = ADDone
         self.ADDtwo = ADDtwo
@@ -55,9 +58,8 @@ class CSGadd(object):
         """
         Returns True if ray contained by CSGadd, False otherwise
         """
-
-        invtransform = tf.inverse_matrix(self.transform)
-        local_point = transform_point(point, invtransform)
+        inv_transform = tf.inverse_matrix(self.transform)
+        local_point = transform_point(point, inv_transform)
         
         bool1 = self.ADDone.contains(local_point)
         bool2 = self.ADDtwo.contains(local_point)
@@ -77,16 +79,15 @@ class CSGadd(object):
         Returns the intersection points of ray with CSGadd in global frame
         """
 
-        # We will need the invtransform later when we return the results..."
-        invtransform = tf.inverse_matrix(self.transform)
+        # We will need the inv_transform later when we return the results..."
+        inv_transform = tf.inverse_matrix(self.transform)
+        local_ray = Ray()
 
-        localray = Ray()
+        local_ray.position = transform_point(ray.position, inv_transform)
+        local_ray.direction = transform_direction(ray.direction, inv_transform)
 
-        localray.position = transform_point(ray.position, invtransform)
-        localray.direction = transform_direction(ray.direction, invtransform)
-
-        ADDone__intersections = self.ADDone.intersection(localray)
-        ADDtwo__intersections = self.ADDtwo.intersection(localray)
+        ADDone__intersections = self.ADDone.intersection(local_ray)
+        ADDtwo__intersections = self.ADDtwo.intersection(local_ray)
 
         """
         Cover the simpler cases
@@ -98,15 +99,15 @@ class CSGadd(object):
         Change ..._intersections into tuples
         """
         if ADDone__intersections is not None:
-            for i in range(0,len(ADDone__intersections)):
+            for i in range(0, len(ADDone__intersections)):
                 point = ADDone__intersections[i]
                 new_point = (point[0], point[1], point[2])
                 ADDone__intersections[i] = new_point
                 
         if ADDtwo__intersections is not None:
-            for i in range(0,len(ADDtwo__intersections)):
+            for i in range(0, len(ADDtwo__intersections)):
                 point = ADDtwo__intersections[i]
-                new_point = (point[0],point[1],point[2])
+                new_point = (point[0], point[1], point[2])
                 ADDtwo__intersections[i] = new_point
 
         """
@@ -116,12 +117,12 @@ class CSGadd(object):
         ADDtwo_intersections = []
 
         if ADDone__intersections is not None:
-            for i in range(0,len(ADDone__intersections)):
+            for i in range(0, len(ADDone__intersections)):
                 if not self.ADDtwo.contains(ADDone__intersections[i]):
                     ADDone_intersections.append(ADDone__intersections[i])
 
         if ADDtwo__intersections is not None:
-            for j in range(0,len(ADDtwo__intersections)):
+            for j in range(0, len(ADDtwo__intersections)):
                 if not self.ADDone.contains(ADDtwo__intersections[j]):
                     ADDtwo_intersections.append(ADDtwo__intersections[j])
 
@@ -182,25 +183,25 @@ class CSGadd(object):
         if self.contains(point):
             return False
 
-        invtransform = tf.inverse_matrix(self.transform)
-        local_point = transform_point(point, invtransform)
+        inv_transform = tf.inverse_matrix(self.transform)
+        local_point = transform_point(point, inv_transform)
         
         bool1 = self.ADDone.on_surface(local_point)
         bool2 = self.ADDtwo.on_surface(local_point)
 
-        if bool1 == True and self.ADDtwo.contains(local_point) == False:
+        if bool1 is True and self.ADDtwo.contains(local_point) == False:
             return True
                                             
-        if bool2 == True and self.ADDone.contains(local_point) == False:
+        if bool2 is True and self.ADDone.contains(local_point) == False:
             return True
                                             
-        if bool1 == bool2 == True:
+        if bool1 == bool2 is True:
             return True
                                             
         else:
             return False
 
-    def surface_identifier(self, surface_point, assert_on_surface = True):
+    def surface_identifier(self, surface_point, assert_on_surface=True):
         """
         Returns surface-ID name if surface_point located on CSGadd surface
         """
@@ -216,20 +217,19 @@ class CSGadd(object):
         bool2 = self.ADDtwo.on_surface(local_point)
 
         assertbool = False
-        if bool1 == True and self.ADDtwo.contains(local_point) == False:
+        if bool1 is True and self.ADDtwo.contains(local_point) == False:
             assertbool = True
-        elif bool2 == True and self.ADDone.contains(local_point) == False:
+        elif bool2 is True and self.ADDone.contains(local_point) == False:
             assertbool = True
-        elif bool1 == bool2 == True:
+        elif bool1 == bool2 is True:
             assertbool = True
         if assert_on_surface:
-            assert assertbool == True
+            assert assertbool is True
 
-                                                                         
-        if bool1 == True and self.ADDtwo.contains(local_point) == False:
+        if bool1 is True and self.ADDtwo.contains(local_point) == False:
             return self.reference + "_ADDone_" + self.ADDone.surface_identifier(local_point)
                                             
-        if bool2 == True and self.ADDone.contains(local_point) == False:
+        if bool2 is True and self.ADDone.contains(local_point) == False:
             return self.reference + "_ADDtwo_" + self.ADDtwo.surface_identifier(local_point)
                                             
     def surface_normal(self, ray, acute=True):
@@ -242,30 +242,29 @@ class CSGadd(object):
         Ensure surface_point on CSGint surface
         """
 
-        invtransform = tf.inverse_matrix(self.transform)
-        localray = Ray()
-        localray.position = transform_point(ray.position, invtransform)
-        localray.direction = transform_direction(ray.direction, invtransform)
+        inv_transform = tf.inverse_matrix(self.transform)
+        local_ray = Ray()
+        local_ray.position = transform_point(ray.position, inv_transform)
+        local_ray.direction = transform_direction(ray.direction, inv_transform)
 
-        bool1 = self.ADDone.on_surface(localray.position)
-        bool2 = self.ADDtwo.on_surface(localray.position)
+        bool1 = self.ADDone.on_surface(local_ray.position)
+        bool2 = self.ADDtwo.on_surface(local_ray.position)
         
-        assertbool = False
-        if bool1 == True and self.ADDtwo.contains(localray.position) == False:
-            assertbool = True
-        elif bool2 == True and self.ADDone.contains(localray.position) == False:
-            assertbool = True
-        elif bool1 == bool2 == True:
-            assertbool = True
-        assert assertbool == True
+        assert_bool = False
+        if bool1 is True and self.ADDtwo.contains(local_ray.position) == False:
+            assert_bool = True
+        elif bool2 is True and self.ADDone.contains(local_ray.position) == False:
+            assert_bool = True
+        elif bool1 == bool2 is True:
+            assert_bool = True
+        assert assert_bool is True
 
-
-        if bool1 == True and self.ADDtwo.contains(localray.position) == False:
-            local_normal = self.ADDone.surface_normal(localray, acute)
+        if bool1 is True and self.ADDtwo.contains(local_ray.position) == False:
+            local_normal = self.ADDone.surface_normal(local_ray, acute)
             return transform_direction(local_normal, self.transform)
 
-        if bool2 == True and self.ADDone.contains(localray.position) == False:
-            local_normal = self.ADDtwo.surface_normal(localray, acute)
+        if bool2 is True and self.ADDone.contains(local_ray.position) == False:
+            local_normal = self.ADDtwo.surface_normal(local_ray, acute)
             return transform_direction(local_normal, self.transform)
                                              
 
@@ -284,12 +283,12 @@ class CSGsub(object):
         self.reference = 'CSGsub'
         self.transform = tf.identity_matrix()
 
-    def append_name(self, namestring):
+    def append_name(self, name_string):
         """
         In case a scene contains several CSG objects, this helps
         with surface identification
         """
-        self.reference = namestring
+        self.reference = name_string
     
     def append_transform(self, new_transform):
         self.transform = tf.concatenate_matrices(new_transform, self.transform)
@@ -299,8 +298,8 @@ class CSGsub(object):
         Returns True if ray contained by CSGsub, False otherwise
         """
 
-        invtransform = tf.inverse_matrix(self.transform)
-        local_point = transform_point(point, invtransform)
+        inv_transform = tf.inverse_matrix(self.transform)
+        local_point = transform_point(point, inv_transform)
         
         bool1 = self.SUBplus.contains(local_point)
         bool2 = self.SUBminus.contains(local_point)
@@ -320,15 +319,14 @@ class CSGsub(object):
         """
 
         # We will need the invtransform later when we return the results..."
-        invtransform = tf.inverse_matrix(self.transform)
+        inv_transform = tf.inverse_matrix(self.transform)
+        local_ray = Ray()
 
-        localray = Ray()
-
-        localray.position = transform_point(ray.position, invtransform)
-        localray.direction = transform_direction(ray.direction, invtransform)
+        local_ray.position = transform_point(ray.position, inv_transform)
+        local_ray.direction = transform_direction(ray.direction, inv_transform)
         
-        SUBplus__intersections = self.SUBplus.intersection(localray)
-        SUBminus__intersections = self.SUBminus.intersection(localray)
+        SUBplus__intersections = self.SUBplus.intersection(local_ray)
+        SUBminus__intersections = self.SUBminus.intersection(local_ray)
                   
         """
         Cover the simpler cases
@@ -340,13 +338,13 @@ class CSGsub(object):
         Change ..._intersections into tuples
         """
         if SUBplus__intersections is not None:
-            for i in range(0,len(SUBplus__intersections)):
+            for i in range(0, len(SUBplus__intersections)):
                 point = SUBplus__intersections[i]
                 new_point = (point[0], point[1], point[2])
                 SUBplus__intersections[i] = new_point
 
         if SUBminus__intersections is not None:
-            for i in range(0,len(SUBminus__intersections)):
+            for i in range(0, len(SUBminus__intersections)):
                 point = SUBminus__intersections[i]
                 new_point = (point[0], point[1], point[2])
                 SUBminus__intersections[i] = new_point
@@ -386,8 +384,8 @@ class CSGsub(object):
         
         transposed_intersections = combined_intersections.transpose()
         
-        
-        intersection_vectors = transposed_intersections[0]-ray.position[0], transposed_intersections[1]-ray.position[1], transposed_intersections[2]-ray.position[2]
+        intersection_vectors = transposed_intersections[0]-ray.position[0],\
+                               transposed_intersections[1]-ray.position[1], transposed_intersections[2]-ray.position[2]
         
         # intersection_separations= []
         # print combined_intersections, point, intersection_vectors
@@ -409,7 +407,6 @@ class CSGsub(object):
         #         for index in sorted_indices:
         #             sorted_combined_intersections.append(np.array(combined_intersections[index]))
         
-        
         # global_frame_intersections = []
         # for point in sorted_combined_intersections:
         #     global_frame_intersections.append(transform_point(point, self.transform))
@@ -417,22 +414,21 @@ class CSGsub(object):
         global_frame_intersections = [transform_point(point, self.transform) for point in sorted_combined_intersections]
         
         return global_frame_intersections
-    
             
     def on_surface(self, point):
         """
         Returns True if the point is on the outer or inner surface of the CSGsub, and False othewise.
         """
 
-        invtransform = tf.inverse_matrix(self.transform)
-        local_point = transform_point(point, invtransform)
+        inv_transform = tf.inverse_matrix(self.transform)
+        local_point = transform_point(point, inv_transform)
         
         bool1 = self.SUBplus.on_surface(local_point)
         bool2 = self.SUBminus.on_surface(local_point)
 
-        if bool1 == True and self.SUBminus.contains(local_point) == False:
+        if bool1 is True and self.SUBminus.contains(local_point) == False:
             return True
-        if bool2 == True and self.SUBplus.contains(local_point) == True:
+        if bool2 is True and self.SUBplus.contains(local_point) == True:
             return True
         else:
             return False
@@ -448,29 +444,28 @@ class CSGsub(object):
             return True   
         """
         
-    def surface_identifier(self, surface_point, assert_on_surface = True):
+    def surface_identifier(self, surface_point, assert_on_surface=True):
         """
         Returns a unique identifier for the surface location on the CSGsub.
         """
-
-        invtransform = tf.inverse_matrix(self.transform)
-        local_point = transform_point(surface_point, invtransform)
+        inv_transform = tf.inverse_matrix(self.transform)
+        local_point = transform_point(surface_point, inv_transform)
         
         bool1 = self.SUBplus.on_surface(local_point)
         bool2 = self.SUBminus.on_surface(local_point)
 
-        assertbool = False
-        if bool1 == True and self.SUBminus.contains(local_point) == False:
-            assertbool = True
-        elif bool2 == True and self.SUBplus.contains(local_point) == True:
-            assertbool = True
+        assert_bool = False
+        if bool1 is True and self.SUBminus.contains(local_point) == False:
+            assert_bool = True
+        elif bool2 is True and self.SUBplus.contains(local_point) == True:
+            assert_bool = True
         if assert_on_surface:
-            assert assertbool == True
+            assert assert_bool is True
 
-        if bool1 == True and self.SUBminus.contains(local_point) == False:
+        if bool1 is True and self.SUBminus.contains(local_point) == False:
             return self.reference + "_SUBplus_" + self.SUBplus.surface_identifier(local_point)
 
-        if bool2 == True and self.SUBplus.contains(local_point) == True:
+        if bool2 is True and self.SUBplus.contains(local_point) == True:
             return self.reference + "_SUBminus_" + self.SUBminus.surface_identifier(local_point)
               
     def surface_normal(self, ray, acute=True):
@@ -478,41 +473,40 @@ class CSGsub(object):
         Return the surface normal for a ray arriving on the CSGsub surface.
         """
 
-        invtransform = tf.inverse_matrix(self.transform)
-        localray = Ray()
-        localray.position = transform_point(ray.position, invtransform)
-        localray.direction = transform_direction(ray.direction, invtransform)
+        inv_transform = tf.inverse_matrix(self.transform)
+        local_ray = Ray()
+        local_ray.position = transform_point(ray.position, inv_transform)
+        local_ray.direction = transform_direction(ray.direction, inv_transform)
         
-        bool1 = self.SUBplus.on_surface(localray.position)
-        bool2 = self.SUBminus.on_surface(localray.position)
+        bool1 = self.SUBplus.on_surface(local_ray.position)
+        bool2 = self.SUBminus.on_surface(local_ray.position)
 
-        assertbool = False
-        if bool1 == True and self.SUBminus.contains(localray.position) == False:
-            assertbool = True
-        if bool2 == True and self.SUBplus.contains(localray.position) == True:
-            assertbool = True
-        assert assertbool == True
+        assert_bool = False
+        if bool1 is True and self.SUBminus.contains(local_ray.position) == False:
+            assert_bool = True
+        if bool2 is True and self.SUBplus.contains(local_ray.position) == True:
+            assert_bool = True
+        assert assert_bool is True
 
-        if bool1 == True and self.SUBminus.contains(localray.position) == False:            
+        if bool1 is True and self.SUBminus.contains(local_ray.position) == False:
             return self.SUBplus.surface_normal(ray, acute)            
 
-        if bool2 == True and self.SUBplus.contains(localray.position) == True:
+        if bool2 is True and self.SUBplus.contains(local_ray.position) == True:
             if acute:            
                 return self.SUBminus.surface_normal(ray,acute)
             else:
                 normal = -1 * self.SUBminus.surface_normal(ray, acute=True)
                 # Remove signed zeros
-                for i in range(0,3):
+                for i in range(0, 3):
                     if normal[i] == 0.0:
                         normal[i] = 0.0
                 return normal
-    
-class CSGint(object):
 
+
+class CSGint(object):
     """
     Constructive Solid Geometry Boolean Intersection
     """
-
     def __init__(self, INTone, INTtwo):
     
         super(CSGint, self).__init__()
@@ -521,12 +515,12 @@ class CSGint(object):
         self.reference = 'CSGint'
         self.transform = tf.identity_matrix()
 
-    def append_name(self, namestring):
+    def append_name(self, name_string):
         """
         In case a scene contains several CSG objects, this helps
         with surface identification
         """
-        self.reference = namestring
+        self.reference = name_string
 
     def append_transform(self, new_transform):
         self.transform = tf.concatenate_matrices(new_transform, self.transform)
@@ -542,7 +536,7 @@ class CSGint(object):
         bool1 = self.INTone.contains(point)
         bool2 = self.INTtwo.contains(point)
 
-        if bool1 == bool2 == True:
+        if bool1 == bool2 is True:
             return True
         
         else:
@@ -553,16 +547,16 @@ class CSGint(object):
         Returns the intersection points of ray with CSGint in global frame
         """
 
-        # We will need the invtransform later when we return the results..."
-        invtransform = tf.inverse_matrix(self.transform)
+        # We will need the inv_transform later when we return the results..."
+        inv_transform = tf.inverse_matrix(self.transform)
 
-        localray = Ray()
+        local_ray = Ray()
 
-        localray.position = transform_point(ray.position, invtransform)
-        localray.direction = transform_direction(ray.direction, invtransform)
+        local_ray.position = transform_point(ray.position, inv_transform)
+        local_ray.direction = transform_direction(ray.direction, inv_transform)
 
-        INTone__intersections = self.INTone.intersection(localray)
-        INTtwo__intersections = self.INTtwo.intersection(localray)
+        INTone__intersections = self.INTone.intersection(local_ray)
+        INTtwo__intersections = self.INTtwo.intersection(local_ray)
 
         """
         Cover the simpler cases
@@ -574,13 +568,13 @@ class CSGint(object):
         Change ..._intersections into tuples
         """
         if INTone__intersections is not None:
-            for i in range(0,len(INTone__intersections)):
+            for i in range(0, len(INTone__intersections)):
                 point = INTone__intersections[i]
                 new_point = (point[0], point[1], point[2])
                 INTone__intersections[i] = new_point
 
         if INTtwo__intersections is not None:
-            for i in range(0,len(INTtwo__intersections)):
+            for i in range(0, len(INTtwo__intersections)):
                 point = INTtwo__intersections[i]
                 new_point = (point[0], point[1], point[2])
                 INTtwo__intersections[i] = new_point
@@ -592,12 +586,12 @@ class CSGint(object):
         INTtwo_intersections = []
 
         if INTone__intersections is not None:
-            for i in range(0,len(INTone__intersections)):
+            for i in range(0, len(INTone__intersections)):
                 if self.INTtwo.contains(INTone__intersections[i]):
                     INTone_intersections.append(INTone__intersections[i])
 
         if INTtwo__intersections is not None:
-            for j in range(0,len(INTtwo__intersections)):
+            for j in range(0, len(INTtwo__intersections)):
                 if self.INTone.contains(INTtwo__intersections[j]):
                     INTtwo_intersections.append(INTtwo__intersections[j])
 
@@ -630,39 +624,37 @@ class CSGint(object):
         sorted_combined_intersections = []
         for index in sorted_indices:
             sorted_combined_intersections.append(np.array(combined_intersections[index]))
-            
 
         global_frame_intersections = []
         for point in sorted_combined_intersections:
             global_frame_intersections.append(transform_point(point, self.transform))
 
         return global_frame_intersections
-    
 
     def on_surface(self, point):
         """
         Returns True or False dependent on whether point on CSGint surface or not
         """
 
-        invtransform = tf.inverse_matrix(self.transform)
-        local_point = transform_point(point, invtransform)
+        inv_transform = tf.inverse_matrix(self.transform)
+        local_point = transform_point(point, inv_transform)
         
         bool1 = self.INTone.on_surface(local_point)
         bool2 = self.INTtwo.on_surface(local_point)
 
-        if bool1 == bool2 == True:
+        if bool1 == bool2 is True:
             return True
 
-        if bool1 == True and self.INTtwo.contains(local_point):
+        if bool1 is True and self.INTtwo.contains(local_point):
             return True
 
-        if bool2 == True and self.INTone.contains(local_point):
+        if bool2 is True and self.INTone.contains(local_point):
             return True
 
         else:
             return False
 
-    def surface_identifier(self, surface_point, assert_on_surface = True):
+    def surface_identifier(self, surface_point, assert_on_surface=True):
         """
         Returns surface-ID name if surface_point located on CSGint surface
         """
@@ -671,21 +663,21 @@ class CSGint(object):
         Ensure surface_point on CSGint surface
         """
         
-        invtransform = tf.inverse_matrix(self.transform)
-        local_point = transform_point(surface_point, invtransform)
+        inv_transform = tf.inverse_matrix(self.transform)
+        local_point = transform_point(surface_point, inv_transform)
         
         bool1 = self.INTone.on_surface(local_point)
         bool2 = self.INTtwo.on_surface(local_point)
         
-        assertbool = False
-        if bool1 == True and self.INTtwo.contains(local_point) == True:
-            assertbool = True
-        if bool2 == True and self.INTone.contains(local_point) == True:
-            assertbool = True
-        if bool1 == bool2 == True:
-            assertbool = True
+        assert_bool = False
+        if bool1 is True and self.INTtwo.contains(local_point) == True:
+            assert_bool = True
+        if bool2 is True and self.INTone.contains(local_point) == True:
+            assert_bool = True
+        if bool1 == bool2 is True:
+            assert_bool = True
         if assert_on_surface:
-            assert assertbool == True
+            assert assert_bool is True
                 
         if bool1:
             return self.reference + "_INTone_" + self.INTone.surface_identifier(local_point)
@@ -701,22 +693,22 @@ class CSGint(object):
         Ensure surface_point on CSGint surface
         """
 
-        invtransform = tf.inverse_matrix(self.transform)
-        localray = Ray()
-        localray.position = transform_point(ray.position, invtransform)
-        localray.direction = transform_direction(ray.direction, invtransform)
+        inv_transform = tf.inverse_matrix(self.transform)
+        local_ray = Ray()
+        local_ray.position = transform_point(ray.position, inv_transform)
+        local_ray.direction = transform_direction(ray.direction, inv_transform)
         
-        bool1 = self.INTone.on_surface(localray.position)
-        bool2 = self.INTtwo.on_surface(localray.position)
+        bool1 = self.INTone.on_surface(local_ray.position)
+        bool2 = self.INTtwo.on_surface(local_ray.position)
         
-        assertbool = False
-        if bool1 == True and self.INTtwo.contains(localray.position) == True:
-            assertbool = True
-        if bool2 == True and self.INTone.contains(localray.position) == True:
-            assertbool = True
-        if bool1 == bool2 == True:
-            assertbool = True
-        assert assertbool == True
+        assert_bool = False
+        if bool1 is True and self.INTtwo.contains(local_ray.position) == True:
+            assert_bool = True
+        if bool2 is True and self.INTone.contains(local_ray.position) == True:
+            assert_bool = True
+        if bool1 is bool2 is True:
+            assert_bool = True
+        assert assert_bool is True
                      
         if bool1:
             return self.INTone.surface_normal(ray, acute)
@@ -724,7 +716,6 @@ class CSGint(object):
             return self.INTtwo.surface_normal(ray, acute)
 
 
-        
 if __name__ == '__main__':
 
     """
@@ -883,16 +874,3 @@ if __name__ == '__main__':
     print normal  
     """
 
-    
-                    
-                    
-                
-    
-    
-    
-        
-
-        
-
-        
-        

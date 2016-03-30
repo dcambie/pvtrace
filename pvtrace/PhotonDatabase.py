@@ -124,8 +124,8 @@ class PhotonDatabase(object):
         self.cursor.execute('INSERT INTO direction VALUES (?, ?, ?, ?)', values)
         
         try:
-            values = (
-            float(photon.polarisation[0]), float(photon.polarisation[1]), float(photon.polarisation[2]), self.uid)
+            values = (float(photon.polarisation[0]), float(photon.polarisation[1]),
+                      float(photon.polarisation[2]), self.uid)
             self.cursor.execute('INSERT INTO polarisation VALUES (?, ?, ?, ?)', values)
         except:
             pass
@@ -221,7 +221,7 @@ class PhotonDatabase(object):
     def endpoint_uids_for_object_and_surface(self, obj, surface):
         return itemise(self.cursor.execute(
             "SELECT MAX(uid) FROM photon GROUP BY pid INTERSECT"
-            "SELECT uid FROM state WHERE on_surface_obj=? AND surface_id=?;",(obj, surface)).fetchall())
+            "SELECT uid FROM state WHERE on_surface_obj=? AND surface_id=?;", (obj, surface)).fetchall())
     
     def endpoint_uids_outbound_for_object_and_surface(self, obj, surface, luminescent=None, solar=None):
         """
@@ -235,7 +235,7 @@ class PhotonDatabase(object):
             return itemise(self.cursor.execute(
                 'SELECT MAX(uid) FROM photon GROUP BY pid HAVING uid IN'
                 '(SELECT uid FROM state WHERE ray_direction_bound = "Out" AND on_surface_obj=? AND surface_id=?'
-                'GROUP BY uid);',(obj, surface)).fetchall())
+                'GROUP BY uid);', (obj, surface)).fetchall())
         elif luminescent:
             return itemise(self.cursor.execute(
                 'SELECT MAX(uid) FROM photon GROUP BY pid HAVING uid IN'
@@ -249,7 +249,7 @@ class PhotonDatabase(object):
                 'ray_direction_bound = "Out" AND on_surface_obj=? AND surface_id=? AND absorption_counter = 0'
                 'GROUP BY uid);', (obj, surface)).fetchall())
         else:
-            print("Cannot return any uids for this question." \
+            print("Cannot return any uids for this question."
                   "Are you using the function uids_out_bound_on_surface correctly?")
             return []
 
@@ -345,7 +345,7 @@ class PhotonDatabase(object):
             return itemise(self.cursor.execute(
                 'SELECT MAX(uid) FROM photon GROUP BY pid HAVING uid IN ('
                 'SELECT uid FROM state WHERE ray_direction_bound = "Out"'
-                'AND surface_id=? AND absorption_counter = 0 GROUP BY uid);',(surface_id,)).fetchall())
+                'AND surface_id=? AND absorption_counter = 0 GROUP BY uid);', (surface_id,)).fetchall())
         else:
             self.logger.info("Cannot return any uids for this question."
                              "Are you using the function uids_out_bound_on_surface correctly?")
@@ -422,16 +422,19 @@ class PhotonDatabase(object):
             " GROUP BY uid HAVING uid IN (SELECT MAX(uid) FROM photon group BY pid)").fetchall())
     
     def value_for_table_column_uid(self, table, column, uid):
-        """Returns values from the database index my table, column and row, where the row is uniquely defined using the photon uid. 
-        Column can also be array-like so multiple columns can be specified provided they come from the same table."""
+        """
+        Returns values from the database index my table, column and row, where the row is uniquely defined using
+        photon uid.
+        Column can also be array-like so multiple columns can be specified provided they come from the same table.
+        """
         if isinstance(column, str) or isinstance(column, unicode):
             return self.cursor.execute("SELECT ? FROM ? WHERE uid = ?", (column, table, uid)).fetchall()
         elif isinstance(column, list) or isinstance(column, tuple):
             col_headers = ""
             for header in column:
-                col_header += header
+                col_headers += header
                 if header is not column[-1]:
-                    col_header += ', '
+                    col_headers += ', '
             return self.cursor.execute("SELECT (?) FROM ? WHERE uid = ?", (col_headers, table, uid)).fetchall()
         else:
             self.logger.info("Cannot return any uids for this question."
@@ -464,7 +467,6 @@ class PhotonDatabase(object):
             return self.cursor.execute(cmd).fetchall()
 
     def wavelengthForUid(self, uid):
-        # import pdb; pdb.set_trace()
         if isinstance(uid, int) or isinstance(uid, float):
             return np.array(self.cursor.execute("SELECT wavelength FROM photon WHERE uid = ?", (uid,)).fetchall()[0])
         elif isinstance(uid, list) or isinstance(uid, tuple):

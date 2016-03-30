@@ -201,24 +201,25 @@ def rotation_matrix_from_vector_alignment(before, after):
     :param before: vector before rotation
     :param after: vector after rotation
     :return: rotation matrix
-
+    """
+    """
     >>> # General input/output test
     >>> V1 = norm(np.random.random(3))
-    >>> V2 = norm([1,1,1])
+    >>> V2 = norm([1, 1, 1])
     >>> R = rotation_matrix_from_vector_alignment(V1, V2)
     >>> V3 = transform_direction(V1, R)
     >>> cmp_points(V2, V3)
     True
     >>> # Catch the special case in which we cannot take the cross product
-    >>> V1 = [0,0,1]
-    >>> V2 = [0,0,1]
+    >>> V1 = [0, 0, 1]
+    >>> V2 = [0, 0, 1]
     >>> R = rotation_matrix_from_vector_alignment(V1, V2)
     >>> V3 = transform_direction(V1, R)
     >>> cmp_points(V2, V3)
     True
     >>> # Catch the special case in which we cannot take the cross product
-    >>> V1 = [0,0,1]
-    >>> V2 = [0,0,-1]
+    >>> V1 = [0, 0, 1]
+    >>> V2 = [0, 0, -1]
     >>> R = rotation_matrix_from_vector_alignment(V1, V2)
     >>> V3 = transform_direction(V1, R)
     >>> cmp_points(V2, V3)
@@ -286,21 +287,22 @@ class Ray(object):
         The normal of the plane is, n = [a, b, c], thus
         d = -n dot O
         If n.p + d < 0, the point is behind the plane
-
-        >>> point = np.array((-1,-1,-1))
-        >>> ray = Ray(position=(1,1,1), direction=(1,1,1))
+        """
+        """
+        >>> point = np.array((-1, -1, -1))
+        >>> ray = Ray(position=(1, 1, 1), direction=(1, 1, 1))
         >>> ray.behind(point)
         True
-        >>> point = np.array((-2,1,1))
-        >>> ray = Ray(position=(1,1,1), direction=(1,1,1))
+        >>> point = np.array((-2, 1, 1))
+        >>> ray = Ray(position=(1, 1, 1), direction=(1, 1, 1))
         >>> ray.behind(point)
         True
-        >>> point = np.array((2,2,2))
-        >>> ray = Ray(position=(1,1,1), direction=(1,1,1))
+        >>> point = np.array((2, 2, 2))
+        >>> ray = Ray(position=(1, 1, 1), direction=(1, 1, 1))
         >>> ray.behind(point)
         False
-        >>> point = np.array((4,2,2))
-        >>> ray = Ray(position=(1,1,1), direction=(1,1,1))
+        >>> point = np.array((4, 2, 2))
+        >>> ray = Ray(position=(1, 1, 1), direction=(1, 1, 1))
         >>> ray.behind(point)
         False
         """
@@ -383,7 +385,8 @@ class Plane(object):
 
         :param ray: The ray to be evaluated for intersection
         :return: boolean
-
+        """
+        """
         >>> ray = Ray(position=[0.5, 0.5, -0.5], direction=[0,0,1])
         >>> plane = Plane()
         >>> plane.intersection(ray)
@@ -427,7 +430,8 @@ class FinitePlane(Plane):
     A subclass of Plane but that has a finite size. The size of the plane
     is specified as the the plane was sitting in the xy-plane of a Cartesian
     system. The transformations are used dor the positioning.
-
+    """
+    """
     >>> fp = FinitePlane(length = 1, width = 1)
     >>> fp.intersection(Ray(position=(0, 0, 1), direction=(0, 0, -1)))
     [array([ 0.,  0.,  0.])]
@@ -580,7 +584,8 @@ class Box(object):
     def contains(self, point):
         """
         Returns True is the point is inside the box or False if it is not or is on the surface.
-        
+        """
+        """
         >>> box = Box([1, 1, 1], [2, 2, 2])
         >>> box.contains([2, 2, 2])
         False
@@ -723,7 +728,8 @@ class Box(object):
 
         :param point: 3D coordinates of the point to be evaluated
         :return: boolean
-
+        """
+        """
         >>> box = Box([1, 1, 1], [2, 2, 2])
         >>> box.on_surface([2, 2, 2])
         True
@@ -772,7 +778,8 @@ class Box(object):
         :param ray: Ray (position, direction)
         :param acute: Boolean weather acute angle
         :return: bool
-        
+        """
+        """
         >>> box = Box([0, 0, 0], [1, 1, 1])
         >>> ray = Ray([0.5, 0.5, 1], [0, 0, 1])
         >>> box.surface_normal(ray)
@@ -817,8 +824,9 @@ class Box(object):
                             exit_loop = True
                             break
 
-        assert common_index is not None, "The intersection point %s doesn't share an element with either the origin %s or extent points %s (all points transformed into local frame)." % (
-            ray_pos, self.origin, self.extent)
+        assert common_index is not None, "The intersection point %s doesn't share an element with either" \
+                                         "the origin %s or extent points %s (all points transformed into local frame)."\
+                                         % (ray_pos, self.origin, self.extent)
 
         normal = np.zeros(3)
         if list(self.origin) == list(reference_point):
@@ -830,8 +838,8 @@ class Box(object):
             if angle(normal, ray_dir) > np.pi / 2:
                 normal *= -1.0
                 assert 0 <= angle(normal, ray_dir) <= np.pi / 2, "The normal vector needs to be pointing in the same" \
-                                                              "direction quadrant as the ray, so the angle between" \
-                                                              "them is between 0 and 90"
+                                                                 " direction quadrant as the ray, so the angle " \
+                                                                 "between them is between 0 and 90"
 
         # remove signed zeros this just makes the doctest work.
         # Signed zeros shouldn't really effect the maths but makes things neat.
@@ -843,7 +851,8 @@ class Box(object):
     def intersection(self, ray):
         """Returns an array intersection points with the ray and box. If no intersection occurs
         this function returns None.
-
+        """
+        """
         # Inside-out single intersection
         >>> ray = Ray(position=[0.5,0.5,0.5], direction=[0,0,1])
         >>> box = Box()
@@ -964,6 +973,8 @@ class Cylinder(object):
         :return: Boolean
 
         Returns True if the point in inside the cylinder and False if it is on the surface or outside.
+        """
+        """
         >>> # Inside
         >>> cylinder = Cylinder(.5, 2)
         >>> cylinder.contains([.25, .25, 1])
@@ -996,7 +1007,8 @@ class Cylinder(object):
         :param ray: Ray (position, direction)
         :param acute: Boolean weather acute angle
         :return: bool
-        
+        """
+        """
         >>> cylinder = Cylinder(2, 2)
         >>> #Bottom cap in
         >>> ray = Ray([0,0,0], [0,0,1])
@@ -1131,7 +1143,8 @@ class Cylinder(object):
         The intersection algoithm is taken from, "Intersecting a Ray with a Cylinder"
         Joseph M. Cychosz and Warren N. Waggenspack, Jr., in "Graphics Gems IV", 
         Academic Press, 1994.
-        
+        """
+        """
         >>> cld = Cylinder(1.0, 1.0)
         >>> cld.intersection(Ray([0.0, 0.0, 0.5], [1, 0, 0]))
         [array([ 1. ,  0. ,  0.5])]
@@ -1289,7 +1302,6 @@ class Cylinder(object):
 class Sphere(object):
     """
     A sphere.
-    >>> s = Sphere()
     """
 
     def __init__(self, centre=(0., 0., 0.), radius=1.):
@@ -1303,7 +1315,8 @@ class Sphere(object):
 
         :param point: 3D Coordinates of the point to be evaluated
         :return: bool
-
+        """
+        """
         >>> s = Sphere()
         >>> s.on_surface((0., 0., 0.))
         False
@@ -1322,7 +1335,8 @@ class Sphere(object):
         :param ray: Ray (position, direction)
         :param acute: Boolean weather acute angle
         :return: bool
-
+        """
+        """
         >>> s = Sphere()
         >>> r = Ray(position = (0, 0, 1), direction = (0, 0, 1))
         >>> s.surface_normal(r)
@@ -1352,7 +1366,8 @@ class Sphere(object):
         Credit: http://wiki.cgsociety.org/index.php/Ray_Sphere_Intersection
 
         :param ray: ray (position, direction) to be evaluated for intersection
-
+        """
+        """
         Test inside
         >>> s = Sphere()
         >>> r = Ray(position = (0, 0, 0), direction = (0, 0, 1))
@@ -1421,7 +1436,8 @@ class Sphere(object):
 
         :param point: Point to be evaluated
         :return: Boolean
-
+        """
+        """
         >>> s = Sphere()
         >>> s.contains((0, 0, 0))
         True

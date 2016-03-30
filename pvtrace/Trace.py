@@ -186,7 +186,7 @@ class Photon(object):
 
         # import pdb; pdb.set_trace()
         intersection_points, intersection_objects = self.scene.sort(intersection_points, intersection_objects, self,
-                                                               container=self.container, show_log=self.show_log)
+                                                                    container=self.container, show_log=self.show_log)
 
         # find current intersection point and object -- should be zero if the list is sorted!
         intersection = closest_point(self.position, intersection_points)
@@ -587,16 +587,17 @@ class Scene(object):
         :param height: output render image height size in pixels
         :param width: output render image width size in pixels
         :return: Creates the render image but returns nothing
-
+        """
+        """
         >>> S = Scene('overwrite_me')
         >>> L, W, D = 1, 1, 1
         >>> box = Box(origin=(-L/2., -W/2.,-D/2.), extent=(L/2, W/2, D/2))
         >>> box.name = 'box'
-        >>> myCylinder = Cylinder(radius = 1)
+        >>> myCylinder = Cylinder(radius=1)
         >>> myCylinder.name = 'cyl'
-        >>> #myCylinder.append_transform(tf.translation_matrix((0,-1,0)))
+        >>> # myCylinder.append_transform(tf.translation_matrix((0,-1,0)))
         >>> box.append_transform(tf.rotation_matrix(-np.pi/3,(0,1,0), point=(0,0,0)))
-        >>> #S.add_object(CSGsub(myCylinder, box))
+        >>> # S.add_object(CSGsub(myCylinder, box))
         >>> myPlane = FinitePlane()
         >>> myPlane.name = 'Plane'
         >>> myPlane.append_transform(tf.translation_matrix((0,0,9.9)))

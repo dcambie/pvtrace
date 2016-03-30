@@ -2,11 +2,13 @@ from __future__ import division
 # import subprocess
 import logging
 import time
-from Modules import *
+import pvtrace
+from modules import *
+import sys
 
 # 1 unit = 1 m  Albeit not convenient, this assumption is deeply bounded in pvtrace's heart
 # scene = Scene()
-scene = Scene('overwrite_me')
+scene = pvtrace.Scene('overwrite_me')
 
 logger = logging.getLogger('pvtrace')
 
@@ -23,8 +25,8 @@ for obj in reactor.scene_obj:
 # Doesn't save DB file but uses RAM disk for faster simulation
 # file = os.path.join(os.path.expanduser("~"),"pvtracedb.sql")
 # file = None
-trace = Tracer(scene=scene, source=reactor.source, seed=None, throws=100, use_visualiser=False,
-               show_log=False, show_axis=True, show_counter=False, db_split=False)
+trace = pvtrace.Tracer(scene=scene, source=reactor.source, seed=None, throws=100, use_visualiser=False,
+                       show_log=False, show_axis=True, show_counter=False, db_split=False)
 trace.show_lines = True
 trace.show_path = False
 
@@ -36,7 +38,7 @@ toc = time.clock()
 logger.debug('Simulation Ended (time: '+str(toc)+', elapsed: '+str(toc-tic)+' s)')
 
 for obj in scene.objects:
-    if type(obj) is LSC:
+    if type(obj) is pvtrace.Devices.LSC:
         spectrum = obj.spectrum(surface_names=('far', 'near', 'right', 'left'))
         print(spectrum)
 # For reproducibility reasons always append git version to results (tested on linux only)
@@ -44,15 +46,14 @@ for obj in scene.objects:
 # print 'PvTrace ', label,  ' simulation ended'
 
 scene.stats.print_detailed()
-#stats.print_excel()
+# stats.print_excel()
 scene.stats.create_graphs()
-plane = Plane()
-plane.name= 'base for render'
+plane = pvtrace.Geometry.Plane()
+plane.name = 'base for render'
 # scene.add_object(plane)
 # scene.pov_render(camera_position=(-0.05, 0.025, 0.05), camera_target=(0.025, 0.025, 0), height=1080, width=1920)
-#stats.history()
-#stats.save_db()
-
+# stats.history()
+# stats.save_db()
 
 sys.exit(0)
 

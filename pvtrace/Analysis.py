@@ -136,8 +136,6 @@ class Analysis(object):
     def print_excel(self):
         """
         Prints an easy to import report on the fate of the photons stored in self.db
-
-        :return:None
         """
         print(self.photon_generated)
         print(self.photon_killed)
@@ -259,6 +257,7 @@ class Analysis(object):
 
     def save_db(self, location=None):
         self.db.dump_to_file(location)
+
 
 # fixme: move this to Spectrum
 def histogram(data, filename, wavelength_range=(350, 700)):

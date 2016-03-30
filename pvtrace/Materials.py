@@ -346,9 +346,11 @@ class Spectrum(object):
 class AngularSpectrum(object):
     """
     A spectrum with an angular dependence.
+    """
+    """
     >>> x = np.array([400.,600.,601,1000.])
     >>> y = np.array([0., np.pi/4, np.pi/2])
-    >>> z = np.array([[0.,0.,0.],      [1e-9,1e-9,1e-9],     [1-1e-9,1-1e-9,1-1e-9],  [1.,1.,1.]])
+    >>> z = np.array([[0., 0., 0.], [1e-9, 1e-9, 1e-9], [1-1e-9, 1-1e-9, 1-1e-9], [1.,1.,1.]])
     >>> z_i = BilinearInterpolation(x,y,z)
     >>> z_i(610,0.1) == 0.99999999902255665
     True
@@ -573,8 +575,8 @@ class CompositeMaterial(Material):
         self.materials = materials
         if refractive_index is None:
             print("")
-            print("CompositeMaterial must be created with a value of refractive index which is an estimate of the" \
-                  "effective medium of all materials which it contains. The individual refractive index of each" \
+            print("CompositeMaterial must be created with a value of refractive index which is an estimate of the"
+                  "effective medium of all materials which it contains. The individual refractive index of each"
                   "material is ignored when grouping multiple material together using a composite material.\n")
             print("For example try using, CompositeMaterial([pmma, dye1, dye2], refractive_index=1.5]).\n")
             raise ValueError

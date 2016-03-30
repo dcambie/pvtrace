@@ -29,17 +29,18 @@ from Interpolation import interp1d, BilinearInterpolation
 from ConstructiveGeometry import CSGadd, CSGint, CSGsub
 from external.transformations import translation_matrix, rotation_matrix
 import external.transformations as tf
+import math
 from types import *
 import os
 
 
-def load_spectrum(filename, xbins=None):
+def load_spectrum(filename, xbins=None, base10=True):
     assert os.path.exists(filename) == True, "File '%s' does not exist." % filename
-    spectrum = Spectrum(filename=filename)
+    spectrum = Spectrum(filename=filename, base10=base10)
 
     # Truncate the spectrum using the xbins
-    return spectrum if xbins is None else Spectrum(xbins, spectrum(xbins))
-    # return spectrum if xbins is None else Spectrum(x=xbins, y=spectrum)
+    return spectrum if xbins is None else Spectrum(x=xbins, y=spectrum(xbins), base10=base10)
+    # Note: Spectrum instances are callable thanks to the __call__ decorator of the Spectrum class ;)
 
 
 def common_abscissa(a, b):
@@ -188,7 +189,7 @@ class Spectrum(object):
     e.g. absorption, emission or refractive index spectrum as a function of wavelength in nanometers.
     """
 
-    def __init__(self, x=None, y=None, filename=None):
+    def __init__(self, x=None, y=None, filename=None, base10=True):
         """
         Initialised with x and y which are array-like data of the same length. x must have units of wavelength
         (that is in nanometers), y can an arbitrary units. However, if the Spectrum is representing an
@@ -237,6 +238,8 @@ class Spectrum(object):
         for y in self.y:
             assert float(y) >= 0, "Spectrum has negative values!"
 
+        if base10:
+            self.y *= 1/np.log10(math.e)
         # Make the 'spectrum'
         self.spectrum = interp1d(self.x, self.y, bounds_error=False, fill_value=0.0)
 
@@ -527,8 +530,8 @@ class Material(object):
             photon.position = photon.position + free_pathlength * photon.direction
             return photon
         # Assuming the material has a uniform absorption coefficient we generated a random path length
-        # weigthed by the material absorption coefficient.
-        sampled_pathlength = -np.log10(1 - np.random.uniform()) / self.absorption(photon)
+        # weighed by the material absorption coefficient.
+        sampled_pathlength = -np.log(1 - np.random.uniform()) / self.absorption(photon)
 
         # Photon absorbed.
         if sampled_pathlength < free_pathlength:
@@ -616,7 +619,7 @@ class CompositeMaterial(Material):
         # print 'At ',photon.wavelength,' nm the absorption of the materials are:',absorptions
         absorption_coefficient = absorptions.sum()
         # See WolframAlpha "-ln(1-x)/y from x=0 to 1 from y=0 to 2"
-        sampled_pathlength = -np.log10(1 - np.random.uniform()) / absorption_coefficient
+        sampled_pathlength = -np.log(1 - np.random.uniform()) / absorption_coefficient
         # print "sampled is: ",sampled_pathlength
 
         # Absorption occurs.

@@ -5,8 +5,9 @@ import time
 from Modules import *
 
 # 1 unit = 1 m  Albeit not convenient, this assumption is deeply bounded in pvtrace's heart
-# scene = Scene('overwrite_me')
-scene = Scene()
+# scene = Scene()
+scene = Scene('overwrite_me')
+
 logger = logging.getLogger('pvtrace')
 
 # reactor = Reactor(reactor_name="5x5_6ch_squared", dye="Red305", dye_concentration=0.20, photocatalyst="MB",

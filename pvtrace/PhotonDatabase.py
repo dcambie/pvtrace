@@ -27,7 +27,7 @@ def itemise(array):
     is_points = None
     for item in array:
         
-        if isinstance(item, types.ListType) or isinstance(item, types.TupleType):
+        if isinstance(item, list) or isinstance(item, tuple):
             
             if len(item) == 1:
                 # The data is comprised of single values

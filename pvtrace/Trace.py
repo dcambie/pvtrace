@@ -19,14 +19,14 @@ import time
 from copy import copy
 
 import shortuuid
-import visual
 
-import Analysis
-import PhotonDatabase
-import external.pov as pov
-from Devices import *
-from Visualise import Visualiser
-from visual import rate
+
+import pvtrace.Analysis
+import pvtrace.PhotonDatabase
+import pvtrace.external.pov as pov
+from pvtrace.Devices import *
+# from Visualise import Visualiser
+# import visual
 
 POVRAY_BINARY = ("pvengine.exe" if os.name == 'nt' else "pvtrace")
 
@@ -634,7 +634,7 @@ class Scene(object):
         self.working_dir = self.get_working_dir(uuid)
         print("Working directory: ", self.working_dir)
         self.log = self.start_logging()
-        self.stats = Analysis.Analysis(uuid=self.uuid)
+        self.stats = pvtrace.Analysis.Analysis(uuid=self.uuid)
 
     def start_logging(self):
         LOG_FILENAME = os.path.join(self.working_dir, 'output.log')
@@ -743,7 +743,7 @@ class Scene(object):
                     points[i] = None
                     objects[i] = None
 
-        objects = filter(None, objects)
+        objects = [item for item in objects if item]
         points_copy = list(points)
         points = []
 
@@ -892,7 +892,7 @@ class Tracer(object):
         self.total_steps = 0
         self.seed = seed
         self.killed = 0
-        self.database = PhotonDatabase.PhotonDatabase(None)
+        self.database = pvtrace.PhotonDatabase.PhotonDatabase(None)
         self.show_log = show_log
         self.show_counter = show_counter
         # From Scene, link db with analytics and get uuid
@@ -914,82 +914,82 @@ class Tracer(object):
 
         np.random.seed(self.seed)
         if not use_visualiser:
-            Visualiser.VISUALISER_ON = False
+            pvtrace.Visualiser.VISUALISER_ON = False
         else:
-            Visualiser.VISUALISER_ON = True
-        self.visualiser = Visualiser(background=background, ambient=ambient, show_axis=show_axis)
+            pvtrace.Visualiser.VISUALISER_ON = True
+            self.visualiser = pvtrace.Visualiser(background=background, ambient=ambient, show_axis=show_axis)
 
-        for obj in scene.objects:
-            if obj != scene.bounds:
-                if not isinstance(obj.shape, CSGadd) and not isinstance(obj.shape, CSGint)\
-                        and not isinstance(obj.shape, CSGsub):
+            for obj in scene.objects:
+                if obj != scene.bounds:
+                    if not isinstance(obj.shape, CSGadd) and not isinstance(obj.shape, CSGint)\
+                            and not isinstance(obj.shape, CSGsub):
 
-                    # import pdb; pdb.set_trace()
-                    if isinstance(obj, RayBin):
-                        # checkerboard = ( (0,0.01,0,0.01), (0.01,0,0.01,0), (0,0.01,0,1), (0.01,0,0.01,0) )
-                        # checkerboard = ( (0,1,0,1), (1,0,1,0), (0,1,0,1), (1,0,1,0) )
-                        # material = visual.materials.texture(data=checkerboard, mapping="rectangular",
-                        #                                     interpolate=False)
-                        material = visual.materials.wood
-                        colour = visual.color.blue
-                        opacity = 1.
-
-                    elif isinstance(obj, Channel):
-                        material = visual.materials.wood
-                        colour = visual.color.blue
-                        opacity = 1.
-                    # Dario's edit: LSC color set to red/
-                    # this breaks multiple lSC colours in the same scene. sorry :)
-                    elif isinstance(obj, LSC):
-                        material = visual.materials.plastic
-                        colour = visual.color.red
-                        opacity = 0.2
-
-                    elif isinstance(obj, PlanarReflector):
-                        colour = visual.color.white
-                        opacity = 1.
-                        material = visual.materials.plastic
-
-                    elif isinstance(obj, Coating):
-                        colour = visual.color.white
-                        opacity = 0.5
-                        material = visual.materials.plastic
-
-                        if hasattr(obj.reflectivity, 'lambertian'):
-                            if obj.reflectivity.lambertian is True:
-                                # The material is a diffuse reflector
-                                colour = visual.color.white
-                                opacity = 1.
-                                material = visual.materials.plastic
-
-                    elif isinstance(obj.material, SimpleMaterial):
                         # import pdb; pdb.set_trace()
-                        wavelength = obj.material.bandgap
-                        colour = norm(wav2RGB(wavelength))
-                        opacity = 0.5
-                        material = visual.materials.plastic
-                    else:
-                        # This excludes CompositeMaterial, even if the material with highest abs. could be used.
-                        if not hasattr(obj.material, 'all_absorption_coefficients'):
-                            try:
-                                max_index = obj.material.emission_data.y.argmax()
-                                wavelength = obj.material.emission_data.x[max_index]
-                                colour = norm(wav2RGB(wavelength))
-                            except:
-                                colour = (0.2, 0.2, 0.2)
+                        if isinstance(obj, RayBin):
+                            # checkerboard = ( (0,0.01,0,0.01), (0.01,0,0.01,0), (0,0.01,0,1), (0.01,0,0.01,0) )
+                            # checkerboard = ( (0,1,0,1), (1,0,1,0), (0,1,0,1), (1,0,1,0) )
+                            # material = visual.materials.texture(data=checkerboard, mapping="rectangular",
+                            #                                     interpolate=False)
+                            material = visual.materials.wood
+                            colour = visual.color.blue
+                            opacity = 1.
 
+                        elif isinstance(obj, Channel):
+                            material = visual.materials.wood
+                            colour = visual.color.blue
+                            opacity = 1.
+                        # Dario's edit: LSC color set to red/
+                        # this breaks multiple lSC colours in the same scene. sorry :)
+                        elif isinstance(obj, LSC):
+                            material = visual.materials.plastic
+                            colour = visual.color.red
+                            opacity = 0.2
+
+                        elif isinstance(obj, PlanarReflector):
+                            colour = visual.color.white
+                            opacity = 1.
+                            material = visual.materials.plastic
+
+                        elif isinstance(obj, Coating):
+                            colour = visual.color.white
+                            opacity = 0.5
+                            material = visual.materials.plastic
+
+                            if hasattr(obj.reflectivity, 'lambertian'):
+                                if obj.reflectivity.lambertian is True:
+                                    # The material is a diffuse reflector
+                                    colour = visual.color.white
+                                    opacity = 1.
+                                    material = visual.materials.plastic
+
+                        elif isinstance(obj.material, SimpleMaterial):
+                            # import pdb; pdb.set_trace()
+                            wavelength = obj.material.bandgap
+                            colour = norm(wav2RGB(wavelength))
                             opacity = 0.5
                             material = visual.materials.plastic
                         else:
-                            # It is possible to processes the most likely colour of a spectrum in a better way than this
-                            colour = (0.2, 0.2, 0.2)
-                            opacity = 0.5
-                            material = visual.materials.plastic
+                            # This excludes CompositeMaterial, even if the material with highest abs. could be used.
+                            if not hasattr(obj.material, 'all_absorption_coefficients'):
+                                try:
+                                    max_index = obj.material.emission_data.y.argmax()
+                                    wavelength = obj.material.emission_data.x[max_index]
+                                    colour = norm(wav2RGB(wavelength))
+                                except:
+                                    colour = (0.2, 0.2, 0.2)
 
-                        if colour[0] == np.nan or colour[1] == np.nan or colour[2] == np.nan:
-                            colour = (0.2, 0.2, 0.2)
+                                opacity = 0.5
+                                material = visual.materials.plastic
+                            else:
+                                # It is possible to processes the most likely colour of a spectrum in a better way than this
+                                colour = (0.2, 0.2, 0.2)
+                                opacity = 0.5
+                                material = visual.materials.plastic
 
-                    self.visualiser.addObject(obj.shape, colour=colour, opacity=opacity, material=material)
+                            if colour[0] == np.nan or colour[1] == np.nan or colour[2] == np.nan:
+                                colour = (0.2, 0.2, 0.2)
+
+                        self.visualiser.addObject(obj.shape, colour=colour, opacity=opacity, material=material)
 
         self.show_lines = True  # False
         self.show_exit = True
@@ -1005,7 +1005,7 @@ class Tracer(object):
             # import pdb; pdb.set_trace()
             # Delete last ray from visualiser
             # fixme: if channels are cylindrical in shape they will be removed from the view if this is active!
-            if Visualiser.VISUALISER_ON:
+            if pvtrace.Visualiser.VISUALISER_ON:
                 for obj in self.visualiser.display.objects:
                     if obj.__class__ is visual.cylinder and obj.radius < 0.001:
                         obj.visible = False
@@ -1030,7 +1030,7 @@ class Tracer(object):
             photon.material = self.source
             photon.show_log = self.show_log
 
-            if Visualiser.VISUALISER_ON:
+            if pvtrace.Visualiser.VISUALISER_ON:
                 photon.visualiser = self.visualiser
                 a = list(photon.position)
                 if self.show_start:
@@ -1079,7 +1079,7 @@ class Tracer(object):
                     entering_photon = copy(photon)
 
                 # print "Step number:", step
-                if Visualiser.VISUALISER_ON:
+                if pvtrace.Visualiser.VISUALISER_ON:
                     b = list(photon.position)
                     if self.show_lines and photon.active:
                         self.visualiser.addLine(a, b, colour=wav2RGB(photon.wavelength))
@@ -1091,7 +1091,7 @@ class Tracer(object):
                 if not photon.active and photon.container == self.scene.bounds:
 
                     # import pdb; pdb.set_trace()
-                    if Visualiser.VISUALISER_ON:
+                    if pvtrace.Visualiser.VISUALISER_ON:
                         if self.show_exit:
                             self.visualiser.addSmallSphere(a, colour=[.33, .33, .33])
                             self.visualiser.addLine(a, a + 0.01 * photon.direction, colour=wav2RGB(wavelength))
@@ -1126,7 +1126,7 @@ class Tracer(object):
                     logged += 1
 
                 # Needed since VPyhton6
-                if Visualiser.VISUALISER_ON:
+                if pvtrace.Visualiser.VISUALISER_ON:
                     visual.rate(100000)
                     a = b
 
@@ -1160,9 +1160,9 @@ class Tracer(object):
 
             # MERGE DB before statistics
             # this will be done in memory only (RAM is cheap nowadays)
-            self.database = PhotonDatabase.PhotonDatabase(dbfile=None)
+            self.database = pvtrace.PhotonDatabase.PhotonDatabase(dbfile=None)
             for db_file in self.dumped:
-                self.database.add_db_file(db_file, tables=("state", "photon"))
+                self.database.add_db_file(db_file, tables=None("state", "photon"))
                 os.remove(db_file)
                 # print "merged ",db_file
 

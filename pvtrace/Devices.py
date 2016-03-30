@@ -45,7 +45,7 @@ class Register(object):
 
                 # The photon has been non-radiatively lost inside a material
                 key = 'loss'
-                if not self.store.has_key(key):
+                if key not in self.store:
                     self.store[key] = []
 
                 log_entry = (list(photon.position), float(photon.wavelength), None, photon.absorption_counter)
@@ -63,7 +63,7 @@ class Register(object):
                                  "placed within the material")
 
                 key = 'volume_source'
-                if not self.store.has_key(key):
+                if key not in self.store:
                     self.store[key] = []
                 log_entry = (list(photon.position), float(photon.wavelength), None, photon.absorption_counter)
                 self.store['volume_source'].append(log_entry)
@@ -87,7 +87,7 @@ class Register(object):
             print('   Logged as ', bound, '...')
 
         key = photon.exit_device.shape.surface_identifier(photon.position)
-        if not self.store.has_key(key):
+        if key not in self.store:
             # Add an item for this key.
             self.store[key] = []
 
@@ -107,7 +107,7 @@ class Register(object):
         """
 
         key = shape.surface_identifier(surface_point)
-        if not self.store.has_key(key):
+        if key not in self.store:
             return 0.0
         entries = self.store[key]
         counts = 0
@@ -124,7 +124,7 @@ class Register(object):
         Returns the number of photons that have been non-radiatively lost in the volume of the shape. 
         A more adventurous version of this could be made that returns positions. 
         """
-        if not self.store.has_key('loss'):
+        if 'loss' not in self.store:
             return 0
         return len(self.store['loss'])
 
@@ -136,7 +136,7 @@ class Register(object):
 
         entries = []
         for surface in surface_names:
-            if self.store.has_key(surface):
+            if surface in self.store:
                 entries += self.store[surface]
 
         if len(entries) == 0:
@@ -163,7 +163,7 @@ class Register(object):
         Returns the counts histogram (bins,counts) for object
         wavelengths = []
         key = shape.surface_identifier(surface_point)
-        if not self.store.has_key(key):
+        if key not in self.store:
             return None
 
         entries = self.store[key]
@@ -194,7 +194,7 @@ class Register(object):
         """
         key = shape.surface_identifier(surface_point)
 
-        if not self.store.has_key(key):
+        if key not in self.store:
             return [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
         reabs_list = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -221,7 +221,7 @@ class Register(object):
         Length of list is ten by default (=> photons with up to 9 re-absorptions recorded), but is extended if necessary
         """
 
-        if not self.store.has_key('loss'):
+        if 'loss'not in self.store:
             return [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
         reabs_list = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]

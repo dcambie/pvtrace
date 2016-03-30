@@ -265,10 +265,11 @@ class Spectrum(object):
         A numpy array is returned if nanometers if a list of a numpy array.
         """
         # Check is the nanometers is a number
-        b1 = type(nanometers) == FloatType
-        b2 = type(nanometers) == IntType
-        b3 = type(nanometers) == np.float32
-        b4 = type(nanometers) == np.float64
+        b1 = True if isinstance(nanometers, float) else False
+        b2 = True if isinstance(nanometers, int) else False
+        b3 = True if isinstance(nanometers, np.float32) else False
+        b4 = True if isinstance(nanometers, np.float64) else False
+
         if b1 or b2 or b3 or b4:
             return np.float(self.value(nanometers))
         return self.value(nanometers)

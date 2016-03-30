@@ -2,7 +2,7 @@ from __future__ import division
 # import subprocess
 import logging
 import time
-from pvtrace.Modules import *
+from Modules import *
 
 # 1 unit = 1 m  Albeit not convenient, this assumption is deeply bounded in pvtrace's heart
 # scene = Scene()
@@ -24,7 +24,7 @@ for obj in reactor.scene_obj:
 # file = os.path.join(os.path.expanduser("~"),"pvtracedb.sql")
 # file = None
 trace = Tracer(scene=scene, source=reactor.source, seed=None, throws=50, use_visualiser=False,
-               show_log=False, show_axis=True, show_counter=False, db_split=True)
+               show_log=False, show_axis=True, show_counter=False, db_split=False)
 trace.show_lines = True
 trace.show_path = False
 

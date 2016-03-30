@@ -20,11 +20,10 @@ except:
     print("Python module visual is not installed... telling all Visualiser object to not render.")
     VISUAL_INSTALLED = False
 
-from visual import *
 import numpy as np
-import Geometry as geo
-import ConstructiveGeometry as csg
-import external.transformations as tf
+import pvtrace.Geometry as geo
+import pvtrace.ConstructiveGeometry as csg
+import pvtrace.external.transformations as tf
 
 
 class Visualiser (object):
@@ -77,7 +76,7 @@ class Visualiser (object):
             visual.label(pos=(0, .08, 0), text='Y', background=visual.color.green, linecolor=visual.color.green)
             visual.label(pos=(0, 0, .07), text='Z', background=visual.color.blue, linecolor=visual.color.blue)
     
-    def addBox(self, box_to_add, colour=None, opacity=1., material=visual.materials.plastic):
+    def addBox(self, box_to_add, colour=None, opacity=1., material=None):
         if not Visualiser.VISUALISER_ON:
             return
         if isinstance(box_to_add, geo.Box):
@@ -92,15 +91,21 @@ class Visualiser (object):
             # print "Visualiser: box position=%s, box_size=%s" % (str(pos), str(box_size))
             angle, direction, point = tf.rotation_from_matrix(box_to_add.transform)
 
+            if material is None:
+                material = visual.materials.plastic
+
             if np.allclose(np.array(colour), np.array([0,0,0])):
                 visual.box(pos=pos, size=box_size, material=material, opacity=opacity)
             else:
                 visual.box(pos=pos, size=box_size, color=colour, materials=material, opacity=opacity)
     
-    def addSphere(self, sphere_to_add, colour=None, opacity=1., material=visual.materials.plastic):
+    def addSphere(self, sphere_to_add, colour=None, opacity=1., material=None):
         """docstring for addSphere"""
         if not Visualiser.VISUALISER_ON:
             return
+
+        if material is None:
+            material = visual.materials.plastic
         
         if isinstance(sphere_to_add, geo.Sphere):
             if colour is None:
@@ -111,9 +116,13 @@ class Visualiser (object):
                 visual.sphere(pos=sphere_to_add.centre, radius=sphere_to_add.radius, color=geo.norm(colour),
                               opacity=opacity, material=material)
             
-    def addFinitePlane(self, plane, colour=None, opacity=1., material=visual.materials.plastic):
+    def addFinitePlane(self, plane, colour=None, opacity=1., material=None):
         if not Visualiser.VISUALISER_ON:
             return
+
+        if material is None:
+            material = visual.materials.plastic
+
         if isinstance(plane, geo.FinitePlane):
             if colour is None:
                 colour = visual.color.blue
@@ -125,19 +134,27 @@ class Visualiser (object):
             axis = geo.transform_direction((0,0,1), plane.transform)
             visual.box(pos=pos, size=size, color=colour, opacity=opacity, material=material)
 
-    def addPolygon(self, polygon, colour=None, opacity=1., material=visual.materials.plastic):
+    def addPolygon(self, polygon, colour=None, opacity=1., material=None):
         if not Visualiser.VISUALISER_ON:
             return
+
+        if material is None:
+            material = visual.materials.plastic
+
         if isinstance(polygon, geo.Polygon):
             if colour is None:
                 visual.convex(pos=polygon.pts, color=geo.norm([0.1,0.1,0.1]), material=material)
             else:
                 visual.convex(pos=polygon.pts, color=geo.norm(colour), material=material)
     
-    def addConvex(self, convex, colour=None, opacity=1., material=visual.materials.plastic):
+    def addConvex(self, convex, colour=None, opacity=1., material=None):
         """docstring for addConvex"""
         if not Visualiser.VISUALISER_ON:
             return
+
+        if material is None:
+                material = visual.materials.plastic
+
         if isinstance(convex, geo.Convex):
             if colour is None:
                 print("Color is none")

@@ -59,7 +59,7 @@ class Analysis(object):
         :rtype: string
         """
         # This needs "from __future__ import division"
-        return format((num_photons / self.tot) * 100, '.2f') + ' % (' + str(num_photons).rjust(6, ' ') + ')'
+        return format((num_photons / self.tot) * 100, '.2f') + ' % (' + str(num_photons).rjust(6, ' ') + ' )'
 
     def print_detailed(self):
         """

@@ -192,7 +192,8 @@ class Red305(object):
         # Linearity measured up to 0.15mg/g, then it bends as bit due to too high Abs values for spectrometer
         # (secondary peak still linear at 0.20mg/g)
         # device_abs_at_peak = 13.031 * self.concentration * (self.thickness / 0.003)
-        # print "with a concentration of ", self.concentration, ' and thickness', self.thickness, ' this device should have an Abs at peak of', device_abs_at_peak
+        # print "with a concentration of ", self.concentration, ' and thickness', self.thickness, ' device should'\
+        # 'have an Abs at peak of', device_abs_at_peak
         # Correcting factor to adjust absorption at peak to match settings
         # Note that in 'original' pvTrace, thin-film.py file np.log was used incorrectly (log10() intended, got ln())
         # phi = device_abs_at_peak / (ap * self.thickness)
@@ -323,7 +324,30 @@ class Reactor(object):
             lsc_y = 0.05        # 5 cm length
             lsc_name = 'Reactor (5x5cm, 0 channel, Dye: ' + dye + ')'
             # @formatter:on
-            self.reaction_volume = 0
+
+            # 2. CHANNELS
+            # None :)
+
+            # 3. LIGHT (Perpendicular planar source 5x5 (matching device) with sun spectrum)
+            lamp_name = 'SolarSimulator'
+            # Size of the irradiated area
+            lamp_parameters = (0.05, 0.05)
+        elif reactor_name == '5x5_1ch':
+            # 1. LSC DEVICE
+            # @formatter:off
+            thickness = 0.003   # 3 mm thickness
+            lsc_x = 0.05        # 5 cm width
+            lsc_y = 0.05        # 5 cm length
+            lsc_name = 'Reactor (5x5cm, 1 channel, Dye: ' + dye + ')'
+            # @formatter:on
+
+            # 2. CHANNEL
+            channel = Channel(origin=(0, 0.02475, 0.001),
+                              size=(0.050, 0.0005, 0.001), shape="box")
+            channel.material = reaction_mixture
+            channel.name = "Channel"
+            self.scene_obj.append(channel)
+            self.reaction_volume += channel.volume
 
             # 3. LIGHT (Perpendicular planar source 5x5 (matching device) with sun spectrum)
             lamp_name = 'SolarSimulator'

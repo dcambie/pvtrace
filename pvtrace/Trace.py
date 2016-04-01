@@ -25,14 +25,16 @@ import pvtrace.Analysis
 import pvtrace.PhotonDatabase
 import pvtrace.external.pov as pov
 from pvtrace.Devices import *
-# from Visualise import Visualiser
-# import visual
-
-POVRAY_BINARY = ("pvengine.exe" if os.name == 'nt' else "pvtrace")
-
+from Visualise import Visualiser
+try:
+    import visual
+except Exception:
+    pass
 
 # import multiprocessing
 # cpu_count = multiprocessing.cpu_count()
+POVRAY_BINARY = ("pvengine.exe" if os.name == 'nt' else "pvtrace")
+
 
 def remove_duplicates(the_list):
     l = list(the_list)

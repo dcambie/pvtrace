@@ -67,7 +67,7 @@ class Visualiser (object):
                                       background=background, ambient=ambient)
         self.display.bind('keydown', self.keyInput)
         self.display.exit = False
-        self.display.forward = vector(0, 0.75, -0.5)
+        self.display.forward = (0, 0.75, -0.5)
         self.display.center = (0.035, 0.03, 0)
 
         if show_axis:

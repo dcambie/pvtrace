@@ -189,7 +189,7 @@ class PhotonDatabase(object):
         """
         self.cursor.execute("ATTACH DATABASE ? AS  toMerge", [filename])
         for table in tables:
-            self.cursor.execute("INSERT INTO " + table + " SELECT * FROM toMerge." + table)
+            self.cursor.execute("INSERT INTO "+table+" SELECT * FROM toMerge."+table)
         self.cursor.execute("DETACH DATABASE toMerge")
 
     def empty(self):

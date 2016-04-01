@@ -114,16 +114,16 @@ def wav2RGB(wavelength):
 
     # intensity correction
     if 380 <= w < 420:
-        SSS = 0.3 + 0.7 * (w - 350) / (420 - 350)
+        sss = 0.3 + 0.7 * (w - 350) / (420 - 350)
     elif 420 <= w <= 700:
-        SSS = 1.0
+        sss = 1.0
     elif 700 < w <= 780:
-        SSS = 0.3 + 0.7 * (780 - w) / (780 - 700)
+        sss = 0.3 + 0.7 * (780 - w) / (780 - 700)
     else:
-        SSS = 0.0
-    SSS *= 255
+        sss = 0.0
+    sss *= 255
 
-    return [int(SSS * red), int(SSS * green), int(SSS * blue)]
+    return [int(sss * red), int(sss * green), int(sss * blue)]
 
 
 def fresnel_reflection(incident_angle, n1, n2):

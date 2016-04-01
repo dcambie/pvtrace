@@ -994,9 +994,9 @@ class Cylinder(object):
 
         origin_z = 0.
         xy_distance = np.sqrt(local_point[0] ** 2 + local_point[1] ** 2)
-        if interval_check(origin_z, local_point[2], self.length, strict = True) == True and xy_distance < self.radius:
+        if interval_check(origin_z, local_point[2], self.length, strict=True) == True and xy_distance < self.radius:
             return True
-        else :
+        else:
             return False
 
     def surface_normal(self, ray, acute=True):
@@ -1063,6 +1063,11 @@ class Cylinder(object):
 
     def on_surface(self, point):
         """
+        Checks whether the point is on cylinder's surface
+
+        :param point the point (3D coord) to be evaluated as on_surface()
+        """
+        """
         >>> # On surface
         >>> cylinder = Cylinder(.5, 2.)
         >>> cylinder.on_surface([.0, .0, 2.])
@@ -1092,13 +1097,13 @@ class Cylinder(object):
         local_point = transform_point(point, tf.inverse_matrix(self.transform))
 
         origin_z = 0.
-        xydistance = np.sqrt(local_point[0] ** 2 + local_point[1] ** 2)
+        xy_distance = np.sqrt(local_point[0] ** 2 + local_point[1] ** 2)
 
         if interval_check(origin_z, local_point[2], self.length):
-            if cmp_floats(xydistance, self.radius):
+            if cmp_floats(xy_distance, self.radius):
                 return True
 
-        if smaller_equal_to(xydistance, self.radius):
+        if smaller_equal_to(xy_distance, self.radius):
             if cmp_floats(local_point[2], origin_z) == True or cmp_floats(local_point[2], self.length) == True:
                 return True
 

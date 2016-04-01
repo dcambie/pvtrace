@@ -42,7 +42,8 @@ class LightSource(object):
         """
         Plots the lightsource spectrum
         """
-        Analysis.xyplot(x=self.light.spectrum.x, y=self.light.spectrum.y, filename='ligthsource_' + self.name + '_spectrum')
+        pvtrace.Analysis.xyplot(x=self.light.spectrum.x, y=self.light.spectrum.y,
+                                filename='lightsource_' + self.name + '_spectrum')
 
 
 class SolarSimulator(object):
@@ -213,7 +214,7 @@ class Red305(object):
 
     @staticmethod
     def emission():
-        # fixme Add experimental data from pdms low concentration samples (not reabsorption red-shifted)
+        # fixme Add experimental data from pdms low concentration samples (not re-absorption red-shifted)
         # emission_data = np.loadtxt(os.path.join(PVTDATA, "dyes", 'fluro-red-fit.ems.txt'))
         emission_data = np.loadtxt(os.path.join(PVTDATA, "dyes", 'Red305_ems_spectrum.txt'))
         return Spectrum(x=emission_data[:, 0], y=emission_data[:, 1])
@@ -328,9 +329,6 @@ class Reactor(object):
             lamp_name = 'SolarSimulator'
             # Size of the irradiated area
             lamp_parameters = (0.05, 0.05)
-        elif reactor_name == "wip":
-            # Used for temporary tests
-            pass
         else:
             raise Exception('The reactor requested (', reactor_name, ') is not known. Check the name ;)')
 

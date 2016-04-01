@@ -1163,7 +1163,7 @@ class Tracer(object):
             # this will be done in memory only (RAM is cheap nowadays)
             self.database = pvtrace.PhotonDatabase.PhotonDatabase(dbfile=None)
             for db_file in self.dumped:
-                self.database.add_db_file(db_file, tables=None("state", "photon"))
+                self.database.add_db_file(filename=db_file, tables=("photon", "state"))
                 os.remove(db_file)
                 # print "merged ",db_file
 

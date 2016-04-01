@@ -39,7 +39,7 @@ class interp1d(object):
         ----------
         x : array
             A 1D array of monotonically increasing real values.  x cannot
-            include duplicate values (otherwise f is overspecified)
+            include duplicate values (otherwise f is over specified)
         y : array
             An N-D array of real values.  y's length along the interpolation
             axis must be equal to the length of x.

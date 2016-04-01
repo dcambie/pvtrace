@@ -234,8 +234,6 @@ class Visualiser (object):
         """
         
         x = xmin
-        y = ymin
-        z = zmin
         
         print('Visualisation of ', CSGobj.reference, ' started...')
             

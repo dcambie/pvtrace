@@ -59,6 +59,7 @@ class Analysis(object):
         :rtype: string
         """
         # This needs "from __future__ import division"
+        assert self.tot > 0, "Total photons are zero"
         return format((num_photons / self.tot) * 100, '.2f') + ' % (' + str(num_photons).rjust(6, ' ') + ' )'
 
     def print_detailed(self):

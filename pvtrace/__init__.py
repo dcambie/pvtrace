@@ -42,5 +42,5 @@ while pvtrace_containing_directory.find('pvtrace') != -1:
 
 PVTDATA = os.path.join(pvtrace_containing_directory, 'pvtrace', 'data')
 
-print("Pvtrace data directory:")
-print(PVTDATA)
+# print("Pvtrace data directory:")
+# print(PVTDATA)

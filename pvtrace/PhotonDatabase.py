@@ -63,7 +63,7 @@ class PhotonDatabase(object):
         self.logger = logging.getLogger('pvtrace.PhotonDatabase')
 
         if dbfile is not None:
-            # There is a defa
+            # There is a default
             self.file = dbfile
             
             # Delete this dbfile and start again
@@ -178,7 +178,7 @@ class PhotonDatabase(object):
         print("\r DB copy saved as ", filename)
 
     def add_db_file(self, filename=None,
-                    tables=("state", "direction", "polarisation", "position", "surface_normal", "photon")):
+                    tables=("photon", "state", "direction", "position", "surface_normal", "polarisation")):
         """
         Adds the data in the give filename db to the current DB (only the tables in tables)
 

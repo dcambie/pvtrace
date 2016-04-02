@@ -25,9 +25,10 @@ import pvtrace.Analysis
 import pvtrace.PhotonDatabase
 import pvtrace.external.pov as pov
 from pvtrace.Devices import *
-from Visualise import Visualiser
+
 try:
     import visual
+    from Visualise import Visualiser
 except Exception:
     pass
 
@@ -629,12 +630,12 @@ class Scene(object):
 
     #        """
 
-    def __init__(self, uuid=None):
+    def __init__(self, uuid=None, force=False):
         super(Scene, self).__init__()
         self.bounds = Bounds()  # Create boundaries to world and apply to scene
         self.objects = [self.bounds]
         self.uuid = None
-        self.working_dir = self.get_working_dir(uuid)
+        self.working_dir = self.get_new_working_dir(uuid=uuid, use_existing=force)
         print("Working directory: ", self.working_dir)
         self.log = self.start_logging()
         self.stats = pvtrace.Analysis.Analysis(uuid=self.uuid)
@@ -642,8 +643,8 @@ class Scene(object):
     def start_logging(self):
         LOG_FILENAME = os.path.join(self.working_dir, 'output.log')
 
-        # Create file if needed and truncate if already existing
-        open(LOG_FILENAME, 'w').close()
+        # Create file if needed and without truncating (appending useful for post-mortem DB analysis)
+        open(LOG_FILENAME, 'a').close()
         # logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG)
         logging.basicConfig(filename=LOG_FILENAME, level=logging.INFO)
         logger = logging.getLogger('pvtrace.trace')
@@ -652,7 +653,7 @@ class Scene(object):
         logger.debug('Date/Time ' + time.strftime("%c"))
         return logger
 
-    def get_working_dir(self, uuid=None):
+    def get_new_working_dir(self, uuid=None, use_existing=None):
         if uuid is None:
             try_uuid = shortuuid.uuid()
         else:
@@ -665,6 +666,9 @@ class Scene(object):
             self.uuid = try_uuid
             return working_dir
         elif try_uuid == 'overwrite_me':
+            self.uuid = try_uuid
+            return working_dir
+        elif use_existing:
             self.uuid = try_uuid
             return working_dir
         else:

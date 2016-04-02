@@ -7,8 +7,8 @@ from modules import *
 import sys
 
 # 1 unit = 1 m  Albeit not convenient, this assumption is deeply bounded in pvtrace's heart
-# scene = Scene()
-scene = pvtrace.Scene('overwrite_me')
+scene = pvtrace.Scene()
+# scene = pvtrace.Scene('overwrite_me')
 
 logger = logging.getLogger('pvtrace')
 
@@ -18,7 +18,7 @@ logger = logging.getLogger('pvtrace')
 
 # reactor = Reactor(reactor_name="5x5_6ch_squared", dye="Red305", dye_concentration=0.20, photocatalyst="MB",
 #                   photocatalyst_concentration=0.0004)
-reactor = Reactor(reactor_name="5x5_1ch", dye="Red305", dye_concentration=0.15, photocatalyst="Air",
+reactor = Reactor(reactor_name="5x5_1ch", dye="Red305", dye_concentration=0.15, photocatalyst="MB",
                   photocatalyst_concentration=0.01)
 logger.info('Reactor volume (calculated): '+str(reactor.reaction_volume*1000000)+' mL')
 

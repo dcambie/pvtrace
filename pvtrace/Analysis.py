@@ -7,8 +7,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import six
+import sys
 
-# plt.switch_backend('Qt4Agg')
+if sys.version_info > (2, 7):
+    plt.switch_backend('Qt4Agg')
 """
 Changing the backend is important on Windows, since the default one results in the following error:
 PyEval_RestoreThread: NULL tstate

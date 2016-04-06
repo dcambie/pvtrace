@@ -100,6 +100,9 @@ class Register(object):
         log_entry = (list(photon.position), float(photon.wavelength), bound, photon.absorption_counter)
         self.store[key].append(log_entry)
 
+    def print_store(self):
+        print(self.store)
+
     def count(self, shape, surface_point, bound):
         """
         Returns the number of photon counts that are on the 
@@ -119,6 +122,28 @@ class Register(object):
             return 0
         return counts
 
+    def count_face(self, face_name):
+        """
+        Returns the number of photon counts that are on the
+        same surface as the surface_point for the given shape.
+        """
+        entries = []
+        if face_name in self.store:
+            entries += self.store[face_name]
+        else:
+            return 0.0
+
+        if len(entries) == 0:
+            return 0.0
+
+        counts = 0
+        for entry in entries:
+            counts += 1
+
+        if counts is None:
+            return 0
+        return counts
+
     def loss(self):
         """
         Returns the number of photons that have been non-radiatively lost in the volume of the shape. 
@@ -128,7 +153,7 @@ class Register(object):
             return 0
         return len(self.store['loss'])
 
-    def spectrum(self, surface_names=()):
+    def spectrum_face(self, surface_names=()):
         """
         Returns the counts histogram (bins,counts) for object
         """
@@ -158,9 +183,11 @@ class Register(object):
             bins = np.arange(np.floor(wavelengths.min() - 1), np.ceil(wavelengths.max() + 2))
             freq, bins = np.histogram(wavelengths, bins=bins)
         return Spectrum(bins[0:-1], freq)
-    """
+
     def spectrum(self, shape, surface_point, bound):
+        """
         Returns the counts histogram (bins,counts) for object
+        """
         wavelengths = []
         key = shape.surface_identifier(surface_point)
         if key not in self.store:
@@ -186,32 +213,33 @@ class Register(object):
             bins = np.arange(np.floor(wavelengths.min() - 1), np.ceil(wavelengths.max() + 2))
             freq, bins = np.histogram(wavelengths, bins=bins)
         return Spectrum(bins[0:-1], freq)
-    """
-    def reabs(self, shape, surface_point, bound):
+
+    def reabs(self,surface_names=()):
         """
         16/03/10: Returns list where list[i+1] contains number of surface photons that experienced i re-absorptions;
         Length of list is ten by default (=> photons with up to 9 re-absorptions recorded), but is extended if necessary
         """
-        key = shape.surface_identifier(surface_point)
 
-        if key not in self.store:
+        entries = []
+        for surface in surface_names:
+            if surface in self.store:
+                entries += self.store[surface]
+
+        if len(entries) == 0:
             return [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
         reabs_list = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
-        key_entries = self.store[key]
+        for entry in entries:
 
-        for entry in key_entries:
+            number_reabs = entry[3]
 
-            if entry[2] == bound:
-                number_reabs = entry[3]
+            # In case reabs_list is not sufficiently long...
+            if number_reabs + 1 > len(reabs_list):
+                while len(reabs_list) < number_reabs + 1:
+                    reabs_list.append(0)
 
-                # In case reabs_list is not sufficiently long...
-                if number_reabs + 1 > len(reabs_list):
-                    while len(reabs_list) < number_reabs + 1:
-                        reabs_list.append(0)
-
-                reabs_list[number_reabs] += 1
+            reabs_list[number_reabs] += 1
 
         return reabs_list
 
@@ -221,7 +249,7 @@ class Register(object):
         Length of list is ten by default (=> photons with up to 9 re-absorptions recorded), but is extended if necessary
         """
 
-        if 'loss'not in self.store:
+        if 'loss' not in self.store:
             return [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
         reabs_list = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]

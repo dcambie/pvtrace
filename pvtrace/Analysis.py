@@ -113,7 +113,7 @@ class Analysis(object):
         self.log.info("Photons in channels (sum)\t" + self.percent(photons_in_channels_tot))
 
         if solar + luminescent + self.non_radiative + photons_in_channels_tot == self.tot:
-            self.log.debug("Results sanity check OK!")
+            self.log.info("Results sanity check OK!")
         else:
             self.log.warn("Results FAILED sanity check!!!")
 
@@ -136,37 +136,52 @@ class Analysis(object):
 
         return ret_str
 
+    def print_excel_header(self):
+        """
+        Column header for print_excel()
+        """
+        return "Generated, Killed, Total, Luminescent - Left, Luminescent - Near, Luminescent - Far," \
+               "Luminescent - Right, Luminescent - Top, Luminescent - Bottom, Solar - Top, Solar - Bottom," \
+               "Channels - Direct, Channels - Luminescent"
+
     def print_excel(self):
         """
         Prints an easy to import report on the fate of the photons stored in self.db
         """
-        print(self.photon_generated)
-        print(self.photon_killed)
-        print(self.tot)
-        print(self.non_radiative)
-        print("\n")
+        return_text = ''
+        # GENERATED
+        return_text += str(self.photon_generated) + ", "
+        # KILLED
+        return_text += str(self.photon_killed) + ", "
+        # THROWN (GENERATED-KILLED)
+        return_text += str(self.tot) + ", "
+        # NON RADIATIVE LOSSES
+        return_text += str(self.non_radiative) + ", "
 
         edges = ['left', 'near', 'far', 'right']
         apertures = ['top', 'bottom']
         faces = edges + apertures
 
+        # LUMINESCENT: left, near, far, right, top, bottom
         luminescent_surfaces = 0
         for surface in faces:
             photons = len(self.db.uids_out_bound_on_surface(surface, luminescent=True))
             luminescent_surfaces += photons
-            print(photons)
-        print("\n")
+            return_text += str(photons) + ", "
 
+        # SOLAR: top and bottom
         for surface in apertures:
-            print(len(self.db.uids_out_bound_on_surface(surface, solar=True)))
-        print("\n")
+            return_text += str(len(self.db.uids_out_bound_on_surface(surface, solar=True))) + ", "
 
         luminescent_photons_in_channels = len(self.db.uids_in_reactor_and_luminescent())
         photons_in_channels_tot = len(self.db.uids_in_reactor())
 
-        print(photons_in_channels_tot - luminescent_photons_in_channels)
-        print(luminescent_photons_in_channels)
-        print(luminescent_photons_in_channels / (luminescent_surfaces + luminescent_photons_in_channels))
+        # CHANNELS: direct
+        return_text += str(photons_in_channels_tot - luminescent_photons_in_channels) + ", "
+        # CHANNELS: luminescent
+        return_text += str(luminescent_photons_in_channels)
+
+        return return_text
 
     def get_bounces(self, photon_list=None):
         """
@@ -240,7 +255,7 @@ class Analysis(object):
                 histogram(data=data, filename=file_path)
                 self.log.info('[' + plot + "] Plot saved to " + file_path)
 
-        print("Plotting bounces luminescent to channels")
+        self.log.info("Plotting bounces luminescent to channels")
         uids = self.db.uids_in_reactor_and_luminescent()
         if len(uids) < 10:
             self.log.info("[bounces channel] The database doesn't have enough photons to generate this graph!")

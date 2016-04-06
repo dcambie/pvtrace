@@ -20,7 +20,6 @@ from copy import copy
 
 import shortuuid
 
-
 import pvtrace.Analysis
 import pvtrace.PhotonDatabase
 import pvtrace.external.pov as pov
@@ -74,6 +73,26 @@ class Photon(object):
         :param direction: the photon Cartesian direction vector (3 elements), a normalised vector is array-like
         :param active: boolean indicating if the ray has or has not been lost (e.g. absorbed in a material)
         :param show_log: print verbose output on photon fate during tracing
+
+        >>> a = Photon()
+        >>> a.wavelength
+        555
+        >>> a.position
+        array([ 0.,  0.,  0.])
+        >>> a.direction
+        array([ 0.,  0.,  1.])
+        >>> a.active
+        True
+        >>> a.show_log
+        True
+        >>> a.wavelength = 600
+        >>> b = a
+        >>> b.wavelength
+        600
+        >>> a.ray
+        <pvtrace.Geometry.Ray object at ...
+        >>> print(a)
+        600nm [ 0.  0.  0.] [ 0.  0.  1.] <type 'NoneType'> active
         """
 
         if position is not None:
@@ -143,29 +162,30 @@ class Photon(object):
             info += " inactive "
         return info
 
-    def getPosition(self):
-        """
-        Returns the position of the photons rays
-        """
-        return self.ray.position
-
     def isReaction(self):
         """
         True if the photon path ends in the reaction mixture
         """
         return self.reaction
 
-    def getDirection(self):
+    def getPosition(self):
         """
-        Returns the direction of the photons rays
+        Returns the position of the photons rays
         """
-        return self.ray.direction
+        return self.ray.position
 
     def setPosition(self, position):
         self.ray.position = position
         # Define setter and getters as properties
 
     position = property(getPosition, setPosition)
+
+
+    def getDirection(self):
+        """
+        Returns the direction of the photons rays
+        """
+        return self.ray.direction
 
     def setDirection(self, direction):
         self.ray.direction = direction
@@ -590,15 +610,16 @@ class Scene(object):
         :param height: output render image height size in pixels
         :param width: output render image width size in pixels
         :return: Creates the render image but returns nothing
-        """
-        """
+
+        doctest: +ELLIPSIS
         >>> S = Scene('overwrite_me')
+        Working directory: ...
         >>> L, W, D = 1, 1, 1
         >>> box = Box(origin=(-L/2., -W/2.,-D/2.), extent=(L/2, W/2, D/2))
         >>> box.name = 'box'
         >>> myCylinder = Cylinder(radius=1)
         >>> myCylinder.name = 'cyl'
-        >>> # myCylinder.append_transform(tf.translation_matrix((0,-1,0)))
+        >>> myCylinder.append_transform(tf.translation_matrix((0,-1,0)))
         >>> box.append_transform(tf.rotation_matrix(-np.pi/3,(0,1,0), point=(0,0,0)))
         >>> # S.add_object(CSGsub(myCylinder, box))
         >>> myPlane = FinitePlane()
@@ -607,7 +628,7 @@ class Scene(object):
         >>> S.add_object(myPlane)
         >>> S.add_object(box)
         >>> S.add_object(myCylinder)
-        >>> S.pov_render()
+        >>> S.pov_render(width=800, height=600)
         """
 
         #        """
@@ -672,8 +693,7 @@ class Scene(object):
             self.uuid = try_uuid
             return working_dir
         else:
-            print("Error: working dir "+str(working_dir)+" already existing!")
-            self.get_working_dir()
+            raise NameError("Working dir "+str(working_dir)+" already existing!")
 
     def add_object(self, object_to_add):
         """
@@ -1178,7 +1198,6 @@ class Tracer(object):
         db_final_location = os.path.join(self.scene.working_dir, 'db.sqlite')
         self.database.dump_to_file(db_final_location)
 
-
 if __name__ == "__main__":
     import doctest
-    doctest.testmod()
+    doctest.testmod(verbose=True, optionflags=doctest.ELLIPSIS)

@@ -142,13 +142,13 @@ class Analysis(object):
         Column header for print_excel()
         """
         if additional is None:
-            return "Generated, Killed, Total, Luminescent - Left, Luminescent - Near, Luminescent - Far," \
-               "Luminescent - Right, Luminescent - Top, Luminescent - Bottom, Solar - Top, Solar - Bottom," \
-               "Channels - Direct, Channels - Luminescent"
+            return "Generated, Killed, Total, Losses, Luminescent - Left, Luminescent - Near, Luminescent - Far, " \
+                   "Luminescent - Right, Luminescent - Top, Luminescent - Bottom, Solar - Top, Solar - Bottom, " \
+                   "Channels - Direct, Channels - Luminescent"
         else:
-            return additional+", Generated, Killed, Total, Luminescent - Left, Luminescent - Near, Luminescent - Far," \
-               "Luminescent - Right, Luminescent - Top, Luminescent - Bottom, Solar - Top, Solar - Bottom," \
-               "Channels - Direct, Channels - Luminescent"
+            return additional+", Generated, Killed, Total, Losses, Luminescent - Left, Luminescent - Near," \
+                              "Luminescent - Far, Luminescent - Right, Luminescent - Top, Luminescent - Bottom," \
+                              "Solar - Top, Solar - Bottom, Channels - Direct, Channels - Luminescent"
 
     def print_excel(self, additions):
         """

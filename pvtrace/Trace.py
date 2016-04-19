@@ -1032,10 +1032,10 @@ class Tracer(object):
             # import pdb; pdb.set_trace()
             # Delete last ray from visualiser
             # fixme: if channels are cylindrical in shape they will be removed from the view if this is active!
-            if pvtrace.Visualiser.VISUALISER_ON:
-                for obj in self.visualiser.display.objects:
-                    if obj.__class__ is visual.cylinder and obj.radius < 0.001:
-                        obj.visible = False
+            # if pvtrace.Visualiser.VISUALISER_ON:
+            #     for obj in self.visualiser.display.objects:
+            #         if obj.__class__ is visual.cylinder and obj.radius < 0.001:
+            #             obj.visible = False
             # DB speed statistics
             # if throw == 0:
             #     then = time.clock()
@@ -1108,9 +1108,11 @@ class Tracer(object):
                 # print "Step number:", step
                 if pvtrace.Visualiser.VISUALISER_ON:
                     b = list(photon.position)
+                    # if self.show_lines and photon.active and step > 0:
                     if self.show_lines and photon.active:
                         self.visualiser.addLine(a, b, colour=wav2RGB(photon.wavelength))
 
+                    # if self.show_path and photon.active and step > 0:
                     if self.show_path and photon.active:
                         self.visualiser.addSmallSphere(b)
 

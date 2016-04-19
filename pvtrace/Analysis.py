@@ -70,6 +70,7 @@ class Analysis(object):
 
         :return:None
         """
+        # Todo: here and in print_excel several totals are computed twice. Consider moving common code in other function
         self.db_stats()
 
         self.log.debug('Print_detailed() called on DB with ' + str(self.photon_generated) + ' photons')
@@ -136,19 +137,27 @@ class Analysis(object):
 
         return ret_str
 
-    def print_excel_header(self):
+    def print_excel_header(self, additional=None):
         """
         Column header for print_excel()
         """
-        return "Generated, Killed, Total, Luminescent - Left, Luminescent - Near, Luminescent - Far," \
+        if additional is None:
+            return "Generated, Killed, Total, Luminescent - Left, Luminescent - Near, Luminescent - Far," \
+               "Luminescent - Right, Luminescent - Top, Luminescent - Bottom, Solar - Top, Solar - Bottom," \
+               "Channels - Direct, Channels - Luminescent"
+        else:
+            return additional+", Generated, Killed, Total, Luminescent - Left, Luminescent - Near, Luminescent - Far," \
                "Luminescent - Right, Luminescent - Top, Luminescent - Bottom, Solar - Top, Solar - Bottom," \
                "Channels - Direct, Channels - Luminescent"
 
-    def print_excel(self):
+    def print_excel(self, additions):
         """
         Prints an easy to import report on the fate of the photons stored in self.db
         """
-        return_text = ''
+        if additions is None:
+            return_text = ''
+        else:
+            return_text = str(additions) + ", "
         # GENERATED
         return_text += str(self.photon_generated) + ", "
         # KILLED

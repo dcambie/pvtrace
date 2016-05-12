@@ -150,7 +150,7 @@ class Analysis(object):
                               "Luminescent - Far, Luminescent - Right, Luminescent - Top, Luminescent - Bottom," \
                               "Solar - Top, Solar - Bottom, Channels - Direct, Channels - Luminescent"
 
-    def print_excel(self, additions):
+    def print_excel(self, additions=None):
         """
         Prints an easy to import report on the fate of the photons stored in self.db
         """

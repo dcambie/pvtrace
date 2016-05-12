@@ -64,8 +64,12 @@ class SolarSimulator(object):
         self.source = PlanarSource(direction=(0, 0, -1), spectrum=self.spectrum, length=parameters[0],
                                    width=parameters[1])
         self.source.name = 'Solar simulator Michael (small)'
+
         # distance from device in this case is only important for Visualizer :)
-        self.source.translate((0, 0, 0.025))
+        if len(parameters) == 4:
+            self.source.translate((parameters[2], parameters[3], 0.025))
+        else:
+            self.source.translate((0, 0, 0.025))
 
 
 class Sun(object):
@@ -353,6 +357,40 @@ class Reactor(object):
             lamp_name = 'SolarSimulator'
             # Size of the irradiated area
             lamp_parameters = (0.05, 0.05)
+        elif reactor_name == '5x5_2ch_half':
+            # 1. LSC DEVICE
+            # @formatter:off
+            thickness = 0.003   # 3 mm thickness
+            lsc_x = 0.05        # 5 cm width
+            lsc_y = 0.05        # 5 cm length
+            lsc_name = 'Reactor (5x5cm, 2 channels, half design w/ half irradiation, Dye: ' + dye + ')'
+            # @formatter:on
+
+            # 2. CHANNEL
+            # Geometry of channels: origin and sizes in mm
+            geometry = []
+            # @formatter:off
+            #        ORIGIN:  X      Y    Z  L:   X     Y   Z
+            geometry.append(((   0,  5.00, 1), (10.0, 1.0, 1)))  # Inlet, bigger for the first 10 mm
+            geometry.append(((10.0,  5.25, 1), (37.5, 0.5, 1)))  # 1st channel
+            geometry.append(((47.0,  5.75, 1), ( 0.5, 7.3, 1)))  # 1st Vertical connection
+            geometry.append(((10.0, 13.05, 1), (37.5, 0.5, 1)))  # 2nd channel
+            geometry.append(((   0, 12.80, 1), (10.0, 1.0, 1)))  # Outlet, bigger for the first 10 mm
+            # Transform mm into meters (overly complicated code to multiply all values im geometry per 0.001)
+            geometry = [[[coord * 0.001 for coord in tuples] for tuples in channel] for channel in geometry]
+
+            for i in range(0, len(geometry)):
+                position = geometry[i]
+                channel = Channel(origin=position[0], size=position[1], shape="box")
+                channel.material = reaction_mixture
+                channel.name = "Channel" + str(i)
+                self.scene_obj.append(channel)
+                self.reaction_volume += channel.volume
+
+            # 3. LIGHT (Perpendicular planar source 5x5 (matching device) with sun spectrum)
+            lamp_name = 'SolarSimulator'
+            # Size of the irradiated area
+            lamp_parameters = (0.05, 0.025, 0, 0.025)
         else:
             raise Exception('The reactor requested (', reactor_name, ') is not known. Check the name ;)')
 

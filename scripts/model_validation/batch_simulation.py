@@ -6,23 +6,25 @@ import pvtrace
 from modules import *
 import sys
 
-file_path = os.path.join(os.path.expanduser('~'), 'pvtrace_data', 'output_mb_conc.txt')
+red305_concentration = 0.20
+
+file_path = os.path.join(os.path.expanduser('~'), 'pvtrace_data', 'output_red_'+str(red305_concentration)+'_mb_conc.txt')
 for mainloop_i in range(0, 20):
     if mainloop_i < 10:
-        concentration = 0.00001 + 0.00001 * mainloop_i
+        mb_concentration = 0.00001 + 0.00001 * mainloop_i
     else:
-        concentration = 0.0001 + 0.0001 * (mainloop_i-9)
+        mb_concentration = 0.0001 + 0.0001 * (mainloop_i - 9)
 
     # 1 unit = 1 m  Albeit not convenient, this assumption is deeply bounded in pvtrace's heart
     # scene = pvtrace.Scene()
-    scene = pvtrace.Scene('conc_study_'+str(concentration))
+    scene = pvtrace.Scene('conc_study_' + str(red305_concentration) + '_' + str(mb_concentration))
 
     logger = logging.getLogger('pvtrace')
 
     # reactor = Reactor(reactor_name="5x5_6ch_squared", dye="Red305", dye_concentration=0.20, photocatalyst="MB",
     #                   photocatalyst_concentration=0.0004)
-    reactor = Reactor(reactor_name="5x5_6ch_squared", dye="Red305", dye_concentration=0.05, photocatalyst="MB",
-                      photocatalyst_concentration=concentration)
+    reactor = Reactor(reactor_name="5x5_square", dye="Red305", dye_concentration=red305_concentration, photocatalyst="MB",
+                      photocatalyst_concentration=mb_concentration)
     logger.info('Reactor volume (calculated): '+str(reactor.reaction_volume*1000000)+' mL')
 
     for obj in reactor.scene_obj:
@@ -71,7 +73,7 @@ for mainloop_i in range(0, 20):
         text = str(scene.stats.print_excel_header("Concentration")+"\n")
     else:
         text = ""
-    text += str(scene.stats.print_excel(concentration)+"\n")
+    text += str(scene.stats.print_excel(mb_concentration) + "\n")
     write_me = open(file_path, 'a')
     write_me.write(text)
     write_me.close()

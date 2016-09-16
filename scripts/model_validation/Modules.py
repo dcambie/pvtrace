@@ -234,6 +234,15 @@ class Reactor(object):
     def __init__(self, reactor_name, dye, dye_concentration, photocatalyst=None, photocatalyst_concentration=0.001,
                  solvent=None):
 
+        # Info to log
+        logger = logging.getLogger('pvtrace.modules')
+        # Conversion to string forced to avoid error on empty parameters being NoneType
+        logger.info('Creating a reactor with the following parameters:')
+        logger.info('Reactor type = ' + str(reactor_name))
+        logger.info('Dye = ' + str(dye) + '(Conc: ' + str(dye_concentration) + ')')
+        logger.info('Photocatalyst = ' + str(photocatalyst) + '(Conc: ' + str(photocatalyst_concentration) + ')')
+        logger.info('Solvent = ' + str(solvent))
+
         # Set photocatalyst
         if photocatalyst is None:
             self.photocat = False
@@ -357,7 +366,7 @@ class Reactor(object):
             lamp_name = 'SolarSimulator'
             # Size of the irradiated area
             lamp_parameters = (0.05, 0.05)
-        elif reactor_name == '5x5_2ch_half':
+        elif reactor_name == '5x5_2ch_half' or reactor_name == '5x5_2ch_full':
             # 1. LSC DEVICE
             # @formatter:off
             thickness = 0.003   # 3 mm thickness
@@ -368,8 +377,8 @@ class Reactor(object):
 
             # 2. CHANNEL
             # Geometry of channels: origin and sizes in mm
-            geometry = []
             # @formatter:off
+            geometry = []
             #        ORIGIN:  X      Y    Z  L:   X     Y   Z
             geometry.append(((   0,  5.00, 1), (10.0, 1.0, 1)))  # Inlet, bigger for the first 10 mm
             geometry.append(((10.0,  5.25, 1), (37.5, 0.5, 1)))  # 1st channel
@@ -390,7 +399,259 @@ class Reactor(object):
             # 3. LIGHT (Perpendicular planar source 5x5 (matching device) with sun spectrum)
             lamp_name = 'SolarSimulator'
             # Size of the irradiated area
-            lamp_parameters = (0.05, 0.025, 0, 0.025)
+            if reactor_name == '5x5_2ch_half':
+                lamp_parameters = (0.05, 0.025, 0, 0.025)
+            else:
+                lamp_parameters = (0.05, 0.05)
+
+        elif reactor_name == '5x5_square':
+            # 1. LSC DEVICE
+            # @formatter:off
+            thickness = 0.003   # 3 mm thickness
+            lsc_x = 0.05        # 5 cm width
+            lsc_y = 0.05        # 5 cm length
+            lsc_name = 'Reactor (5x5cm, 2 channels, half design w/ half irradiation, Dye: ' + dye + ')'
+            # @formatter:on
+
+            # 2. CHANNEL
+            # Geometry of channels: origin and sizes in mm
+            geometry = []
+            # @formatter:off
+            #        ORIGIN:  X      Y    Z  L:   X     Y   Z
+            geometry.append(((21.50, 0.00, 1), ( 1.0, 6.0, 1)))  # Inlet, bigger for the first 6 mm
+            geometry.append(((21.75, 6.00, 1), ( 0.5,1.25, 1)))  # Post-inlet
+            geometry.append((( 7.25, 7.25, 1), (15.0, 0.5, 1)))  # Bottom-left
+            geometry.append((( 7.25, 7.75, 1), ( 0.5,35.0, 1)))  # Left
+            geometry.append((( 7.75,42.25, 1), (34.5, 0.5, 1)))  # Top
+            geometry.append(((42.25, 7.75, 1), ( 0.5,35.0, 1)))  # Right
+            geometry.append(((27.75, 7.25, 1), (15.0, 0.5, 1)))  # Bottom-right
+            geometry.append(((27.75, 6.00, 1), ( 0.5,1.25, 1)))  # Pre-outlet
+            geometry.append(((27.50, 0.00, 1), ( 1.0, 6.0, 1)))  # Outlet, bigger for the first 6 mm
+            # Transform mm into meters (overly complicated code to multiply all values im geometry per 0.001)
+            geometry = [[[coord * 0.001 for coord in tuples] for tuples in channel] for channel in geometry]
+
+            for i in range(0, len(geometry)):
+                position = geometry[i]
+                channel = Channel(origin=position[0], size=position[1], shape="box")
+                channel.material = reaction_mixture
+                channel.name = "Channel" + str(i)
+                self.scene_obj.append(channel)
+                self.reaction_volume += channel.volume
+
+            # 3. LIGHT (Perpendicular planar source 5x5 (matching device) with sun spectrum)
+            lamp_name = 'SolarSimulator'
+            # Size of the irradiated area
+            lamp_parameters = (0.05, 0.05)
+        elif reactor_name == 'wip':
+            # 1. LSC DEVICE
+            # @formatter:off
+            thickness = 0.003   # 3 mm thickness
+            lsc_x = 0.03        # 5 cm width
+            lsc_y = 0.01        # 5 cm length
+            lsc_name = 'Reactor (5x5cm, 2 channels, half design w/ half irradiation, Dye: ' + dye + ')'
+            # @formatter:on
+            # 2. CHANNEL
+            # Geometry of channels: origin and sizes in mm
+            geometry = []
+            # @formatter:off
+            #        ORIGIN:  X      Y    Z  L:   X     Y   Z
+            geometry.append(((   9.5,  0, 1), (0.5, 10, 1)))  # Inlet, bigger for the first 10 mm
+            geometry.append(((   19.5,  0, 1), (0.5, 10, 1)))  # Inlet, bigger for the first 10 mm
+            # Transform mm into meters (overly complicated code to multiply all values im geometry per 0.001)
+            geometry = [[[coord * 0.001 for coord in tuples] for tuples in channel] for channel in geometry]
+            # @formatter:on
+
+            for i in range(0, len(geometry)):
+                position = geometry[i]
+                channel = Channel(origin=position[0], size=position[1], shape="box")
+                channel.material = reaction_mixture
+                channel.name = "Channel" + str(i)
+                self.scene_obj.append(channel)
+                self.reaction_volume += channel.volume
+
+            # 3. LIGHT (Perpendicular planar source 5x5 (matching device) with sun spectrum)
+            lamp_name = 'SolarSimulator'
+            # Size of the irradiated area
+            lamp_parameters = (0.03, 0.01)
+        elif reactor_name == '5x5_ar0.5':
+            # 1. LSC DEVICE
+            # @formatter:off
+            thickness = 0.003   # 3 mm thickness
+            lsc_x = 0.05        # 5 cm width
+            lsc_y = 0.05        # 5 cm length
+            lsc_name = 'Reactor (5x5cm, 8 channels, Dye: ' + dye + ')'
+            # @formatter:on
+
+            # 2. CHANNELS
+            for i in range(1, 9):
+                channel = Channel(origin=(0., 0.007 + 0.005 * (i - 1), 0.001),
+                                  size=(0.050, 0.0005, 0.001), shape="box")
+                channel.material = reaction_mixture
+                channel.name = "Channel" + str(i)
+                self.scene_obj.append(channel)
+                self.reaction_volume += channel.volume
+
+            # 3. LIGHT (Perpendicular planar source 5x5 (matching device) with sun spectrum)
+            lamp_name = 'SolarSimulator'
+            # Size of the irradiated area
+            lamp_parameters = (0.05, 0.05)
+        elif reactor_name == '5x5_ar1':
+            # 1. LSC DEVICE
+            # @formatter:off
+            thickness = 0.003   # 3 mm thickness
+            lsc_x = 0.05        # 5 cm width
+            lsc_y = 0.05        # 5 cm length
+            lsc_name = 'Reactor (5x5cm, 8 channels, Dye: ' + dye + ')'
+            # @formatter:on
+
+            # 2. CHANNELS
+            for i in range(1, 9):
+                channel = Channel(origin=(0., 0.007 + 0.005 * (i - 1), 0.001),
+                                  size=(0.050, 0.0007071, 0.0007071), shape="box")
+                channel.material = reaction_mixture
+                channel.name = "Channel" + str(i)
+                self.scene_obj.append(channel)
+                self.reaction_volume += channel.volume
+
+            # 3. LIGHT (Perpendicular planar source 5x5 (matching device) with sun spectrum)
+            lamp_name = 'SolarSimulator'
+            # Size of the irradiated area
+            lamp_parameters = (0.05, 0.05)
+        elif reactor_name == '5x5_ar2':
+            # 1. LSC DEVICE
+            # @formatter:off
+            thickness = 0.003   # 3 mm thickness
+            lsc_x = 0.05        # 5 cm width
+            lsc_y = 0.05        # 5 cm length
+            lsc_name = 'Reactor (5x5cm, 8 channels, Dye: ' + dye + ')'
+            # @formatter:on
+
+            # 2. CHANNELS
+            for i in range(1, 9):
+                channel = Channel(origin=(0., 0.007 + 0.005 * (i - 1), 0.001),
+                                  size=(0.050, 0.001, 0.0005), shape="box")
+                channel.material = reaction_mixture
+                channel.name = "Channel" + str(i)
+                self.scene_obj.append(channel)
+                self.reaction_volume += channel.volume
+
+            # 3. LIGHT (Perpendicular planar source 5x5 (matching device) with sun spectrum)
+            lamp_name = 'SolarSimulator'
+            # Size of the irradiated area
+            lamp_parameters = (0.05, 0.05)
+        elif reactor_name == '5x5_24ch':
+            # 1. LSC DEVICE
+            # @formatter:off
+            thickness = 0.003   # 3 mm thickness
+            lsc_x = 0.05        # 5 cm width
+            lsc_y = 0.05        # 5 cm length
+            lsc_name = 'Reactor (5x5cm, 24 channels, Dye: ' + dye + ')'
+            # @formatter:on
+
+            # 2. CHANNELS
+            for i in range(1, 25):
+                channel = Channel(origin=(0., 0.005 + ((0.001 * 28/24) + 0.0005) * (i - 1), 0.001),
+                                  size=(0.050, 0.0005, 0.001), shape="box")
+                channel.material = reaction_mixture
+                channel.name = "Channel" + str(i)
+                self.scene_obj.append(channel)
+                self.reaction_volume += channel.volume
+
+            # 3. LIGHT (Perpendicular planar source 5x5 (matching device) with sun spectrum)
+            lamp_name = 'SolarSimulator'
+            # Size of the irradiated area
+            lamp_parameters = (0.05, 0.05)
+        elif reactor_name == '5x5_12ch':
+            # 1. LSC DEVICE
+            # @formatter:off
+            thickness = 0.003   # 3 mm thickness
+            lsc_x = 0.05        # 5 cm width
+            lsc_y = 0.05        # 5 cm length
+            lsc_name = 'Reactor (5x5cm, 12 channels, Dye: ' + dye + ')'
+            # @formatter:on
+    
+            # 2. CHANNELS
+            for i in range(1, 13):
+                channel = Channel(origin=(0., 0.005 + ((0.001 * 28 / 24) + 0.0005) * 2 * (i - 1), 0.001),
+                                  size=(0.050, 0.0005, 0.001), shape="box")
+                channel.material = reaction_mixture
+                channel.name = "Channel" + str(i)
+                self.scene_obj.append(channel)
+                self.reaction_volume += channel.volume
+    
+            # 3. LIGHT (Perpendicular planar source 5x5 (matching device) with sun spectrum)
+            lamp_name = 'SolarSimulator'
+            # Size of the irradiated area
+            lamp_parameters = (0.05, 0.05)
+        elif reactor_name == '5x5_6ch':
+            # 1. LSC DEVICE
+            # @formatter:off
+            thickness = 0.003   # 3 mm thickness
+            lsc_x = 0.05        # 5 cm width
+            lsc_y = 0.05        # 5 cm length
+            lsc_name = 'Reactor (5x5cm, 6 channels, Dye: ' + dye + ')'
+            # @formatter:on
+    
+            # 2. CHANNELS
+            for i in range(1, 7):
+                channel = Channel(origin=(0., 0.005 + ((0.001 * 28 / 24) + 0.0005) * 4 * (i - 1), 0.001),
+                                  size=(0.050, 0.0005, 0.001), shape="box")
+                channel.material = reaction_mixture
+                channel.name = "Channel" + str(i)
+                self.scene_obj.append(channel)
+                self.reaction_volume += channel.volume
+    
+            # 3. LIGHT (Perpendicular planar source 5x5 (matching device) with sun spectrum)
+            lamp_name = 'SolarSimulator'
+            # Size of the irradiated area
+            lamp_parameters = (0.05, 0.05)
+        elif reactor_name == '5x5_spyral_035_3_1':
+            # 1. LSC DEVICE
+            # @formatter:off
+            thickness = 0.003   # 3 mm thickness
+            lsc_x = 0.05        # 5 cm width
+            lsc_y = 0.05        # 5 cm length
+            lsc_name = 'Reactor (5x5cm, Spyral, 0.35 mm nozzle, 1/3 mm, Dye: ' + dye + ')'
+            # @formatter:on
+
+            # 2. CHANNELS
+            # Geometry of channels: origin and sizes in mm
+            geometry = []
+            # @formatter:off
+            #        ORIGIN:  X        Y     Z  L:   X      Y   Z
+            geometry.append((( 4.775,  0.000, 1), ( 1.05, 10.00, 1)))  # Inlet, bigger for the first 10 mm
+            geometry.append((( 5.125, 10.000, 1), ( 0.35, 36.15, 1)))  # 1st channel left
+            geometry.append((( 5.475, 45.800, 1), (31.25,  0.35, 1)))  # 1st channel bottom
+            geometry.append(((36.725, 11.650, 1), ( 0.35, 34.50, 1)))  # 2nd channel right
+            geometry.append(((21.075, 11.650, 1), (15.65,  0.35, 1)))  # 2nd channel top
+            geometry.append(((20.725, 11.650, 1), ( 0.35, 18.90, 1)))  # 3rd channel left
+            geometry.append(((21.075, 30.200, 1), ( 3.75,  0.35, 1)))  # 3nd channel bottom
+            geometry.append(((24.825, 19.450, 1), ( 0.35, 11.10, 1)))  # Middle piece
+            geometry.append(((25.175, 19.450, 1), ( 3.75,  0.35, 1)))  # 3nd channel top
+            geometry.append(((28.925, 19.450, 1), ( 0.35, 18.90, 1)))  # 3nd channel right
+            geometry.append(((13.275, 38.000, 1), (15.65,  0.35, 1)))  # 2nd channel bottom
+            geometry.append(((12.925,  3.850, 1), ( 0.35, 34.50, 1)))  # 2nd channel left
+            geometry.append(((13.275,  3.850, 1), (31.25,  0.35, 1)))  # 1st channel top
+            geometry.append(((44.525,  3.850, 1), ( 0.35, 36.15, 1)))  # 1st channel right
+            geometry.append(((44.175, 40.000, 1), ( 1.05, 10.00, 1)))  # Outlet, bigger for the first 10 mm
+            
+            # @formatter:on
+
+            # Transform mm into meters (overly complicated code to multiply all values im geometry per 0.001)
+            geometry = [[[coord * 0.001 for coord in tuples] for tuples in channel] for channel in geometry]
+
+            for i in range(0, len(geometry)):
+                position = geometry[i]
+                channel = Channel(origin=position[0], size=position[1], shape="box")
+                channel.material = reaction_mixture
+                channel.name = "Channel" + str(i)
+                self.scene_obj.append(channel)
+                self.reaction_volume += channel.volume
+
+            # 3. LIGHT (Perpendicular planar source 5x5 (matching device) with sun spectrum)
+            lamp_name = 'SolarSimulator'
+            # Size of the irradiated area
+            lamp_parameters = (0.05, 0.05)
         else:
             raise Exception('The reactor requested (', reactor_name, ') is not known. Check the name ;)')
 

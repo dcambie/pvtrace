@@ -31,7 +31,7 @@ class Visualiser (object):
     Visualiser a class that converts project geometry objects into vpython objects and draws them.
 
     It can be used pragmatically: just add objects as they are created and the changes will update in the display.
-    Note: the Scene can be controlled with ASWD keys
+    Note: the Scene can be controlled with awsd keys
     """
     VISUALISER_ON = True
     if not VISUAL_INSTALLED:
@@ -42,17 +42,44 @@ class Visualiser (object):
 
         if len(s) == 1:
             if s == 'd':
-                self.display.center = (self.display.center[0]+0.01, self.display.center[1], self.display.center[2])
+                self.display.center = (self.display.center[0]+0.005, self.display.center[1], self.display.center[2])
             if s == 's':
-                self.display.center = (self.display.center[0], self.display.center[1]-0.01, self.display.center[2])
+                self.display.center = (self.display.center[0], self.display.center[1]-0.005, self.display.center[2])
             if s == 'a':
-                self.display.center = (self.display.center[0]-0.01, self.display.center[1], self.display.center[2])
+                self.display.center = (self.display.center[0]-0.005, self.display.center[1], self.display.center[2])
             if s == 'w':
-                self.display.center = (self.display.center[0], self.display.center[1]+0.01, self.display.center[2])
+                self.display.center = (self.display.center[0], self.display.center[1]+0.005, self.display.center[2])
+            if s == 'r':
+                self.display.center = (self.display.center[0], self.display.center[1] + 0.0005, self.display.center[2])
             if s == '0':
                 self.display.center = (0.035, 0.03, 0)
+                self.display.forward = (0, 0.75, -0.5)
+            if s == 'z':
+                self.display.center = (0.025, 0.025, 0.0015)
+                self.display.forward = (0.5, 0, 0)
             if s == 'q':
                 Visualiser.VISUALISER_ON = False
+            if s == '1':
+                self.display.forward = self.display.forward.rotate(angle=0.1, axis=(0, 0, 1))
+            if s == '2':
+                self.display.forward = self.display.forward.rotate(angle=-0.1, axis=(0, 0, 1))
+            if s == '3':
+                self.display.forward = self.display.forward.rotate(angle=0.1, axis=(1, 0, 0))
+            if s == '4':
+                self.display.forward = self.display.forward.rotate(angle=-0.1, axis=(1, 0, 0))
+            if s == '5':
+                self.display.forward = self.display.forward.rotate(angle=0.1, axis=(0, 1, 0))
+            if s == '6':
+                self.display.forward = self.display.forward.rotate(angle=-0.1, axis=(0, 1, 0))
+            if s == 'p':
+                print("Forward: " + str(self.display.forward))
+                print("Center: " + str(self.display.center))
+            if s == '[':
+                print("Forward: " + str(self.display.forward))
+                print("Center: " + str(self.display.center))
+            if s == '[':
+                print("Forward: " + str(self.display.forward))
+                print("Center: " + str(self.display.center))
 
     def __init__(self, background=None, ambient=None, show_axis=True):
         super(Visualiser, self).__init__()
@@ -63,13 +90,17 @@ class Visualiser (object):
             background = (0.957, 0.957, 1)
         if ambient is None:
             ambient = 0.5
-        self.display = visual.display(title='PVTrace', x=0, y=0, width=800, height=600,
-                                      background=background, ambient=ambient)
+        self.display = visual.display(title='PVTrace', x=0, y=0, width=800, height=600, background=background,
+                                      ambient=ambient)
         self.display.bind('keydown', self.keyInput)
         self.display.exit = False
-        self.display.forward = (0, 0.75, -0.5)
-        self.display.center = (0.035, 0.03, 0)
 
+        # Note: first center than forward to enable camera movements!
+        self.display.center = (0.025, 0.025, 0.0015)
+        #self.display.forward = (0, 0.75, -0.5)
+        self.display.forward = (-0.05, 0.4, -1)
+
+        show_axis = False
         if show_axis:
             visual.curve(pos=[(0, 0, 0), (.08, 0, 0)], radius=0.0005, color=visual.color.red)
             visual.curve(pos=[(0, 0, 0), (0, .07, 0)], radius=0.0005, color=visual.color.green)
@@ -180,8 +211,9 @@ class Visualiser (object):
         if not Visualiser.VISUALISER_ON:
             return
         if colour is None:
-            colour = visual.color.blue
-        visual.sphere(pos=point, radius=0.00012, color=Geo.norm(colour), opacity=opacity, materiall=material)
+            #colour = visual.color.blue
+            colour = visual.color.gray(0.2)
+        return visual.sphere(pos=point, radius=0.00006, color=Geo.norm(colour), opacity=opacity, materiall=material)
         # visual.curve(pos=[point], radius=0.0005, color=geo.norm(colour))
 
     def addLine(self, start, stop, colour=None, opacity=1., material=None):
@@ -190,7 +222,7 @@ class Visualiser (object):
         if colour is None:
             colour = visual.color.white
         axis = np.array(stop) - np.array(start)
-        visual.cylinder(pos=start, axis=axis, radius=0.0001, color=Geo.norm(colour), opacity=opacity, material=material)
+        return visual.cylinder(pos=start, axis=axis, radius=0.000025, color=Geo.norm(colour), opacity=opacity, material=material)
     
     def addCylinder(self, cylinder, colour=None, opacity=1., material=None):
         if not Visualiser.VISUALISER_ON:

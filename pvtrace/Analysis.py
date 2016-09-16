@@ -142,18 +142,21 @@ class Analysis(object):
         Column header for print_excel()
         """
         if additional is None:
-            return "Generated, Killed, Total, Losses, Luminescent - Left, Luminescent - Near, Luminescent - Far, " \
+            r_text = "Generated, Killed, Total, Losses, Luminescent - Left, Luminescent - Near, Luminescent - Far, " \
                    "Luminescent - Right, Luminescent - Top, Luminescent - Bottom, Solar - Top, Solar - Bottom, " \
                    "Channels - Direct, Channels - Luminescent"
         else:
-            return additional+", Generated, Killed, Total, Losses, Luminescent - Left, Luminescent - Near," \
+            r_text = additional+", Generated, Killed, Total, Losses, Luminescent - Left, Luminescent - Near," \
                               "Luminescent - Far, Luminescent - Right, Luminescent - Top, Luminescent - Bottom," \
                               "Solar - Top, Solar - Bottom, Channels - Direct, Channels - Luminescent"
+        self.log.info(r_text)
+        return r_text
 
     def print_excel(self, additions=None):
         """
         Prints an easy to import report on the fate of the photons stored in self.db
         """
+        self.db_stats()
         if additions is None:
             return_text = ''
         else:
@@ -190,6 +193,7 @@ class Analysis(object):
         # CHANNELS: luminescent
         return_text += str(luminescent_photons_in_channels)
 
+        self.log.info(return_text)
         return return_text
 
     def get_bounces(self, photon_list=None):

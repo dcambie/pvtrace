@@ -125,6 +125,7 @@ class Photon(object):
         self.intersection_counter = 0
         self.reaction = False
         self.previous_container = None
+        self.visual_obj = []
 
     def __copy__(self):
         photon_copy = Photon()
@@ -148,6 +149,7 @@ class Photon(object):
         photon_copy.emitter_material = self.emitter_material
         photon_copy.on_surface_object = self.on_surface_object
         photon_copy.reaction = self.reaction
+        photon_copy.visual_obj = self.visual_obj
         return photon_copy
 
     def __deepcopy__(self):
@@ -962,15 +964,15 @@ class Tracer(object):
                             opacity = 1.
 
                         elif isinstance(obj, Channel):
-                            material = visual.materials.wood
+                            material = visual.materials.plastic
                             colour = visual.color.blue
-                            opacity = 1.
+                            opacity = 1
                         # Dario's edit: LSC color set to red/
                         # this breaks multiple lSC colours in the same scene. sorry :)
                         elif isinstance(obj, LSC):
                             material = visual.materials.plastic
                             colour = visual.color.red
-                            opacity = 0.2
+                            opacity = 0.4
 
                         elif isinstance(obj, PlanarReflector):
                             colour = visual.color.white
@@ -1018,9 +1020,9 @@ class Tracer(object):
 
                         self.visualiser.addObject(obj.shape, colour=colour, opacity=opacity, material=material)
 
-        self.show_lines = True  # False
-        self.show_exit = True
-        self.show_path = True  # False
+        self.show_lines = False  # False
+        self.show_exit = False
+        self.show_path = False  # False
         self.show_start = False  # Was True
         self.show_normals = False
 
@@ -1108,8 +1110,8 @@ class Tracer(object):
                 # print "Step number:", step
                 if pvtrace.Visualiser.VISUALISER_ON:
                     b = list(photon.position)
-                    # if self.show_lines and photon.active and step > 0:
-                    if self.show_lines and photon.active:
+                    if self.show_lines and photon.active and step > 2:
+                    #if self.show_lines and photon.active:
                         self.visualiser.addLine(a, b, colour=wav2RGB(photon.wavelength))
 
                     # if self.show_path and photon.active and step > 0:
@@ -1122,8 +1124,8 @@ class Tracer(object):
                     # import pdb; pdb.set_trace()
                     if pvtrace.Visualiser.VISUALISER_ON:
                         if self.show_exit:
-                            self.visualiser.addSmallSphere(a, colour=[.33, .33, .33])
-                            self.visualiser.addLine(a, a + 0.01 * photon.direction, colour=wav2RGB(wavelength))
+                            photon.visual_obj.append(self.visualiser.addSmallSphere(a, colour=[.33, .33, .33]))
+                            photon.visual_obj.append(self.visualiser.addLine(a, a + 0.01 * photon.direction, colour=wav2RGB(wavelength)))
 
                     # Record photon that has made it to the bounds
                     if step == 0:
@@ -1153,6 +1155,13 @@ class Tracer(object):
                         #    entering_photon.container.log_in_volume(entering_photon)
                     # assert logged == throw, "Logged (%s) and throw (%s) are not equal" % (str(logged), str(throw))
                     logged += 1
+
+                    # if photon.absorption_counter == 0:
+                    #     #print(photon.visual_obj)
+                    #     for obj in photon.visual_obj:
+                    #         obj.visible = False
+                    # else:
+                    #     print("ok ")
 
                 # Needed since VPyhton6
                 if pvtrace.Visualiser.VISUALISER_ON:

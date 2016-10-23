@@ -153,8 +153,8 @@ class PhotonDatabase(object):
         # the last line of this method update the unique photon ID (i.e. the row number)
         self.uid += 1
         
-        # Every 50 times write data to dbfile
-        if self.uid % 50 == 0:
+        # Every 100 times write data to dbfile
+        if not self.uid % 100:
             self.connection.commit()
 
     def dump_to_file(self, location=None):

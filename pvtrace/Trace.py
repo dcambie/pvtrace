@@ -164,7 +164,7 @@ class Photon(object):
             info += " inactive "
         return info
 
-    def isReaction(self):
+    def is_reaction(self):
         """
         True if the photon path ends in the reaction mixture
         """
@@ -181,7 +181,6 @@ class Photon(object):
         # Define setter and getters as properties
 
     position = property(getPosition, setPosition)
-
 
     def getDirection(self):
         """
@@ -233,6 +232,13 @@ class Photon(object):
 
             # Reached a RayBin (kind of perfect absorber)?
         if isinstance(intersection_object, RayBin):
+            self.active = False
+            self.previous_container = self.container
+            self.container = intersection_object
+            return self
+        
+        # reached a SimpleCell - absorbs everything.
+        if isinstance(intersection_object, SimpleCell):
             self.active = False
             self.previous_container = self.container
             self.container = intersection_object
@@ -369,7 +375,7 @@ class Photon(object):
                 reflection = 0.
             elif isinstance(intersection_object, PlanarReflector):
                 reflection = 0.
-            elif not isinstance(intersection_object, Coating) and isinstance(next_containing_object, Coating):
+            elif isinstance(next_containing_object, Coating):
                 # Catches the case when a Coating is touching an interface, forcing it to use the Coatings 
                 # reflectivity rather than standard Fresnel reflection
                 reflection = next_containing_object.reflectivity(self)
@@ -602,6 +608,7 @@ class Scene(object):
     """
     A collection of objects. All intersection points can be found or a ray can be traced through.
     """
+    # TODO: remove Scene from Trace
 
     def pov_render(self, camera_position=(0, 0, 0.1), camera_target=(0, 0, 0), height=2400, width=3200):
         """
@@ -1011,6 +1018,7 @@ class Tracer(object):
                                 material = visual.materials.plastic
                             else:
                                 # It is possible to processes the most likely colour of a spectrum in a better way than this
+                                # TODO: reimplement me
                                 colour = (0.2, 0.2, 0.2)
                                 opacity = 0.5
                                 material = visual.materials.plastic
@@ -1020,9 +1028,9 @@ class Tracer(object):
 
                         self.visualiser.addObject(obj.shape, colour=colour, opacity=opacity, material=material)
 
-        self.show_lines = False  # False
-        self.show_exit = False
-        self.show_path = False  # False
+        self.show_lines = True  # False
+        self.show_exit = True
+        self.show_path = True  # False
         self.show_start = False  # Was True
         self.show_normals = False
 
@@ -1110,8 +1118,8 @@ class Tracer(object):
                 # print "Step number:", step
                 if pvtrace.Visualiser.VISUALISER_ON:
                     b = list(photon.position)
-                    if self.show_lines and photon.active and step > 2:
-                    #if self.show_lines and photon.active:
+                    # if self.show_lines and photon.active and step > 2:
+                    if self.show_lines and photon.active:
                         self.visualiser.addLine(a, b, colour=wav2RGB(photon.wavelength))
 
                     # if self.show_path and photon.active and step > 0:
@@ -1125,7 +1133,8 @@ class Tracer(object):
                     if pvtrace.Visualiser.VISUALISER_ON:
                         if self.show_exit:
                             photon.visual_obj.append(self.visualiser.addSmallSphere(a, colour=[.33, .33, .33]))
-                            photon.visual_obj.append(self.visualiser.addLine(a, a + 0.01 * photon.direction, colour=wav2RGB(wavelength)))
+                            photon.visual_obj.append(self.visualiser.addLine(a, a + 0.01 * photon.direction,
+                                                     colour=wav2RGB(wavelength)))
 
                     # Record photon that has made it to the bounds
                     if step == 0:

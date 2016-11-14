@@ -28,19 +28,24 @@ from pvtrace.Interpolation import *
 
 import os
 import sys
+import logging
 
-print("pvtrace pre-flight checks...")
+logger = logging.getLogger('pvtrace')
+logger.info('pvtrace pre-flight checks...')
 
 # Module constants -- location of the data folder
-# print(sys.path)
+logger.info('System Path: '+str(sys.path))
+pvtrace_containing_directory = False
 for path in sys.path:
     if path.find('pvtrace') != -1:
         pvtrace_containing_directory = path
         break
-while pvtrace_containing_directory.find('pvtrace') != -1:
-    pvtrace_containing_directory = os.path.abspath(os.path.join(pvtrace_containing_directory, '..'))
+
+if pvtrace_containing_directory is not False:
+    while pvtrace_containing_directory.find('pvtrace') != -1:
+        pvtrace_containing_directory = os.path.abspath(os.path.join(pvtrace_containing_directory, '..'))
+else:
+    pvtrace_containing_directory = os.path.expanduser('~')
 
 PVTDATA = os.path.join(pvtrace_containing_directory, 'pvtrace', 'data')
-
-# print("Pvtrace data directory:")
-# print(PVTDATA)
+logger.info('PVTDATA set to '+PVTDATA)

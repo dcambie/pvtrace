@@ -101,7 +101,7 @@ class PhotonDatabase(object):
             exit(1)
 
     def load(self, dbfile):
-        """Loads and existing photon database into memory from a dbfile path."""
+        """ Loads an existing photon database into memory from a dbfile path. """
         self.connection = sql.connect(dbfile)
         self.cursor = self.connection.cursor()
 
@@ -194,7 +194,7 @@ class PhotonDatabase(object):
 
     def empty(self):
         """
-        Empties DB
+        Empties the DB
         """
         self.cursor.execute("DELETE FROM state")
         self.cursor.execute("DELETE FROM direction")
@@ -265,16 +265,16 @@ class PhotonDatabase(object):
             "GROUP BY uid HAVING uid IN (SELECT MAX(uid) FROM photon group BY pid)", (obj,)).fetchall())
     
     def killed(self):
-        """Returns the uid of killed photons (one that took too many steps to complete)."""
+        """ Returns the uid of killed photons (one that took too many steps to complete). """
         return self.cursor.execute('SELECT uid FROM state WHERE killed = 1').fetchall()
 
     # fixme: Needs implementation
     def missed(self):
-        """Returns the uid of photons that did not hit any scene objects"""
+        """ Returns the uid of photons that did not hit any scene objects. """
         pass
     
     def objects_with_records(self):
-        """Returns a list of which scene object have been hit by rays."""
+        """ Returns a list of which scene object have been hit by rays. """
         objects_keys = self.cursor.execute(
             'SELECT DISTINCT(container_obj) FROM state GROUP BY container_obj;').fetchall()
         objects_keys = itemise(objects_keys)
@@ -287,8 +287,7 @@ class PhotonDatabase(object):
         return filtered_keys
 
     def surfaces_with_records(self):
-        """Returns surfaces that have been hit by a ray for all exiting objects.
-        """
+        """ Returns surfaces that have been hit by a ray for all exiting objects. """
         keys = self.cursor.execute(
             'SELECT DISTINCT surface_id FROM state WHERE uid IN (SELECT uid FROM surface_normal'
             'WHERE uid IN (SELECT MAX(uid) FROM photon GROUP BY pid));').fetchall()
@@ -302,7 +301,7 @@ class PhotonDatabase(object):
         return filtered_keys
     
     def surfaces_with_records_for_object(self, obj):
-        """Returns a list of surface to 'object' that have been hit by a ray."""
+        """ Returns a list of surface to 'object' that have been hit by a ray. """
         keys = self.cursor.execute(
             'SELECT DISTINCT surface_id FROM state WHERE uid IN (SELECT uid FROM surface_normal'
             'WHERE uid IN (SELECT MAX(uid) FROM photon GROUP BY pid))'
@@ -381,40 +380,47 @@ class PhotonDatabase(object):
             return []
     
     def uids_in_reactor(self):
-        """Returns photons in reactor"""
+        """ Returns the uids of all the photons in the reactor channels. """
         return itemise(self.cursor.execute(
             "SELECT MAX(uid) FROM photon GROUP BY pid INTERSECT SELECT uid FROM state WHERE reaction = 1"))
     
     def uids_in_reactor_and_luminescent(self):
-        """Returns photons in reactor and luminescent One absorption is.the reaction mixture, so >1"""
+        """ Returns photons in reactor and luminescent."""
+        # One absorption is the reaction mixture itself, so > 1 to account for dye absorption (i.e. luminescent).
         return itemise(self.cursor.execute(
             "SELECT MAX(uid) FROM photon GROUP BY pid INTERSECT "
             "SELECT uid FROM state WHERE reaction = 1 AND absorption_counter > 1"))
     
     def uids_luminescent(self):
-        """Returns luminescent photons"""
+        """ Returns luminescent photons. """
         return itemise(self.cursor.execute(
             "SELECT MAX(uid) FROM photon GROUP BY pid INTERSECT SELECT uid FROM state WHERE absorption_counter > 1"))
 
     def uids_first_intersection(self):
-        """Returns the unique identifier of the first intersection for all photons"""
+        """ Returns the unique identifier of the first intersection for all photons. """
         return self.cursor.execute('SELECT uid FROM state WHERE intersection_counter = 1;').fetchall()
     
     def uids_generated_photons(self):
+        """ Returns the unique identifier of the first step of each generated photon. """
         return self.cursor.execute('SELECT MIN(uid) FROM photon GROUP BY pid;').fetchall()
     
     def pid_from_uid(self, uid):
+        """ Returns the photon ID of a given uid. """
         return self.cursor.execute('SELECT pid FROM photon WHERE uid=?', (uid,)).fetchall()
 
     def uids_for_pid(self, pid):
+        """ Returns all the uids associated to a given photon ID. """
         return itemise(self.cursor.execute('SELECT uid FROM photon WHERE pid=?', (pid,)))
     
     def bounces_for_pid(self, pid):
+        """ Returns the number of bounces for a given photon ID. """
         last_uid_for_pid = max(self.uids_for_pid(pid))
-        return itemise(self.cursor.execute('SELECT absorption_counter FROM state WHERE uid=?', (last_uid_for_pid,)))
+        return itemise(self.cursor.execute('SELECT intersection_counter FROM state WHERE uid=?', (last_uid_for_pid,)))
 
     def bounces_for_uid(self, uid):
-        return itemise(self.cursor.execute('SELECT absorption_counter FROM state WHERE uid=?', (uid,)))
+        """ Returns the number of bounces for a given uid. """
+        # Note: if uid is not max(uid) of pid then this might be lower than expected!
+        return itemise(self.cursor.execute('SELECT intersection_counter FROM state WHERE uid=?', (uid,)))
 
     def uids_nonradiative_losses(self):
         return itemise(self.cursor.execute(
@@ -441,7 +447,7 @@ class PhotonDatabase(object):
                              "Are you using the function value_for_table_column_uid correctly?")
             return []
 
-    def directionForUid(self, uid):
+    def direction_for_uid(self, uid):
         if isinstance(uid, int) or isinstance(uid, float):
             return np.array(self.cursor.execute("SELECT x,y,z FROM direction WHERE uid = ?", (uid,)).fetchall()[0])
         elif isinstance(uid, list) or isinstance(uid, tuple):
@@ -450,7 +456,7 @@ class PhotonDatabase(object):
             cmd = "SELECT x,y,z FROM direction WHERE uid IN (%s)" % (items,)
             return self.cursor.execute(cmd).fetchall()
     
-    def polarisationForUid(self, uid):
+    def polarisation_for_uid(self, uid):
         if isinstance(uid, int) or isinstance(uid, float):
             return np.array(self.cursor.execute("SELECT x,y,z FROM polarisation WHERE uid = ?", (uid,)).fetchall()[0])
         elif isinstance(uid, list) or isinstance(uid, tuple):
@@ -458,7 +464,7 @@ class PhotonDatabase(object):
             cmd = "SELECT x,y,z FROM polarisation WHERE uid IN (%s)" % (items,)
             return self.cursor.execute(cmd).fetchall()
     
-    def positionForUid(self, uid):
+    def position_for_uid(self, uid):
         if isinstance(uid, int) or isinstance(uid, float):
             return np.array(self.cursor.execute("SELECT x,y,z FROM position WHERE uid = ?", (uid,)).fetchall()[0])
         elif isinstance(uid, list) or isinstance(uid, tuple):
@@ -466,7 +472,7 @@ class PhotonDatabase(object):
             cmd = "SELECT x,y,z FROM position WHERE uid IN (%s)" % items
             return self.cursor.execute(cmd).fetchall()
 
-    def wavelengthForUid(self, uid):
+    def wavelength_for_uid(self, uid):
         if isinstance(uid, int) or isinstance(uid, float):
             return np.array(self.cursor.execute("SELECT wavelength FROM photon WHERE uid = ?", (uid,)).fetchall()[0])
         elif isinstance(uid, list) or isinstance(uid, tuple):

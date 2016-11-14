@@ -109,7 +109,7 @@ class Photocatalyst(object):
         photocat_abs_data[:, 1] = photocat_abs_data[:, 1] * self.concentration
         return Spectrum(x=photocat_abs_data[:, 0], y=photocat_abs_data[:, 1])
 
-    def reactionMixture(self, solvent=None):
+    def reaction_mixture(self, solvent=None):
         if solvent is None:
             solvent = self.compound.solvent
 
@@ -235,13 +235,13 @@ class Reactor(object):
                  solvent=None):
 
         # Info to log
-        logger = logging.getLogger('pvtrace.modules')
+        reactor_logger = logging.getLogger('pvtrace.modules')
         # Conversion to string forced to avoid error on empty parameters being NoneType
-        logger.info('Creating a reactor with the following parameters:')
-        logger.info('Reactor type = ' + str(reactor_name))
-        logger.info('Dye = ' + str(dye) + '(Conc: ' + str(dye_concentration) + ')')
-        logger.info('Photocatalyst = ' + str(photocatalyst) + '(Conc: ' + str(photocatalyst_concentration) + ')')
-        logger.info('Solvent = ' + str(solvent))
+        reactor_logger.info('Creating a reactor with the following parameters:')
+        reactor_logger.info('Reactor type = ' + str(reactor_name))
+        reactor_logger.info('Dye = ' + str(dye) + '(Conc: ' + str(dye_concentration) + ')')
+        reactor_logger.info('Photocatalyst = ' + str(photocatalyst) + '(Conc: ' + str(photocatalyst_concentration) + ')')
+        reactor_logger.info('Solvent = ' + str(solvent))
 
         # Set photocatalyst
         if photocatalyst is None:
@@ -251,9 +251,9 @@ class Reactor(object):
 
         # Solvent is default for photocatalyst or explicitly set
         if solvent is None:
-            reaction_mixture = self.photocat.reactionMixture()
+            reaction_mixture = self.photocat.reaction_mixture()
         else:
-            reaction_mixture = self.photocat.reactionMixture(solvent)
+            reaction_mixture = self.photocat.reaction_mixture(solvent)
 
         # Set default values
         self.scene_obj = []
@@ -263,6 +263,7 @@ class Reactor(object):
         # out of the reactor loop
         pdms_data = np.loadtxt(os.path.join(PVTDATA, 'PDMS.txt'))
 
+        # noinspection PyListCreation,PyListCreation
         if reactor_name == '5x5_8ch':
             # 1. LSC DEVICE
             # @formatter:off
@@ -677,3 +678,5 @@ class Reactor(object):
         self.source = lamp.light
         if print_lamp:
             lamp.plot()
+        
+        reactor_logger.info('Reactor complete! :)')

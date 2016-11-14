@@ -41,6 +41,10 @@ class Visualiser (object):
         s = evt.key
 
         if len(s) == 1:
+            if s == 'x':
+                print(self.display.center)
+                print(self.display.forward)
+                
             if s == 'd':
                 self.display.center = (self.display.center[0]+0.005, self.display.center[1], self.display.center[2])
             if s == 's':
@@ -95,11 +99,9 @@ class Visualiser (object):
         self.display.bind('keydown', self.keyInput)
         self.display.exit = False
 
-        # Note: first center than forward to enable camera movements!
-        self.display.center = (0.025, 0.025, 0.0015)
-        #self.display.forward = (0, 0.75, -0.5)
-        self.display.forward = (-0.05, 0.4, -1)
-
+        self.display.center = (0.025, 0.015, 0)
+        self.display.forward = (0, 0.83205, -0.5547)
+        
         show_axis = False
         if show_axis:
             visual.curve(pos=[(0, 0, 0), (.08, 0, 0)], radius=0.0005, color=visual.color.red)
@@ -211,7 +213,7 @@ class Visualiser (object):
         if not Visualiser.VISUALISER_ON:
             return
         if colour is None:
-            #colour = visual.color.blue
+            # colour = visual.color.blue
             colour = visual.color.gray(0.2)
         return visual.sphere(pos=point, radius=0.00006, color=Geo.norm(colour), opacity=opacity, materiall=material)
         # visual.curve(pos=[point], radius=0.0005, color=geo.norm(colour))
@@ -222,7 +224,8 @@ class Visualiser (object):
         if colour is None:
             colour = visual.color.white
         axis = np.array(stop) - np.array(start)
-        return visual.cylinder(pos=start, axis=axis, radius=0.000025, color=Geo.norm(colour), opacity=opacity, material=material)
+        return visual.cylinder(pos=start, axis=axis, radius=0.000055, color=Geo.norm(colour),
+                               opacity=opacity, material=material)
     
     def addCylinder(self, cylinder, colour=None, opacity=1., material=None):
         if not Visualiser.VISUALISER_ON:

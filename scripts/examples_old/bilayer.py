@@ -273,9 +273,9 @@ for i in range(1,2):
     # oNLY PHOTONS IN CHANNELS!
     for photon in photons:
         if config['debug']:
-            print "Wavelenght: ",trace.database.wavelengthForUid(photon)# Nice output
+            print "Wavelenght: ",trace.database.wavelength_for_uid(photon)# Nice output
         elif config['print_wavelegths']:
-            print " ".join(map(str,trace.database.wavelengthForUid(photon) )) # Clean output (for elaborations)
+            print " ".join(map(str, trace.database.wavelength_for_uid(photon))) # Clean output (for elaborations)
 
     if config['debug']:
         print channel.name," photons: ",photons_in_channels_tot/thrown * 100,"% (",photons_in_channels_tot,")"

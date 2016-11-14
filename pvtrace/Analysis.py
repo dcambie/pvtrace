@@ -129,11 +129,11 @@ class Analysis(object):
         if only_luminescent:
             ret_str = " Photons in reactor (luminescent only). Wavelengths in nm"
             for photon in self.db.uids_in_reactor_and_luminescent():
-                ret_str += " ".join(map(str, self.db.wavelengthForUid(photon)))  # Clean output (for elaborations)
+                ret_str += " ".join(map(str, self.db.wavelength_for_uid(photon)))  # Clean output (for elaborations)
         else:
             ret_str = " Photons in reactor (all). Wavelengths in nm"
             for photon in self.db.uids_in_reactor():
-                ret_str += " ".join(map(str, self.db.wavelengthForUid(photon)))  # Clean output (for elaborations)
+                ret_str += " ".join(map(str, self.db.wavelength_for_uid(photon)))  # Clean output (for elaborations)
 
         return ret_str
 
@@ -211,17 +211,22 @@ class Analysis(object):
         x = np.linspace(0, max(bounces), num=max(bounces) + 1)
         return x, y
 
-    def history(self, photon_list=None):
+    def history_from_pid(self, pid=None):
+        # FIXME : this is still missing
+        pass
+
+    def history_from_uid(self, uid=None):
         """
         Extract from the DB the trace of the given photon uid.
-        If a list of uids is provided it's split into individual
+        If a list of uids is provided it's split into individual traces
 
-        :param photon_list: list of uids of photons to be investigated
+        :param uid: list uid of photon to be investigated
         """
-        # FIXME : this is still missing
-        for photon in photon_list:
-            pid = self.db.pid_from_uid(photon)
-        pass
+        # FIXME: account for photon lists!
+        if uid is None:
+            return False
+        else:
+            return self.history_from_pid(self.db.pid_from_uid(uid))
 
     def create_graphs(self, prefix=''):
         """
@@ -263,7 +268,7 @@ class Analysis(object):
             if len(uid) < 10:
                 self.log.info('[' + plot + "] The database doesn't have enough photons to generate this graph!")
             else:
-                data = self.db.wavelengthForUid(uid)
+                data = self.db.wavelength_for_uid(uid)
                 file_path = os.path.join(prefix, plot)
                 histogram(data=data, filename=file_path)
                 self.log.info('[' + plot + "] Plot saved to " + file_path)

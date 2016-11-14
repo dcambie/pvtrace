@@ -28,6 +28,7 @@ def cmp_floats(a, b):
     :param b: second value
     :return: boolean
     """
+    
     abs_diff = abs(a - b)
     if abs_diff < 1e-12:
         return True
@@ -63,7 +64,7 @@ def interval_check(a, b, c, strict=False):
     :param c: third point
     :param strict: boolean, if false a <= b <= c, if true a < b < c
     """
-    if not strict and cmp_floats(a, b) == True or cmp_floats(b, c) == True:
+    if not strict and cmp_floats(a, b) or cmp_floats(b, c):
         return True
     if a < b < c:
         return True
@@ -185,19 +186,18 @@ def transform_point(point, transform):
 
 def transform_direction(direction, transform):
     try:
-        angle, axis, point = tf.rotation_from_matrix(transform)
+        rotation_angle, rotation_axis, point = tf.rotation_from_matrix(transform)
     except ValueError:
         if tf.is_same_transform(tf.identity_matrix() * -1, transform):
             # The ray direction needs to be reversed
             return np.array(direction) * -1.
-    rotation_transform = tf.rotation_matrix(angle, axis)
-    return np.array(np.dot(rotation_transform, np.matrix(np.concatenate((direction, [1.]))).transpose()).transpose()[0,
-                    0:3]).squeeze()
+    rotation_transform = tf.rotation_matrix(rotation_angle, rotation_axis)
+    return np.array(np.dot(rotation_transform,
+                           np.matrix(np.concatenate((direction, [1.]))).transpose()).transpose()[0,0:3]).squeeze()
 
 
 def rotation_matrix_from_vector_alignment(before, after):
     """
-
     :param before: vector before rotation
     :param after: vector after rotation
     :return: rotation matrix
@@ -227,19 +227,19 @@ def rotation_matrix_from_vector_alignment(before, after):
     """
     # The angle between the vectors must not be 0 or 180 (i.e. so we can take a cross product)
     # import pdb; pdb.set_trace()
-    thedot = np.dot(before, after)
-    if cmp_floats(thedot, 1.):
+    the_dot = np.dot(before, after)
+    if cmp_floats(the_dot, 1.):
         # Vectors are parallel
         return tf.identity_matrix()
 
-    if cmp_floats(thedot, -1.):
+    if cmp_floats(the_dot, -1.):
         # Vectors are anti-parallel
         # print "Vectors are anti-parallel this might crash."
         return tf.identity_matrix() * -1.
 
-    axis = np.cross(before, after)  # get the axis of rotation
-    angle = np.arccos(np.dot(before, after))  # get the rotation angle
-    return rotation_matrix(angle, axis)
+    rotation_axis = np.cross(before, after)  # get the axis of rotation
+    rotation_angle = np.arccos(np.dot(before, after))  # get the rotation angle
+    return rotation_matrix(rotation_angle, rotation_axis)
 
 
 class Ray(object):
@@ -374,6 +374,7 @@ class Plane(object):
 
     def surface_normal(self, ray, acute=True):
         normal = transform_direction((0, 0, 1), self.transform)
+        rdir = ray.direction
         if acute:
             if angle(normal, rdir) > np.pi / 2:
                 normal *= -1.0
@@ -462,8 +463,8 @@ class FinitePlane(Plane):
         :return: boolean
         """
         inv_transform = tf.inverse_matrix(self.transform)
-        ray_pos = transform_point(ray.position, inv_transform)
-        if cmp_floats(ray_pos, 0.) and (0. < ray_pos[0] <= self.length) and (0. < ray_pos[1] <= self.width):
+        position = transform_point(point, inv_transform)
+        if cmp_floats(position[2], 0.) and (0. < position[0] <= self.length) and (0. < position[1] <= self.width):
             return True
         return False
 
@@ -474,7 +475,11 @@ class FinitePlane(Plane):
         :param ray: Ray to intersect the plane with
         :return: point / None
         """
+                
         points = super(FinitePlane, self).intersection(ray)
+        if points is None:
+            return None
+        print(points)
         # Is point in the finite plane bounds
         local_point = transform_point(points[0], self.transform)
         if (0. <= local_point[0] <= self.length) and (0. <= local_point[1] <= self.width):
@@ -691,7 +696,7 @@ class Box(object):
                         bool_array[j] = True
 
         if assert_on_surface:
-            assert bool_array[0] == bool_array[1] == bool_array[2] == True
+            assert bool_array[0] == bool_array[1] == bool_array[2] is True
 
         surface_name = []
 
@@ -763,7 +768,7 @@ class Box(object):
                     if interval_check(def_points[j], local_point[j], def_points[j + 3]):
                         bool_array[j] = True
 
-        if bool_array[0] == bool_array[1] == bool_array[2] == True:
+        if bool_array[0] == bool_array[1] == bool_array[2] is True:
             return True
 
         return False
@@ -819,7 +824,7 @@ class Box(object):
                     for val in ray_pos:
                         # logging.debug(str((ref,val)))
                         if cmp_floats(ref, val):
-                            # logging.debug("Common value found, " + str(val) + " at index" + str(list(ray_pos).index(val)))
+                            # logging.debug("Common value found, " + str(val) + " at " + str(list(ray_pos).index(val)))
                             common_index = list(ray_pos).index(val)
                             exit_loop = True
                             break
@@ -994,7 +999,7 @@ class Cylinder(object):
 
         origin_z = 0.
         xy_distance = np.sqrt(local_point[0] ** 2 + local_point[1] ** 2)
-        if interval_check(origin_z, local_point[2], self.length, strict=True) == True and xy_distance < self.radius:
+        if interval_check(origin_z, local_point[2], self.length, strict=True) and xy_distance < self.radius:
             return True
         else:
             return False
@@ -1104,7 +1109,7 @@ class Cylinder(object):
                 return True
 
         if smaller_equal_to(xy_distance, self.radius):
-            if cmp_floats(local_point[2], origin_z) == True or cmp_floats(local_point[2], self.length) == True:
+            if cmp_floats(local_point[2], origin_z) or cmp_floats(local_point[2], self.length) == True:
                 return True
 
         return False

@@ -8,7 +8,8 @@ import sys
 
 red305_concentration = 0.20
 
-file_path = os.path.join(os.path.expanduser('~'), 'pvtrace_data', 'output_red_'+str(red305_concentration)+'_mb_conc.txt')
+file_path = os.path.join(os.path.expanduser('~'), 'pvtrace_data',
+                         'output_red_{0}_mb_conc.txt'.format(str(red305_concentration)))
 for mainloop_i in range(0, 20):
     if mainloop_i < 10:
         mb_concentration = 0.00001 + 0.00001 * mainloop_i
@@ -23,8 +24,8 @@ for mainloop_i in range(0, 20):
 
     # reactor = Reactor(reactor_name="5x5_6ch_squared", dye="Red305", dye_concentration=0.20, photocatalyst="MB",
     #                   photocatalyst_concentration=0.0004)
-    reactor = Reactor(reactor_name="5x5_square", dye="Red305", dye_concentration=red305_concentration, photocatalyst="MB",
-                      photocatalyst_concentration=mb_concentration)
+    reactor = Reactor(reactor_name="5x5_square", dye="Red305", dye_concentration=red305_concentration,
+                      photocatalyst="MB", photocatalyst_concentration=mb_concentration)
     logger.info('Reactor volume (calculated): '+str(reactor.reaction_volume*1000000)+' mL')
 
     for obj in reactor.scene_obj:
@@ -62,8 +63,8 @@ for mainloop_i in range(0, 20):
     #             logger.info("in face "+face+" there are "+str(face_photons)+" photons")
     #
     #         obj.print_store()
-            #spectrum = obj.spectrum_face(surface_names=('far', 'near', 'right', 'left'))
-            #print(spectrum)
+    #         #spectrum = obj.spectrum_face(surface_names=('far', 'near', 'right', 'left'))
+    #         #print(spectrum)
     # For reproducibility reasons always append git version to results (tested on linux only)
     # label = subprocess.check_output(["git", "describe"], cwd=PVTDATA, shell = True)
     # print 'PvTrace ', label,  ' simulation ended'

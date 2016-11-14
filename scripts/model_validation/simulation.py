@@ -12,7 +12,7 @@ logger = logging.getLogger('pvtrace')
 
 # reactor = Reactor(reactor_name="5x5_6ch_squared", dye="Red305", dye_concentration=0.20, photocatalyst="MB",
 #                   photocatalyst_concentration=0.0004)
-reactor = Reactor(reactor_name="5x5_6ch", dye="Red305", dye_concentration=0.20, photocatalyst="MB",
+reactor = Reactor(reactor_name="5x5_6ch_squared", dye="Red305", dye_concentration=0.20, photocatalyst="MB",
                   photocatalyst_concentration=0.0004)
 logger.info('Reactor volume (calculated): ' + str(reactor.reaction_volume * 1000000) + ' mL')
 
@@ -20,7 +20,7 @@ logger.info('Reactor volume (calculated): ' + str(reactor.reaction_volume * 1000
 for obj in reactor.scene_obj:
     scene.add_object(obj)
 
-trace = pvtrace.Tracer(scene=scene, source=reactor.source, seed=None, throws=100000, use_visualiser=False,
+trace = pvtrace.Tracer(scene=scene, source=reactor.source, seed=None, throws=100000, use_visualiser=True,
                        show_log=False, show_axis=True, show_counter=False, db_split=True)
 trace.show_lines = True
 trace.show_path = False

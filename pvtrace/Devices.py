@@ -285,9 +285,10 @@ class SimpleCell(Detector):
     A SimpleCell object is a solar cell with perfect AR coating.
     """
 
-    def __init__(self, finiteplane):
+    def __init__(self, finiteplane, origin=(0., 0., 0.,)):
         super(Detector, self).__init__()
         self.shape = finiteplane
+        self.shape.append_transform(tf.translation_matrix(origin))
         self.name = "cell"
         self.material = None
 

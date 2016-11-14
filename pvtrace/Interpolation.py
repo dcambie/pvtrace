@@ -15,7 +15,7 @@ import numpy as np
 from types import *
 
 
-class interp1d(object):
+class Interp1d(object):
     """ Interpolate a 1D function.
 
     See Also
@@ -287,14 +287,14 @@ class BilinearInterpolation(object):
         assert y_s[0] == z_s[1], "The number of columns in z (which is %s)," \
                                  "must be the same as number of elements in y (which is %s)" % (y_s[0], z_s[1])
     
-    def __call__(self, xvalue, yvalue):
-        """The interpolated value of the surface."""
+    def __call__(self, x_value, y_value):
+        """ The interpolated value of the surface. """
         try:
             x_i = 0
             found = False
             for i in range(0, len(self.x)-1):
-                # print self.x[i], "<=", xvalue, "<", self.x[i+1]
-                if self.x[i] <= xvalue < self.x[i+1]:
+                # print self.x[i], "<=", x_value, "<", self.x[i+1]
+                if self.x[i] <= x_value < self.x[i+1]:
                     # print "Found, returning index", i
                     x_i = i
                     found = True
@@ -309,8 +309,8 @@ class BilinearInterpolation(object):
             y_i = 0
             found = False
             for i in range(0, len(self.y)-1):
-                # print self.y[i], "<=", yvalue, "<", self.y[i+1]
-                if self.y[i] <= yvalue < self.y[i+1]:
+                # print self.y[i], "<=", y_value, "<", self.y[i+1]
+                if self.y[i] <= y_value < self.y[i+1]:
                     # print "Found, returning index", i
                     y_i = i
                     found = True
@@ -324,26 +324,26 @@ class BilinearInterpolation(object):
             
             D = (x_v[1] - x_v[0]) * (y_v[1] - y_v[0])
             ta = self.z[x_i[0], y_i[0]]
-            tb = (x_v[1] - xvalue)
-            tc = (y_v[1] - yvalue)
+            tb = (x_v[1] - x_value)
+            tc = (y_v[1] - y_value)
             t1 = ta * tb * tc / D
             # print t1, "=", ta, "*", tb, "*", tc, "/", D
             
             ta = self.z[x_i[1], y_i[0]]
-            tb = (xvalue - x_v[0]) 
-            tc = (y_v[1] - yvalue) 
+            tb = (x_value - x_v[0])
+            tc = (y_v[1] - y_value)
             t2 = ta * tb * tc / D
             # print t1, "=", ta, "*", tb, "*", tc, "/", D
             
             ta = self.z[x_i[0], y_i[1]]
-            tb = (x_v[1] - xvalue)
-            tc = (yvalue - y_v[0])
+            tb = (x_v[1] - x_value)
+            tc = (y_value - y_v[0])
             t3 = ta * tb * tc / D
             # print t1, "=", ta, "*", tb, "*", tc, "/", D
             
             ta = self.z[x_i[1], y_i[1]]
-            tb = (xvalue - x_v[0])
-            tc = (yvalue - y_v[0])
+            tb = (x_value - x_v[0])
+            tc = (y_value - y_v[0])
             t4 = ta * tb * tc / D
             # print t1, "=", ta, "*", tb, "*", tc, "/", D
             
@@ -355,8 +355,8 @@ class BilinearInterpolation(object):
             
         except ValueError:
             # Is one of the inputs an array?
-            if isinstance(xvalue, list) or isinstance(xvalue, tuple) or isinstance(xvalue, np.array):
+            if isinstance(x_value, list) or isinstance(x_value, tuple) or isinstance(x_value, np.array):
                 constructed_list = []
-                for sub_xvalue in xvalue:
-                    constructed_list.append(self(sub_xvalue, yvalue))
+                for sub_xvalue in x_value:
+                    constructed_list.append(self(sub_xvalue, y_value))
                 return np.array(constructed_list)

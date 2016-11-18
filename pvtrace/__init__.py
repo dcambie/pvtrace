@@ -15,14 +15,17 @@ import numpy as np
 from pvtrace.external import transformations
 from pvtrace.external import mathutils
 
-from pvtrace.Materials import *
+from pvtrace.Analysis import *
+from pvtrace.ConstructiveGeometry import *
 from pvtrace.Devices import *
 from pvtrace.Geometry import *
-from pvtrace.ConstructiveGeometry import *
-from pvtrace.LightSources import *
-from pvtrace.Visualise import *
-from pvtrace.Trace import *
 from pvtrace.Interpolation import *
+from pvtrace.LightSources import *
+from pvtrace.Materials import *
+from pvtrace.PhotonDatabase import *
+from pvtrace.Scene import *
+from pvtrace.Trace import *
+from pvtrace.Visualise import *
 
 import os
 import sys

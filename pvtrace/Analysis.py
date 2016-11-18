@@ -10,7 +10,7 @@ import six
 import sys
 
 if sys.version_info > (2, 7):
-    plt.switch_backend('Qt4Agg')
+    plt.switch_backend('Qt5Agg')
 """
 Changing the backend is important on Windows, since the default one results in the following error:
 PyEval_RestoreThread: NULL tstate

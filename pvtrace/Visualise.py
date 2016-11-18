@@ -352,7 +352,5 @@ class Visualiser (object):
             self.addCSG(obj, res, origin, extent, colour, material=material, opacity=opacity)
         if isinstance(obj, Geo.Polygon):
             self.addPolygon(obj, colour=colour, material=material, opacity=opacity)
-        if isinstance(obj, Geo.Convex):
-            self.addConvex(obj, colour=colour, material=material, opacity=opacity)
         if isinstance(obj, Geo.Sphere):
             self.addSphere(obj, colour=colour, material=material, opacity=opacity)

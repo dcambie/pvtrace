@@ -16,6 +16,7 @@ from __future__ import division, print_function
 import subprocess
 import os
 import time
+import sys
 from copy import copy
 
 import shortuuid
@@ -576,7 +577,7 @@ class Tracer(object):
         self.total_steps = 0
         self.seed = seed
         self.killed = 0
-        self.database = pvtrace.PhotonDatabase.PhotonDatabase(None)
+        self.database = pvtrace.PhotonDatabase(None)
         self.show_log = show_log
         self.show_counter = show_counter
         # From Scene, link db with analytics and get uuid
@@ -705,7 +706,7 @@ class Tracer(object):
             #     then = now
 
             self.scene.log.debug("Photon number: "+str(throw))
-            if self.show_counter:
+            if throw % 10 == 0 and self.show_counter:
                 sys.stdout.write('\r Photon number: ' + str(throw))
                 sys.stdout.flush()
 
@@ -855,7 +856,7 @@ class Tracer(object):
 
             # MERGE DB before statistics
             # this will be done in memory only (RAM is cheap nowadays)
-            self.database = pvtrace.PhotonDatabase.PhotonDatabase(dbfile=None)
+            self.database = pvtrace.PhotonDatabase(dbfile=None)
             for db_file in self.dumped:
                 self.database.add_db_file(filename=db_file, tables=("photon", "state"))
                 os.remove(db_file)
@@ -869,3 +870,4 @@ class Tracer(object):
 if __name__ == "__main__":
     import doctest
     doctest.testmod(verbose=True, optionflags=doctest.ELLIPSIS)
+

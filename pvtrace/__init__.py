@@ -13,8 +13,6 @@
 from __future__ import division
 import numpy as np
 from pvtrace.external import transformations
-from pvtrace.external import pov
-from pvtrace.external import quickhull
 from pvtrace.external import mathutils
 
 from pvtrace.Materials import *

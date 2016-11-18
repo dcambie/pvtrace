@@ -22,7 +22,6 @@ import shortuuid
 
 import pvtrace.Analysis
 import pvtrace.PhotonDatabase
-import pvtrace.external.pov as pov
 from pvtrace.Devices import *
 
 try:
@@ -561,104 +560,12 @@ class Photon(object):
             return self
 
 
-def povObj(obj, colour=None):
-    # print type(obj)
-    try:
-        T = obj.transform
-        white = pov.Texture(pov.Pigment(color="White", transmit=0.5)) if colour is None else colour
-        M = "< %s >" % (", ".join(str(T[:3].transpose().flatten())[1:-1].replace("\n", "").split()))
-    except:
-        pass
-
-    if type(obj) == Cylinder:
-        return pov.Cylinder((0, 0, 0), (0, 0, obj.length), obj.radius, white, matrix=M)
-    if type(obj) == Box:
-        return pov.Box(tuple(obj.origin), tuple(obj.extent), white, matrix=M)
-    if type(obj) == Coating:
-        return povObj(obj.shape)
-    if type(obj) == LSC:
-        # maxindex = obj.material.emission.y.argmax()
-        # wavelength = obj.material.emission.x[maxindex]
-        # colour = wav2RGB(633)
-        # print color # value is [255, 47, 0]
-        # Red for LSC is now hardcoded :(
-        colour = [236, 13, 36]
-        colour = pov.Pigment(color=(colour[0] / 255, colour[1] / 255, colour[2] / 255, 0.85))  # 0.85 is transparency
-        return povObj(obj.shape, colour=colour)
-    if type(obj) == Plane:
-        return pov.Plane((0, 0, 1), 0, white, matrix=M)
-    if type(obj) == FinitePlane:
-        return pov.Box((0, 0, 0), (obj.length, obj.width, 0), white, matrix=M)
-    if type(obj) == CSGsub:
-        return pov.Difference(povObj(obj.SUBplus), povObj(obj.SUBminus))
-    if type(obj) == CSGadd:
-        return pov.Union(povObj(obj.ADDone), povObj(obj.ADDtwo))
-    if type(obj) == CSGint:
-        return pov.Intersection(povObj(obj.INTone), povObj(obj.INTtwo))
-    if type(obj) == RayBin:
-        colour = pov.Pigment(color=(0, 0, 0.5, 1))  # BLUE (rgb/255)
-        return povObj(obj.shape, colour=colour)
-    if type(obj) == Channel:
-        colour = pov.Pigment(color=(0, 0, 0.5, 1))  # BLUE (rgb/255)
-        return povObj(obj.shape, colour=colour)
-    print("Uncaught object type! TYPE:", type(obj), " VALUE: ", obj)
-
 
 class Scene(object):
     """
     A collection of objects. All intersection points can be found or a ray can be traced through.
     """
     # TODO: remove Scene from Trace
-
-    def pov_render(self, camera_position=(0, 0, 0.1), camera_target=(0, 0, 0), height=2400, width=3200):
-        """
-        Pov thing
-
-        :param camera_position: position of the camera
-        :param camera_target:  aim for camera
-        :param height: output render image height size in pixels
-        :param width: output render image width size in pixels
-        :return: Creates the render image but returns nothing
-
-        doctest: +ELLIPSIS
-        >>> S = Scene('overwrite_me')
-        Working directory: ...
-        >>> L, W, D = 1, 1, 1
-        >>> box = Box(origin=(-L/2., -W/2.,-D/2.), extent=(L/2, W/2, D/2))
-        >>> box.name = 'box'
-        >>> myCylinder = Cylinder(radius=1)
-        >>> myCylinder.name = 'cyl'
-        >>> myCylinder.append_transform(tf.translation_matrix((0,-1,0)))
-        >>> box.append_transform(tf.rotation_matrix(-np.pi/3,(0,1,0), point=(0,0,0)))
-        >>> # S.add_object(CSGsub(myCylinder, box))
-        >>> myPlane = FinitePlane()
-        >>> myPlane.name = 'Plane'
-        >>> myPlane.append_transform(tf.translation_matrix((0,0,9.9)))
-        >>> S.add_object(myPlane)
-        >>> S.add_object(box)
-        >>> S.add_object(myCylinder)
-        >>> S.pov_render(width=800, height=600)
-        """
-
-        #        """
-        f = pov.File("demo.pov", "colors.inc", "stones.inc")
-
-        cam = pov.Camera(location=camera_position, sky=(1, 0, 1), look_at=camera_target)
-        light = pov.LightSource(camera_position, color="White")
-
-        povObjs = [cam, light]
-        for obj in self.objects[1:]:
-            povObjs.append(povObj(obj))
-
-        # print tuple(povObjs)
-        f.write(*tuple(povObjs))
-        f.close()
-
-        # A for anti-aliasing, q is quality (1-11)
-        subprocess.call(POVRAY_BINARY + " +A +Q10 +H" + str(height) + " +W" + str(width) + " demo.pov", shell=True)
-        file_opener("demo.png")
-
-    #        """
 
     def __init__(self, uuid=None, force=False):
         super(Scene, self).__init__()

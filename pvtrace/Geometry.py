@@ -16,7 +16,6 @@ from __future__ import division, print_function
 import numpy as np
 
 import pvtrace.external.transformations as tf
-from pvtrace.external.quickhull import qhull3d
 from pvtrace.external.transformations import translation_matrix, rotation_matrix
 
 
@@ -1471,108 +1470,7 @@ class Sphere(object):
         return False
 
 
-class Convex(object):
-    """
-    docstring for Convex
-    """
-
-    def __init__(self, points):
-        super(Convex, self).__init__()
-        self.points = points
-        verts, triangles = qhull3d(points)
-        self.faces = range(len(triangles))
-
-        for i in range(len(triangles)):
-            a = triangles[i][0]
-            b = triangles[i][1]
-            c = triangles[i][2]
-            self.faces[i] = Polygon([verts[a], verts[b], verts[c]])
-
-    def on_surface(self, point):
-        for face in self.faces:
-            if face.on_surface(point):
-                return True
-        return False
-
-    def surface_normal(self, ray, acute=False):
-        for face in self.faces:
-            if face.on_surface(ray.position):
-                normal = face.surface_normal(ray, acute=acute)
-                if angle(normal, ray.direction) > np.pi / 2:
-                    normal *= -1
-                return normal
-
-        assert "Have not found the surface normal for this ray. Are you sure the ray is on the surface of this object?"
-
-    @staticmethod
-    def surface_identifier(surface_point, assert_on_surface=True):
-        return "Convex"
-
-    def intersection(self, ray):
-        points = []
-        for face in self.faces:
-            pt = face.intersection(ray)
-            if pt is not None:
-                points.append(np.array(pt[0]))
-        if len(points) > 0:
-            return points
-        return None
-
-    def contains(self, point):
-        ray = Ray(position=point, direction=norm(np.random.random(3)))
-        hit_counter = 0
-        for face in self.faces:
-
-            if face.on_surface(ray.position):
-                return False
-
-            pt = face.intersection(ray)
-            if pt is not None:
-                hit_counter += 1
-
-        even_or_odd = hit_counter % 2
-        if even_or_odd == 0:
-            return False
-        return True
-
-    def centroid(self):
-        """
-        Credit:
-        http://orion.math.iastate.edu:80/burkardt/c_src/geometryc/geometryc.html
-        
-        Returns the 'centroid' of the Convex polynomial.
-        """
-        raise NotImplementedError("The centroid method of the Convex class is not yet implemented.")
-        # area = 0.0;
-        # for ( i = 0; i < n - 2; i++ ) {
-        # areat = triangle_area_3d ( x[i], y[i], z[i], x[i+1],
-        #  y[i+1], z[i+1], x[n-1], y[n-1], z[n-1] );
-        #    
-        # area = area + areat;
-        # *cx = *cx + areat * ( x[i] + x[i+1] + x[n-1] ) / 3.0;
-        # *cy = *cy + areat * ( y[i] + y[i+1] + y[n-1] ) / 3.0;
-        # *cz = *cz + areat * ( z[i] + z[i+1] + z[n-1] ) / 3.0;
-        #
-        # }
-        #
-        # *cx = *cx / area;
-        # *cy = *cy / area;
-        # *cz = *cz / area;
-        #
-
-
 if __name__ == "__main__":
     import doctest
 
     doctest.testmod()
-
-    if False:
-        # Catch the special case in which we cannot take the cross product
-        V1 = [0, 0, 1]
-        V2 = [0, 0, -1]
-        # import pdb; pdb.set_trace()
-        R = rotation_matrix_from_vector_alignment(V1, V2)
-        R2 = rotation_matrix(np.pi, [1, 0, 0])
-        V3 = transform_direction(V1, R)
-        print(R2)
-        print(cmp_points(V2, V3))

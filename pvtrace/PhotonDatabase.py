@@ -64,7 +64,6 @@ class PhotonDatabase(object):
         self.readonly = readonly
 
         if dbfile is not None:
-            # There is a default
             self.file = dbfile
             
             # Delete this dbfile and start again
@@ -76,7 +75,6 @@ class PhotonDatabase(object):
                 else:
                     raise ValueError("A database already exist at '%s', please rename your database" % self.file)
             
-            # print "Attempting to creating database dbfile...", self.file
             if self.readonly:
                 mode = 'r'
             else:
@@ -94,6 +92,7 @@ class PhotonDatabase(object):
             self.connection = sql.connect(":memory:")
             self.logger.debug('Using in-memory DB')
 
+        self.logger.debug("Attempting DB connection")
         self.cursor = self.connection.cursor()
 
         # Faster DB on disk without journaling
@@ -107,6 +106,7 @@ class PhotonDatabase(object):
                 dbfile = open(os.path.abspath(DB_SCHEMA), "r")
                 for line in dbfile:
                     self.cursor.execute(line)
+                self.logger.debug("DB schema loaded into db")
             except Exception:
                 print("Could not load DB schema file. (", DB_SCHEMA, ")")
                 exit(1)
@@ -417,7 +417,12 @@ class PhotonDatabase(object):
     
     def pid_from_uid(self, uid):
         """ Returns the photon ID of a given uid. """
-        return self.cursor.execute('SELECT pid FROM photon WHERE uid=?', (uid,)).fetchall()
+        if isinstance(uid, int) or isinstance(uid, float):
+            return itemise(self.cursor.execute("SELECT pid FROM photon WHERE uid=?", (uid,)).fetchall())[0]
+        elif isinstance(uid, list) or isinstance(uid, tuple):
+            items = str(uid)[1:-1]
+            cmd = "SELECT pid FROM photon WHERE uid IN ({0})".format(items)
+            return itemise(self.cursor.execute(cmd).fetchall())
 
     def uids_for_pid(self, pid):
         """ Returns all the uids associated to a given photon ID. """
@@ -445,14 +450,18 @@ class PhotonDatabase(object):
         Column can also be array-like so multiple columns can be specified provided they come from the same table.
         """
         if isinstance(column, str) or isinstance(column, unicode):
-            return self.cursor.execute("SELECT ? FROM ? WHERE uid = ?", (column, table, uid)).fetchall()
+            cmd = "SELECT " + column + " FROM " + table + " WHERE uid = " + str(uid)
+            self.logger.debug(cmd)
+            return self.cursor.execute(cmd).fetchall()
         elif isinstance(column, list) or isinstance(column, tuple):
             col_headers = ""
             for header in column:
-                col_headers += header
+                col_headers += str(header)
                 if header is not column[-1]:
                     col_headers += ', '
-            return self.cursor.execute("SELECT (?) FROM ? WHERE uid = ?", (col_headers, table, uid)).fetchall()
+            cmd = "SELECT "+col_headers+" FROM "+table+" WHERE uid = "+str(uid)
+            self.logger.debug(cmd)
+            return self.cursor.execute(cmd).fetchall()
         else:
             self.logger.info("Cannot return any uids for this question."
                              "Are you using the function value_for_table_column_uid correctly?")

@@ -50,7 +50,7 @@ class PhotonDatabase(object):
     An object the wraps a mysql database.
     """
 
-    def __init__(self, dbfile=None):
+    def __init__(self, dbfile=None, readonly=False):
         """
         Create the database and loads the schema into it.
 
@@ -61,6 +61,7 @@ class PhotonDatabase(object):
         self.uid = 0
         self.split_size = 20000
         self.logger = logging.getLogger('pvtrace.PhotonDatabase')
+        self.readonly = readonly
 
         if dbfile is not None:
             # There is a default
@@ -68,14 +69,22 @@ class PhotonDatabase(object):
             
             # Delete this dbfile and start again
             if os.path.exists(self.file):
-                if os.path.split(self.file)[1] == "pvtracedb.sql":
+                if os.path.split(self.file)[1] == "pvtracedb.sql" and self.readonly is not True:
                     os.remove(self.file)
+                elif self.readonly is True:
+                    self.logger.debug('Found DB file '+self.file)
                 else:
                     raise ValueError("A database already exist at '%s', please rename your database" % self.file)
             
             # print "Attempting to creating database dbfile...", self.file
+            if self.readonly:
+                mode = 'r'
+            else:
+                mode = 'w+'
+            
             try:
-                open(self.file, 'w+')
+                open(self.file, mode)
+                self.logger.debug('DB opened with '+mode+' mode')
             except:
                 raise IOError("Could not create file, %s" % self.file)
             
@@ -83,6 +92,7 @@ class PhotonDatabase(object):
         else:
             self.file = None
             self.connection = sql.connect(":memory:")
+            self.logger.debug('Using in-memory DB')
 
         self.cursor = self.connection.cursor()
 
@@ -91,14 +101,15 @@ class PhotonDatabase(object):
             self.cursor.execute("PRAGMA synchronous = OFF")
             self.cursor.execute("PRAGMA journal_mode = OFF")
 
-        try:
-            # print "Attempting to loading schema into database from dbfile ... ", DB_SCHEMA
-            dbfile = open(os.path.abspath(DB_SCHEMA), "r")
-            for line in dbfile:
-                self.cursor.execute(line)
-        except Exception:
-            print("Could not load DB schema file. (", DB_SCHEMA, ")")
-            exit(1)
+        if self.readonly is False:
+            try:
+                # print "Attempting to loading schema into database from dbfile ... ", DB_SCHEMA
+                dbfile = open(os.path.abspath(DB_SCHEMA), "r")
+                for line in dbfile:
+                    self.cursor.execute(line)
+            except Exception:
+                print("Could not load DB schema file. (", DB_SCHEMA, ")")
+                exit(1)
 
     def load(self, dbfile):
         """ Loads an existing photon database into memory from a dbfile path. """
@@ -447,6 +458,7 @@ class PhotonDatabase(object):
                              "Are you using the function value_for_table_column_uid correctly?")
             return []
 
+    # Returns the direction of the selected uid or list of uids
     def direction_for_uid(self, uid):
         if isinstance(uid, int) or isinstance(uid, float):
             return np.array(self.cursor.execute("SELECT x,y,z FROM direction WHERE uid = ?", (uid,)).fetchall()[0])
@@ -455,7 +467,8 @@ class PhotonDatabase(object):
             items = str(uid)[1:-1]
             cmd = "SELECT x,y,z FROM direction WHERE uid IN (%s)" % (items,)
             return self.cursor.execute(cmd).fetchall()
-    
+
+    # Returns the polarization of the selected uid or list of uids
     def polarisation_for_uid(self, uid):
         if isinstance(uid, int) or isinstance(uid, float):
             return np.array(self.cursor.execute("SELECT x,y,z FROM polarisation WHERE uid = ?", (uid,)).fetchall()[0])
@@ -463,7 +476,8 @@ class PhotonDatabase(object):
             items = str(uid)[1:-1]
             cmd = "SELECT x,y,z FROM polarisation WHERE uid IN (%s)" % (items,)
             return self.cursor.execute(cmd).fetchall()
-    
+
+    # Returns the position of the selected uid or list of uids
     def position_for_uid(self, uid):
         if isinstance(uid, int) or isinstance(uid, float):
             return np.array(self.cursor.execute("SELECT x,y,z FROM position WHERE uid = ?", (uid,)).fetchall()[0])
@@ -472,6 +486,7 @@ class PhotonDatabase(object):
             cmd = "SELECT x,y,z FROM position WHERE uid IN (%s)" % items
             return self.cursor.execute(cmd).fetchall()
 
+    # Returns the wavelength of the selected uid or list of uids
     def wavelength_for_uid(self, uid):
         if isinstance(uid, int) or isinstance(uid, float):
             return np.array(self.cursor.execute("SELECT wavelength FROM photon WHERE uid = ?", (uid,)).fetchall()[0])

@@ -1,6 +1,6 @@
 from __future__ import division, print_function
 
-from pvtrace import PhotonDatabase
+from pvtrace import PhotonDatabase, Trajectory
 
 import logging
 import os
@@ -18,17 +18,14 @@ Changing the backend is important on Windows, since the default one results in t
 PyEval_RestoreThread: NULL tstate
 
 That error could be circumvented calling .quit() and .destroy() on the graph element.
-Using Qt4 as backend requires PyQt4 but keeps the code platform independent without inflating platform-specific code
+Using Qt5 as backend requires PyQt5 but keeps the code platform independent
 """
 
 
 class Analysis(object):
     """
     Class for analysis of results, based on the produced database.
-    Can also be applied to old database data
-
-    Idea: just use uuid and save everything in that folder,
-    given uuid the class loads previous results if folder exists nad create the folder if not
+    Can also be applied to old database data (best indirectly, by creating a Scene() instance with matching uuid,
     """
 
     def __init__(self, database=None, uuid=None):
@@ -218,8 +215,7 @@ class Analysis(object):
         return x, y
 
     def history_from_pid(self, pid=None):
-        # FIXME : this is still missing
-        pass
+        return self.db.uids_for_pid(pid)
 
     def history_from_uid(self, uid=None):
         """
@@ -228,11 +224,67 @@ class Analysis(object):
 
         :param uid: list uid of photon to be investigated
         """
-        # FIXME: account for photon lists!
+        
+        # No uid
         if uid is None:
             return False
-        else:
+        
+        # Single uid
+        if isinstance(uid, int) or isinstance(uid, float):
             return self.history_from_pid(self.db.pid_from_uid(uid))
+        
+        # List of uids
+        history = []
+        pids = self.db.pid_from_uid(uid)
+        for pid in pids:
+            history.append(self.history_from_pid(pid))
+        return history
+    
+    def describe_trajectory(self, uid_list=None):
+        """
+        Describe one or multiple uid-based photon trajectory
+        
+        :param uid_list: the list(s) of uids of the trajectory
+        :return: None
+        """
+        if isinstance(uid_list[0], list) is False:
+            self.log.info("describe_trajectory() uids provided: "+str(sorted(uid_list)))
+            self.describe_photon_path(uid_list)
+        else:
+            for trajectory in uid_list:
+                self.describe_photon_path(trajectory)
+    
+    def describe_photon_path(self, path):
+        """
+        Describe a photon trajectory
+        
+        :param trajectory: uid-based photon trajectory
+        :return:
+        """
+        trajectory = Trajectory.Trajectory()
+        for step in path:
+            position = self.db.value_for_table_column_uid(table='position', column=('x', 'y', 'z'), uid=step)
+            direction = self.db.value_for_table_column_uid(table='direction', column=('x', 'y', 'z'), uid=step)
+            polarization = self.db.value_for_table_column_uid(table='polarisation', column=('x', 'y', 'z'), uid=step)
+            wavelength = self.db.value_for_table_column_uid(table='photon', column='wavelength', uid=step)
+            state = self.db.value_for_table_column_uid(table='state', column=('absorption_counter',
+                                                                              'intersection_counter',
+                                                                              'active',
+                                                                              'killed',
+                                                                              'source',
+                                                                              'emitter_material',
+                                                                              'absorber_material',
+                                                                              'container_obj',
+                                                                              'on_surface_obj',
+                                                                              'surface_id',
+                                                                              'ray_direction_bound',
+                                                                              'reaction'), uid=step)
+            
+            if isinstance(state[0], tuple):
+                state = state[0]
+
+            trajectory.add_step(position=position, direction=direction, polarization=polarization,
+                                wavelength=wavelength, active=state[2], container=state[7])
 
     def create_graphs(self, prefix=''):
         """

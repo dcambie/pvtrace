@@ -25,6 +25,7 @@ from pvtrace.Materials import *
 from pvtrace.PhotonDatabase import *
 from pvtrace.Scene import *
 from pvtrace.Trace import *
+from pvtrace.Trajectory import *
 from pvtrace.Visualise import *
 
 import os

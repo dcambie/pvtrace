@@ -36,7 +36,7 @@ class Scene(object):
         # Create file if needed and without truncating (appending useful for post-mortem DB analysis)
         open(LOG_FILENAME, 'a').close()
         # logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG)
-        logging.basicConfig(filename=LOG_FILENAME, level=logging.INFO)
+        logging.basicConfig(filename=LOG_FILENAME, filemode='a', level=logging.INFO)
         logger = logging.getLogger('pvtrace.scene')
         logger.debug('*** NEW SIMULATION ***')
         logger.info('UUID: ' + self.uuid)

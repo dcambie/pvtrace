@@ -51,7 +51,7 @@ class Register(object):
                 log_entry = (list(photon.position), float(photon.wavelength), None, photon.absorption_counter)
                 self.store[key].append(log_entry)
                 if photon.show_log:
-                    self.logger.debug('Photon ' + photon.pid + ' lost')
+                    self.logger.debug('Photon lost')
                     print('   Logged as lost photon...')
                 return
             else:

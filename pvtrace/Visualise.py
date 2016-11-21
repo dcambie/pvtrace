@@ -17,7 +17,7 @@ try:
     VISUAL_INSTALLED = True
     print("Python module visual is installed...")
 except:
-    print("Python module visual is not installed... telling all Visualiser object to not render.")
+    print("Python module visual is not installed...  all Visualiser are disabled.")
     VISUAL_INSTALLED = False
 
 import numpy as np

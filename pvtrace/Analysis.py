@@ -1,5 +1,7 @@
 from __future__ import division, print_function
 
+from pvtrace import PhotonDatabase
+
 import logging
 import os
 
@@ -39,6 +41,10 @@ class Analysis(object):
             self.uuid = uuid
             self.working_dir = os.path.join(os.path.expanduser('~'), 'pvtrace_data', self.uuid)
             self.graph_dir = os.path.join(self.working_dir, 'graphs')
+            try_db_location = os.path.join(self.working_dir, "db.sqlite")
+            if database is None and os.access(try_db_location, os.R_OK):
+                self.db = PhotonDatabase.PhotonDatabase(dbfile=try_db_location, readonly=True)
+            
         self.log = logging.getLogger('pvtrace.analysis')
         self.photon_generated = None
         self.photon_killed = None

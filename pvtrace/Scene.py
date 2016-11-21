@@ -1,3 +1,21 @@
+from __future__ import division, print_function
+
+import os
+import time
+
+import shortuuid
+
+import pvtrace.Analysis
+import pvtrace.PhotonDatabase
+import pvtrace.Scene
+from pvtrace.Devices import *
+
+try:
+    import visual
+    from Visualise import Visualiser
+except Exception:
+    pass
+
 
 class Scene(object):
     """
@@ -8,20 +26,18 @@ class Scene(object):
         super(Scene, self).__init__()
         self.bounds = Bounds()  # Create boundaries to world and apply to scene
         self.objects = [self.bounds]
-        self.uuid = None
         self.working_dir = self.get_new_working_dir(uuid=uuid, use_existing=force)
         print("Working directory: ", self.working_dir)
         self.log = self.start_logging()
-        self.stats = pvtrace.Analysis.Analysis(uuid=self.uuid)
+        self.stats = pvtrace.Analysis(uuid=self.uuid)
 
     def start_logging(self):
         LOG_FILENAME = os.path.join(self.working_dir, 'output.log')
-
         # Create file if needed and without truncating (appending useful for post-mortem DB analysis)
         open(LOG_FILENAME, 'a').close()
         # logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG)
         logging.basicConfig(filename=LOG_FILENAME, level=logging.INFO)
-        logger = logging.getLogger('pvtrace.trace')
+        logger = logging.getLogger('pvtrace.scene')
         logger.debug('*** NEW SIMULATION ***')
         logger.info('UUID: ' + self.uuid)
         logger.debug('Date/Time ' + time.strftime("%c"))
@@ -114,7 +130,6 @@ class Scene(object):
                         points[i] = None
                         objects[i] = None
                 except:
-                    # import pdb; pdb.set_trace()
                     ray.ray.behind(points[i])
                     cmp_points(ray.position, points[i])
                     exit(1)

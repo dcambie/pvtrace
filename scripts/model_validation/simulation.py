@@ -20,8 +20,8 @@ logger.info('Reactor volume (calculated): ' + str(reactor.reaction_volume * 1000
 for obj in reactor.scene_obj:
     scene.add_object(obj)
 
-trace = pvtrace.Tracer(scene=scene, source=reactor.source, seed=None, throws=100000, use_visualiser=True,
-                       show_log=False, show_axis=True, show_counter=False, db_split=True)
+trace = pvtrace.Tracer(scene=scene, source=reactor.source, seed=None, throws=100, use_visualiser=False,
+                       show_log=False, show_axis=True, show_counter=True, db_split=True)
 trace.show_lines = True
 trace.show_path = False
 
@@ -53,7 +53,7 @@ logger.info('Simulation Ended (time: ' + str(toc) + ', elapsed: ' + str(toc - ti
 # print(spectrum)
 # For reproducibility reasons always append git version to results (tested on linux only)
 label = subprocess.check_output(["git", "describe"], cwd=PVTDATA, shell=True)
-logger.info('PvTrace ' + label + ' simulation ended')
+logger.info('PvTrace ' + str(label) + ' simulation ended')
 
 print(scene.stats.print_excel_header() + "\n")
 print(scene.stats.print_excel() + "\n")

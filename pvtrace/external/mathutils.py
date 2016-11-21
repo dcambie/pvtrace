@@ -45,8 +45,6 @@ except ImportError:  # Python3.x
     from past.builtins import xrange
 
 import logging
-logging.basicConfig()
-
 
 def float_to_int(value):
     """Convert float to integer, rounding and handling nan and inf

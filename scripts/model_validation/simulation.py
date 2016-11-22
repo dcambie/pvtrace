@@ -21,7 +21,7 @@ for obj in reactor.scene_obj:
     scene.add_object(obj)
 
 trace = pvtrace.Tracer(scene=scene, source=reactor.source, seed=None, throws=100, use_visualiser=False,
-                       show_log=False, show_axis=True, show_counter=False, db_split=True)
+                       show_log=False, show_axis=True, show_counter=False, db_split=True, preserve_db_tables=True)
 trace.show_lines = True
 trace.show_path = False
 

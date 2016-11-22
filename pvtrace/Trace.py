@@ -568,7 +568,7 @@ class Tracer(object):
     """
     def __init__(self, scene=None, source=None, throws=1, steps=50, seed=None, use_visualiser=True, show_log=False,
                  background=(0.957, 0.957, 1), ambient=0.5, show_axis=True,
-                 show_counter=False, db_split=None):
+                 show_counter=False, db_split=None, preserve_db_tables=False):
         super(Tracer, self).__init__()
         self.scene = scene
         self.source = source
@@ -582,6 +582,7 @@ class Tracer(object):
         self.show_counter = show_counter
         # From Scene, link db with analytics and get uuid
         self.uuid = self.scene.uuid
+        self.db_save_all_tables = preserve_db_tables
 
         # DB splitting (performance tweak)
         self.split_num = self.database.split_size
@@ -737,54 +738,42 @@ class Tracer(object):
                         #       'normal', normal, 'ray dir', photon.direction, 'angle' , np.degrees(rads))
                         if rads < np.pi / 2:
                             bound = "Out"
-                            # print "OUT"
                         else:
                             bound = "In"
-                            # print "IN"
-
+                        # Saves photon to db
                         self.database.log(photon, surface_normal=photon.exit_device.shape.surface_normal(photon),
                                           surface_id=photon.exit_device.shape.surface_identifier(photon.position),
                                           ray_direction_bound=bound, emitter_material=photon.emitter_material,
                                           absorber_material=photon.absorber_material)
-
                 else:
                     self.database.log(photon)
 
-                # import time;
-                # time.sleep(0.1)
-                # import pdb; pdb.set_trace()
                 wavelength = photon.wavelength
-                # photon.visualiser.addPhoton(photon)
                 photon = photon.trace()
 
                 if step == 0:
                     # The ray has hit the first object. 
-                    # Cache this for later use. If the ray is not 
-                    # killed then log data.
-                    # import pdb; pdb.set_trace()
+                    # Cache this for later use. If the ray is not killed then log data.
                     entering_photon = copy(photon)
 
-                # print "Step number:", step
+                # Visualizer bits
                 if pvtrace.Visualiser.VISUALISER_ON:
                     b = list(photon.position)
                     # if self.show_lines and photon.active and step > 2:
                     if self.show_lines and photon.active:
                         self.visualiser.addLine(a, b, colour=wav2RGB(photon.wavelength))
-
+                    
                     # if self.show_path and photon.active and step > 0:
                     if self.show_path and photon.active:
                         self.visualiser.addSmallSphere(b)
-
-                # import pdb; pdb.set_trace()
+                
+                # Reached Bound()
                 if not photon.active and photon.container == self.scene.bounds:
-
-                    # import pdb; pdb.set_trace()
                     if pvtrace.Visualiser.VISUALISER_ON:
                         if self.show_exit:
                             photon.visual_obj.append(self.visualiser.addSmallSphere(a, colour=[.33, .33, .33]))
                             photon.visual_obj.append(self.visualiser.addLine(a, a + 0.01 * photon.direction,
                                                      colour=wav2RGB(wavelength)))
-
                     # Record photon that has made it to the bounds
                     if step == 0:
                         self.scene.log.debug("   * Photon hit scene bounds without previous intersections "
@@ -792,6 +781,7 @@ class Tracer(object):
                     else:
                         self.scene.log.debug("   * Reached Bounds *")
                         photon.exit_device.log(photon)
+                        # This is not really needed and pollutes statistics
                         # self.database.log(photon)
 
                     # entering_photon.exit_device.log(entering_photon)
@@ -799,7 +789,6 @@ class Tracer(object):
                     logged += 1
 
                 elif not photon.active:
-                    # print photon.exit_device.name
                     photon.exit_device = photon.container
                     photon.container.log(photon)
                     self.database.log(photon)
@@ -857,8 +846,14 @@ class Tracer(object):
             # MERGE DB before statistics
             # this will be done in memory only (RAM is cheap nowadays)
             self.database = pvtrace.PhotonDatabase(dbfile=None)
+            # Check whether to save all the DB tables of just photon and state (faster and smaller but with losses)
+            if self.db_save_all_tables:
+                tables_to_save = None
+            else:
+                tables_to_save = ("photon", "state")
+            
             for db_file in self.dumped:
-                self.database.add_db_file(filename=db_file, tables=("photon", "state"))
+                self.database.add_db_file(filename=db_file, tables=tables_to_save)
                 os.remove(db_file)
                 # print "merged ",db_file
 

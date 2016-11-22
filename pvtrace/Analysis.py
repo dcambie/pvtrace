@@ -249,16 +249,18 @@ class Analysis(object):
         """
         if isinstance(uid_list[0], list) is False:
             self.log.info("describe_trajectory() uids provided: "+str(sorted(uid_list)))
-            self.describe_photon_path(uid_list)
+            return self.describe_photon_path(uid_list)
         else:
+            return_values = []
             for trajectory in uid_list:
-                self.describe_photon_path(trajectory)
+                return_values.append(self.describe_photon_path(trajectory))
+            return return_values
     
     def describe_photon_path(self, path):
         """
         Describe a photon trajectory
         
-        :param trajectory: uid-based photon trajectory
+        :param path: uid-based photon trajectory
         :return:
         """
         trajectory = Trajectory.Trajectory()
@@ -279,12 +281,11 @@ class Analysis(object):
                                                                               'surface_id',
                                                                               'ray_direction_bound',
                                                                               'reaction'), uid=step)
-            
-            if isinstance(state[0], tuple):
-                state = state[0]
+            self.log.debug("state is "+str(state))
 
             trajectory.add_step(position=position, direction=direction, polarization=polarization,
                                 wavelength=wavelength, active=state[2], container=state[7])
+        return trajectory
 
     def create_graphs(self, prefix=''):
         """

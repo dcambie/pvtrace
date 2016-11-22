@@ -6,6 +6,8 @@ import types
 import os
 import pvtrace
 import logging
+from itertools import chain
+
 
 # The database schema lives inside the pvtrace module directory
 DB_SCHEMA = os.path.join(os.path.dirname(pvtrace.__file__), "dbschema.sql")
@@ -23,6 +25,9 @@ def counted(fn):
 
 def itemise(array):
     """Extracts redundant nested arrays from a parent array e.g. [(1,), (2,), (3,), (4,)] becomes (1,2,3,4)."""
+    # New implementation under testing
+    return list(chain.from_iterable(array))
+    
     new = []
     is_values = None
     is_points = None
@@ -41,7 +46,7 @@ def itemise(array):
                 new.append(item)
             
             if is_values == is_points:
-                raise ValueError("All elements must of the array must be singleton arrays (i.e. single element arrays)")
+                raise ValueError("All elements of the array must be singleton arrays (i.e. single element arrays)")
     return new
 
 
@@ -188,8 +193,7 @@ class PhotonDatabase(object):
         sqlitebck.copy(self.connection, file_connection)
         print("\r DB copy saved as ", filename)
 
-    def add_db_file(self, filename=None,
-                    tables=("photon", "state", "direction", "position", "surface_normal", "polarisation")):
+    def add_db_file(self, filename=None, tables=None):
         """
         Adds the data in the give filename db to the current DB (only the tables in tables)
 
@@ -198,6 +202,8 @@ class PhotonDatabase(object):
         :param filename: Filename of the db to be added
         :param tables: Tables to be added
         """
+        if tables is None:
+            tables = ("photon", "state", "direction", "position", "surface_normal", "polarisation")
         self.cursor.execute("ATTACH DATABASE ? AS  toMerge", [filename])
         for table in tables:
             self.cursor.execute("INSERT INTO "+table+" SELECT * FROM toMerge."+table)
@@ -452,7 +458,7 @@ class PhotonDatabase(object):
         if isinstance(column, str) or isinstance(column, unicode):
             cmd = "SELECT " + column + " FROM " + table + " WHERE uid = " + str(uid)
             self.logger.debug(cmd)
-            return self.cursor.execute(cmd).fetchall()
+            return itemise(self.cursor.execute(cmd).fetchall())
         elif isinstance(column, list) or isinstance(column, tuple):
             col_headers = ""
             for header in column:
@@ -461,7 +467,7 @@ class PhotonDatabase(object):
                     col_headers += ', '
             cmd = "SELECT "+col_headers+" FROM "+table+" WHERE uid = "+str(uid)
             self.logger.debug(cmd)
-            return self.cursor.execute(cmd).fetchall()
+            return itemise(self.cursor.execute(cmd).fetchall())
         else:
             self.logger.info("Cannot return any uids for this question."
                              "Are you using the function value_for_table_column_uid correctly?")

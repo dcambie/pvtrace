@@ -745,6 +745,8 @@ class Tracer(object):
                                           surface_id=photon.exit_device.shape.surface_identifier(photon.position),
                                           ray_direction_bound=bound, emitter_material=photon.emitter_material,
                                           absorber_material=photon.absorber_material)
+                    else:
+                        self.database.log(photon)
                 else:
                     self.database.log(photon)
 

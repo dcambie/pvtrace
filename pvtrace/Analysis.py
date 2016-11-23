@@ -284,7 +284,7 @@ class Analysis(object):
             self.log.debug("state is "+str(state))
 
             trajectory.add_step(position=position, direction=direction, polarization=polarization,
-                                wavelength=wavelength, active=state[2], container=state[7])
+                                wavelength=wavelength, active=state[2], container=state[7], on_surface_object=state[8])
         return trajectory
 
     def create_graphs(self, prefix=''):

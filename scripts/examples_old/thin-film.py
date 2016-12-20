@@ -14,7 +14,7 @@ lsc = LSC(origin=(0,0,S), size=(L,W,T))
 absorption_data = np.loadtxt(os.path.join(PVTDATA,"dyes", "lr300.abs.txt"))
 T_need = 0.05 # Want to transmit 5% of the light at the peak absorption wavelength
 ap = absorption_data[:,1].max()
-phi = -1/(ap*(T)) * np.log(T_need)
+phi = -1/(ap * T) * np.log(T_need)
 absorption_data[:,1] = absorption_data[:,1]*phi
 print "Absorption data scaled to peak, ", absorption_data[:,1].max()
 print "Therefore transmission at peak = ", np.exp(-absorption_data[:,1].max() * T)

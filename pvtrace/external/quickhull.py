@@ -135,9 +135,14 @@ A random shape
 #
 # ***** END LICENSE BLOCK *****
 
-from mathutils import *
-from itertools import izip
+from pvtrace.external import mathutils
 import operator
+
+# Python2.7 and 3.5 compatibility
+try:
+    from itertools import izip
+except ImportError:  #python3.x
+    izip = zip
 
 # adapted from
 # http://en.literateprograms.org/Quickhull_(Python,_arrays)
@@ -296,7 +301,7 @@ def qhull3d(vertices, precision = 0.0001, verbose = False):
         C{precision}.
     :param verbose: Print information about what the algorithm is doing. Only
         useful for debugging.
-    :return: A list cointaining the extreme points of C{vertices}, and
+    :return: A list containing the extreme points of C{vertices}, and
         a list of triangle indices containing the triangles that connect
         all extreme points.
     """

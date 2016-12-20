@@ -12,28 +12,35 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import division
 import numpy as np
-from external import transformations
-from external import pov
-from external import quickhull
-from external import mathutils
+from pvtrace.external import transformations
+from pvtrace.external import pov
+from pvtrace.external import quickhull
+from pvtrace.external import mathutils
 
-print "pvtrace pre-flight checks..."
-from Materials import *
-from Devices import *
-from Geometry import *
-from ConstructiveGeometry import *
-from LightSources import *
-from Visualise import *
-from Trace import *
-from Interpolation import *
+from pvtrace.Materials import *
+from pvtrace.Devices import *
+from pvtrace.Geometry import *
+from pvtrace.ConstructiveGeometry import *
+from pvtrace.LightSources import *
+from pvtrace.Visualise import *
+from pvtrace.Trace import *
+from pvtrace.Interpolation import *
 
 import os
 import sys
+
+print("pvtrace pre-flight checks...")
+
 # Module constants -- location of the data folder
+# print(sys.path)
 for path in sys.path:
     if path.find('pvtrace') != -1:
-        pvtrace_directory = path
+        pvtrace_containing_directory = path
         break
-PVTDATA = os.path.join(pvtrace_directory, 'data')
-print "pvtrace data directory:"
-print PVTDATA
+while pvtrace_containing_directory.find('pvtrace') != -1:
+    pvtrace_containing_directory = os.path.abspath(os.path.join(pvtrace_containing_directory, '..'))
+
+PVTDATA = os.path.join(pvtrace_containing_directory, 'pvtrace', 'data')
+
+# print("Pvtrace data directory:")
+# print(PVTDATA)

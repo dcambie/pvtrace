@@ -14,21 +14,6 @@
 import numpy as np
 from types import *
 
-# Some wavelength points
-#x = np.array([400.,600.,601,1000.])
-# Some angle values
-#y = np.array([0., np.pi/4, np.pi/2])
-
-# Some reflectivity values
-#z = np.array([[0.,1e-9,1.-1e-9,1.], [0.,1e-9,1.-1e-9,1.], [0.,1e-9,1.-1e-9,1.]])
-#z = np.array([[0.,0.,0.], [1e-9,1e-9,1e-9], [1-1e-9,1-1e-9,1-1e-9], [1.,1.,1.]])
-#z_i = I.interp2d(x, y, z, kind='linear', fill_value=0., bounds_error=False)
-
-#np.savetxt("orig.txt", z)
-#np.savetxt("intp.txt", z_i(x,y))
-
-#print z_i(610,0.1)
-# What crazyness is this spitting out!!!!!!!!!!
 
 class interp1d(object):
     """ Interpolate a 1D function.
@@ -54,7 +39,7 @@ class interp1d(object):
         ----------
         x : array
             A 1D array of monotonically increasing real values.  x cannot
-            include duplicate values (otherwise f is overspecified)
+            include duplicate values (otherwise f is over specified)
         y : array
             An N-D array of real values.  y's length along the interpolation
             axis must be equal to the length of x.
@@ -86,14 +71,14 @@ class interp1d(object):
         self.fill_value = fill_value
         
         if kind in ['zero', 'slinear', 'quadratic', 'cubic']:
-            order = {'nearest':0, 'zero':0,'slinear':1,
-                     'quadratic':2, 'cubic':3}[kind]
+            order = {'nearest': 0, 'zero': 0, 'slinear': 1,
+                     'quadratic': 2, 'cubic': 3}[kind]
             kind = 'spline'
         elif isinstance(kind, int):
             order = kind
             kind = 'spline'
         elif kind not in ('linear', 'nearest'):
-            raise NotImplementedError("%s is unsupported: Use fitpack "\
+            raise NotImplementedError("%s is unsupported: Use fitpack "
                                       "routines for other types." % kind)
         x = np.array(x, copy=self.copy)
         y = np.array(y, copy=self.copy)
@@ -114,7 +99,7 @@ class interp1d(object):
         if kind in ('linear', 'nearest'):
             # Make a "view" of the y array that is rotated to the interpolation
             # axis.
-            axes = range(y.ndim)
+            axes = list(range(y.ndim))
             del axes[self.axis]
             axes.append(self.axis)
             oriented_y = y.transpose(axes)
@@ -126,14 +111,14 @@ class interp1d(object):
                 self.x_bds = (x[1:] + x[:-1]) / 2.0
                 self._call = self._call_nearest
         else:
-            axes = range(y.ndim)
+            axes = list(range(y.ndim))
             del axes[self.axis]
             axes.insert(0, self.axis)
             oriented_y = y.transpose(axes)
             minval = order + 1
             len_y = oriented_y.shape[0]
             self._call = self._call_spline
-            self._spline = splmake(x,oriented_y,order=order)
+            self._spline = splmake(x, oriented_y, order=order)
             
         len_x = len(x)
         if len_x != len_y:
@@ -147,7 +132,7 @@ class interp1d(object):
         
     def _call_linear(self, x_new):
         
-        # 2. Find where in the orignal data, the values to interpolate
+        # 2. Find where in the original data, the values to interpolate
         #    would be inserted.
         #    Note: If x_new[n] == x[m], then m is returned by searchsorted.
         x_new_indices = np.searchsorted(self.x, x_new)
@@ -193,8 +178,8 @@ class interp1d(object):
         return y_new
         
     def _call_spline(self, x_new):
-        x_new =np.asarray(x_new)
-        result = spleval(self._spline,x_new.ravel())
+        x_new = np.asarray(x_new)
+        result = spleval(self._spline, x_new.ravel())
         return result.reshape(x_new.shape+result.shape[1:])
         
     def __call__(self, x_new):
@@ -213,7 +198,7 @@ class interp1d(object):
         """
         
         # 1. Handle values in x_new that are outside of x.  Throw error,
-        #    or return a list of mask array indicating the outofbounds values.
+        #    or return a list of mask array indicating the out_of_bounds values.
         #    The behavior is set by the bounds_error variable.
         x_new = np.asarray(x_new)
         out_of_bounds = self._check_bounds(x_new)
@@ -241,12 +226,12 @@ class interp1d(object):
             return np.asarray(y_new)
         elif self._kind in ('linear', 'nearest'):
             y_new[..., out_of_bounds] = self.fill_value
-            axes = range(ny - nx)
+            axes = list(range(ny - nx))
             axes[self.axis:self.axis] = range(ny - nx, ny)
             return y_new.transpose(axes)
         else:
             y_new[out_of_bounds] = self.fill_value
-            axes = range(nx, ny)
+            axes = list(range(nx, ny))
             axes[self.axis:self.axis] = range(nx)
             return y_new.transpose(axes)
             
@@ -272,16 +257,17 @@ class interp1d(object):
         # !! Could provide more information about which values are out of bounds
         if self.bounds_error and below_bounds.any():
             raise ValueError("A value in x_new is below the interpolation "
-                "range.")
+                             "range.")
         if self.bounds_error and above_bounds.any():
             raise ValueError("A value in x_new is above the interpolation "
-                "range.")
+                             "range.")
                 
         # !! Should we emit a warning if some values are out of bounds?
-        # !! matlab does not.
+        # !! MatLab does not.
         out_of_bounds = np.logical_or(below_bounds, above_bounds)
         return out_of_bounds
-        
+
+
 class BilinearInterpolation(object):
     """docstring for BilinearInterpolation"""
     def __init__(self, x=None, y=None, z=None, fill_value=0.):
@@ -296,11 +282,13 @@ class BilinearInterpolation(object):
         z_s = self.z.shape
         assert x_s[0] >= 3, "Need at least 3 points in x."
         assert y_s[0] >= 3, "Need at least 3 points in y."
-        assert x_s[0] == z_s[0], "The number of rows in z (which is %s), must be the same as number of elements in x (which is %s)" % (x_s[0], z_s[0])
-        assert y_s[0] == z_s[1], "The number of columns in z (which is %s), must be the same as number of elements in y (which is %s)" % (y_s[0], z_s[1])
+        assert x_s[0] == z_s[0], "The number of rows in z (which is %s)," \
+                                 "must be the same as number of elements in x (which is %s)" % (x_s[0], z_s[0])
+        assert y_s[0] == z_s[1], "The number of columns in z (which is %s)," \
+                                 "must be the same as number of elements in y (which is %s)" % (y_s[0], z_s[1])
     
     def __call__(self, xvalue, yvalue):
-        """The intepolated value of the surface."""
+        """The interpolated value of the surface."""
         try:
             x_i = 0
             found = False
@@ -338,7 +326,7 @@ class BilinearInterpolation(object):
             ta = self.z[x_i[0], y_i[0]]
             tb = (x_v[1] - xvalue)
             tc = (y_v[1] - yvalue)
-            t1 = ta * tb  * tc / D
+            t1 = ta * tb * tc / D
             # print t1, "=", ta, "*", tb, "*", tc, "/", D
             
             ta = self.z[x_i[1], y_i[0]]
@@ -366,28 +354,9 @@ class BilinearInterpolation(object):
             return t1 + t2 + t3 + t4
             
         except ValueError:
-            import pdb; pdb.set_trace()
             # Is one of the inputs an array?
-            if type(xvalue) == ListType or type(xvalue) == TupleType or type(xvalue) == type(np.array([])):
+            if isinstance(xvalue, list) or isinstance(xvalue, tuple) or isinstance(xvalue, np.array):
                 constructed_list = []
                 for sub_xvalue in xvalue:
                     constructed_list.append(self(sub_xvalue, yvalue))
                 return np.array(constructed_list)
-
-
-if False:
-    # Some wavelength points
-    x = np.array([400.,600.,601,1000.])
-    
-    # Some angle values
-    y = np.array([0., np.pi/4, np.pi/2])
-    
-    # Some reflectivity values
-    z = np.array([[0.,1e-9,1.-1e-9,1.], [0.,1e-9,1.-1e-9,1.], [0.,1e-9,1.-1e-9,1.]])
-    #             rads @ 400nm,    rads @ 600nm,        rads @ 601m,             rads @ 1000nm     
-    z = np.array([[0.,0.,0.],      [1e-9,1e-9,1e-9],     [1-1e-9,1-1e-9,1-1e-9],  [1.,1.,1.]])
-    # print z.shape
-    
-    z_i = BilinearInterpolation(x,y,z)
-    print z_i(610,0.1)
-    

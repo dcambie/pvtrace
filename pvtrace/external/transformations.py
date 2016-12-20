@@ -308,15 +308,15 @@ def rotation_matrix(angle, direction, point=None):
     True
 
     """
-    sina = math.sin(angle)
-    cosa = math.cos(angle)
+    sin_a = math.sin(angle)
+    cos_a = math.cos(angle)
     direction = unit_vector(direction[:3])
     # rotation matrix around unit vector
-    R = numpy.array(((cosa, 0.0,  0.0),
-                     (0.0,  cosa, 0.0),
-                     (0.0,  0.0,  cosa)), dtype=numpy.float64)
-    R += numpy.outer(direction, direction) * (1.0 - cosa)
-    direction *= sina
+    R = numpy.array(((cos_a, 0.0,  0.0),
+                     (0.0,  cos_a, 0.0),
+                     (0.0,  0.0,  cos_a)), dtype=numpy.float64)
+    R += numpy.outer(direction, direction) * (1.0 - cos_a)
+    direction *= sin_a
     R += numpy.array((( 0.0,         -direction[2],  direction[1]),
                       ( direction[2], 0.0,          -direction[0]),
                       (-direction[1], direction[0],  0.0)),
@@ -359,14 +359,14 @@ def rotation_from_matrix(matrix):
     point = numpy.real(Q[:, i[-1]]).squeeze()
     point /= point[3]
     # rotation angle depending on direction
-    cosa = (numpy.trace(R33) - 1.0) / 2.0
+    cos_a = (numpy.trace(R33) - 1.0) / 2.0
     if abs(direction[2]) > 1e-8:
-        sina = (R[1, 0] + (cosa-1.0)*direction[0]*direction[1]) / direction[2]
+        sin_a = (R[1, 0] + (cos_a-1.0)*direction[0]*direction[1]) / direction[2]
     elif abs(direction[1]) > 1e-8:
-        sina = (R[0, 2] + (cosa-1.0)*direction[0]*direction[2]) / direction[1]
+        sin_a = (R[0, 2] + (cos_a-1.0)*direction[0]*direction[2]) / direction[1]
     else:
-        sina = (R[2, 1] + (cosa-1.0)*direction[1]*direction[2]) / direction[0]
-    angle = math.atan2(sina, cosa)
+        sin_a = (R[2, 1] + (cos_a-1.0)*direction[1]*direction[2]) / direction[0]
+    angle = math.atan2(sin_a, cos_a)
     return angle, direction, point
 
 
@@ -597,7 +597,7 @@ def clip_matrix(left, right, bottom, top, near, far, perspective=False):
     orthographic canonical view volume (a box).
 
     Homogeneous coordinates transformed by the perspective clip matrix
-    need to be dehomogenized (devided by w coordinate).
+    need to be dehomogenized (divided by w coordinate).
 
     >>> frustrum = numpy.random.rand(6)
     >>> frustrum[1] += frustrum[0]
@@ -1768,7 +1768,12 @@ def angle_between_vectors(v0, v1, directed=True, axis=0):
 
 
 def inverse_matrix(matrix):
-    """Return inverse of square transformation matrix.
+    """
+    Return inverse of square transformation matrix.
+
+    :param matrix: Input matrix
+    :return: Inverse matrix
+    :rtype: matrix
 
     >>> M0 = random_rotation_matrix()
     >>> M1 = inverse_matrix(M0.T)
@@ -1778,7 +1783,6 @@ def inverse_matrix(matrix):
     ...     M0 = numpy.random.rand(size, size)
     ...     M1 = inverse_matrix(M0)
     ...     if not numpy.allclose(M1, numpy.linalg.inv(M0)): print(size)
-
     """
     return numpy.linalg.inv(matrix)
 
@@ -1824,6 +1828,7 @@ def _import_module(module_name, warn=True, prefix='_py_', ignore='_'):
     Return True on successful import.
 
     """
+    
     sys.path.append(os.path.dirname(__file__))
     try:
         module = __import__(module_name)
@@ -1845,7 +1850,7 @@ def _import_module(module_name, warn=True, prefix='_py_', ignore='_'):
         return True
 
 
-_import_module('_transformations')
+#_import_module('_transformations')
 
 # Documentation in HTML format can be generated with Epydoc
 __docformat__ = "restructuredtext en"

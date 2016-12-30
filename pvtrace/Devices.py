@@ -30,19 +30,16 @@ class Register(object):
     def __init__(self):
         super(Register, self).__init__()
         self.store = dict()
+        # Dictionary whose keys are surface_identifiers. The items are
+        # arrays where each index is a tuple containing ray statistics
+        # as indicated in self.log()
         self.logger = logging.getLogger('pvtrace.devices')
-        # Dictionary whose keys are surface_identifiers. The items are 
-        # arrays where each index is an tuples containing ray statistics 
-        # as indicated in the log function.
 
     def log(self, photon):
-
         # Need to check that the photon is on the surface
-        # import pdb; pdb.set_trace()
         if not self.shape.on_surface(photon.position):
 
             if not photon.active:
-
                 # The photon has been non-radiatively lost inside a material
                 key = 'loss'
                 if key not in self.store:
@@ -75,25 +72,18 @@ class Register(object):
         # Can do this because all surface_normal with the acute flag False returns outwards facing normals.
         normal = photon.exit_device.shape.surface_normal(photon.ray, acute=False)
         rads = angle(normal, photon.ray.direction)
-        if rads < np.pi / 2:
-            # Ray facing outwards
-            bound = "outbound"
-        else:
-            # Ray facing inwards
-            bound = "inbound"
 
-        if photon.show_log:
-            self.logger.debug("Photon is logged as" + bound)
-            print('   Logged as ', bound, '...')
+        # If the angle between ray direction and normal is less than pi/2 than outbond, inbound otherwise
+        bound = "outbound" if rads < (np.pi / 2) else "inbound"
+        self.logger.debug("Photon logged as" + bound)
 
         key = photon.exit_device.shape.surface_identifier(photon.position)
         if key not in self.store:
-            # Add an item for this key.
             self.store[key] = []
 
         # [0] --> position
         # [1] --> wavelength
-        # [2] --> boundedness (inbound or outbound)
+        # [2] --> surface side (inbound or outbound)
         # [3] --> re-absorptions
         # [4] --> total jumps
         # [5] --> object_number
@@ -133,15 +123,9 @@ class Register(object):
         else:
             return 0.0
 
-        if len(entries) == 0:
+        counts = len(entries)
+        if counts == 0:
             return 0.0
-
-        counts = 0
-        for entry in entries:
-            counts += 1
-
-        if counts is None:
-            return 0
         return counts
 
     def loss(self):
@@ -174,7 +158,6 @@ class Register(object):
             return None
 
         wavelengths = np.array(wavelengths)
-        print(wavelengths)
 
         if len(wavelengths) is 1:
             bins = np.arange(np.floor(wavelengths[0] - 1), np.ceil(wavelengths[0] + 2))

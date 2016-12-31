@@ -18,7 +18,7 @@ scene.add_object(detection_plane)
 
 for source in led:
     trace = pvtrace.Tracer(scene=scene, source=source, seed=None, throws=photons_per_led, use_visualiser=True,
-                           show_log=False, show_axis=True, show_counter=False, db_split=True)
+                           show_axis=True, show_counter=False, db_split=True)
     # Run simulation
     tic = time.clock()
     logger.info('Simulation Started (time: ' + str(tic) + ')')

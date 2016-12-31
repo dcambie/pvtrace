@@ -23,11 +23,6 @@ class Photocatalyst(object):
 
         # Then adjust it based on molar concentration
         photocat_abs_data[:, 1] = photocat_abs_data[:, 1] * self.concentration
-
-        # FIXME: get peak and freq as max(photocat_abs_data)
-        # peak = max(photocat_abs_data[:, 1])
-        # wavelength = 0
-        # self.logger.info('Calculated peak of absorption: ' + peak + ' at ' + wavelength + ' nm')
         return Spectrum(x=photocat_abs_data[:, 0], y=photocat_abs_data[:, 1])
 
 

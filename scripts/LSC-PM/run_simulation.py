@@ -6,12 +6,11 @@ logger = logging.getLogger('pvtrace')
 
 reactor = Reactor(reactor_name="5x5_6ch_squared", dye="Red305", dye_concentration=0.20, photocatalyst="MB",
                   photocatalyst_concentration=0.0004)
+scene.add_objects(reactor.scene_obj)
 
-for obj in reactor.scene_obj:
-    scene.add_object(obj)
-
-trace = pvtrace.Tracer(scene=scene, source=reactor.source.source, seed=None, throws=100, use_visualiser=True,
-                       show_log=False, show_axis=True, show_counter=False, db_split=True, preserve_db_tables=True)
+lamp = LightSource(lamp_type='SolarSimulator', irradiated_area=(0.05, 0.05), distance=0.025)
+trace = pvtrace.Tracer(scene=scene, source=lamp.source, seed=None, throws=100, use_visualiser=True,
+                       show_axis=True, show_counter=False, db_split=True, preserve_db_tables=True)
 trace.show_lines = True
 trace.show_path = False
 

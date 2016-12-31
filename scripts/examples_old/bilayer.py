@@ -202,7 +202,7 @@ for i in range(1,2):
     pwd = os.getcwd()
     dbfile = os.path.join(pwd, config['db_file']) # <--- the name of the database file
 
-    trace = Tracer(scene=scene, source=source, seed=random_seed, throws=config['photons_to_throw'], database_file=dbfile, use_visualiser=config['visualizer'], show_log=config['debug'], show_axis=True)
+    trace = Tracer(scene=scene, source=source, seed=random_seed, throws=config['photons_to_throw'], database_file=dbfile, use_visualiser=config['visualizer'], show_axis=True)
     trace.show_lines = config['show_lines']
     trace.show_path  = config['show_path']
     import time

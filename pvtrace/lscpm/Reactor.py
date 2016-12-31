@@ -174,11 +174,4 @@ class Reactor(object):
         lsc.name = lsc_name
         self.scene_obj.append(lsc)
 
-        # 4. LAMP
-        # FIXME add class parameters for lamp
-        lamp_name = 'SolarSimulator'
-        lamp_parameters = (0.05, 0.05)
-        self.source = LightSource(lamp_type=lamp_name, irradiated_area=lamp_parameters)
-        # self.source.plot() # Plots source spectrum to pvtrace_data folder
-
         reactor_logger.info('Reactor volume (calculated): ' + str(self.reaction_volume * 1000000) + ' mL')

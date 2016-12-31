@@ -47,9 +47,7 @@ class Register(object):
 
                 log_entry = (list(photon.position), float(photon.wavelength), None, photon.absorption_counter)
                 self.store[key].append(log_entry)
-                if photon.show_log:
-                    self.logger.debug('Photon lost')
-                    print('   Logged as lost photon...')
+                self.logger.debug('Photon lost')
                 return
             else:
                 # A photon has been logged in the interior of a material but photon.active = True, which means it is not
@@ -64,9 +62,7 @@ class Register(object):
                     self.store[key] = []
                 log_entry = (list(photon.position), float(photon.wavelength), None, photon.absorption_counter)
                 self.store['volume_source'].append(log_entry)
-                if photon.show_log:
-                    self.logger.debug("Logged as photon from a volume source")
-                    print('Logged as photon from a volume source...')
+                self.logger.debug("Logged as photon from a volume source")
                 return
 
         # Can do this because all surface_normal with the acute flag False returns outwards facing normals.

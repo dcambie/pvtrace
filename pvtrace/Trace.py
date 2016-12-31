@@ -64,7 +64,7 @@ class Photon(object):
     A generic photon class.
     """
 
-    def __init__(self, wavelength=555, position=None, direction=None, active=True, show_log=True):
+    def __init__(self, wavelength=555, position=None, direction=None, active=True):
         """
         Initialize the photon.
 
@@ -73,7 +73,6 @@ class Photon(object):
         :param position: the photon position in cartesian coordinates is an array-like quantity in units of metres
         :param direction: the photon Cartesian direction vector (3 elements), a normalised vector is array-like
         :param active: boolean indicating if the ray has or has not been lost (e.g. absorbed in a material)
-        :param show_log: print verbose output on photon fate during tracing
 
         >>> a = Photon()
         >>> a.wavelength
@@ -83,8 +82,6 @@ class Photon(object):
         >>> a.direction
         array([ 0.,  0.,  1.])
         >>> a.active
-        True
-        >>> a.show_log
         True
         >>> a.wavelength = 600
         >>> b = a
@@ -118,7 +115,6 @@ class Photon(object):
         self.absorber_material = None
         self.emitter_material = None
         self.on_surface_object = None
-        self.show_log = show_log
         self.reabs = 0
         self.id = 0
         self.source = None
@@ -142,7 +138,6 @@ class Photon(object):
         photon_copy.absorption_counter = self.absorption_counter
         photon_copy.intersection_counter = self.intersection_counter
         photon_copy.polarisation = self.polarisation
-        photon_copy.show_log = self.show_log
         photon_copy.reabs = self.reabs
         photon_copy.id = self.id
         photon_copy.source = self.source
@@ -211,7 +206,7 @@ class Photon(object):
 
         # import pdb; pdb.set_trace()
         intersection_points, intersection_objects = self.scene.sort(intersection_points, intersection_objects, self,
-                                                                    container=self.container, show_log=self.show_log)
+                                                                    container=self.container)
 
         # find current intersection point and object -- should be zero if the list is sorted!
         intersection = closest_point(self.position, intersection_points)
@@ -566,7 +561,7 @@ class Tracer(object):
     """
     An object that will fire multiple photons through the scene.
     """
-    def __init__(self, scene=None, source=None, throws=1, steps=50, seed=None, use_visualiser=True, show_log=False,
+    def __init__(self, scene=None, source=None, throws=1, steps=50, seed=None, use_visualiser=True,
                  background=(0.957, 0.957, 1), ambient=0.5, show_axis=True,
                  show_counter=False, db_split=None, preserve_db_tables=False):
         super(Tracer, self).__init__()
@@ -578,7 +573,6 @@ class Tracer(object):
         self.seed = seed
         self.killed = 0
         self.database = pvtrace.PhotonDatabase(None)
-        self.show_log = show_log
         self.show_counter = show_counter
         # From Scene, link db with analytics and get uuid
         self.uuid = self.scene.uuid
@@ -715,7 +709,6 @@ class Tracer(object):
             photon = self.source.photon()
             photon.scene = self.scene
             photon.material = self.source
-            photon.show_log = self.show_log
 
             if pvtrace.Visualiser.VISUALISER_ON:
                 photon.visualiser = self.visualiser

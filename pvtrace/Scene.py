@@ -26,6 +26,7 @@ class Scene(object):
         super(Scene, self).__init__()
         self.bounds = Bounds()  # Create boundaries to world and apply to scene
         self.objects = [self.bounds]
+        self.uuid = ''
         self.working_dir = self.get_new_working_dir(uuid=uuid, use_existing=force)
         print("Working directory: ", self.working_dir)
         self.log = self.start_logging()
@@ -35,8 +36,11 @@ class Scene(object):
         LOG_FILENAME = os.path.join(self.working_dir, 'output.log')
         # Create file if needed and without truncating (appending useful for post-mortem DB analysis)
         open(LOG_FILENAME, 'a').close()
+
+        # LOGGING SETTINGS
         # logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG)
         logging.basicConfig(filename=LOG_FILENAME, filemode='a', level=logging.INFO)
+
         logger = logging.getLogger('pvtrace.scene')
         logger.debug('*** NEW SIMULATION ***')
         logger.info('UUID: ' + self.uuid)
@@ -87,6 +91,20 @@ class Scene(object):
                              "my_device.name='my unique name'.", object_to_add.name)
         self.objects.append(object_to_add)
 
+    def add_objects(self, objects_to_add):
+        """
+        Adds a list of objects to the scene.
+
+        :param objects_to_add: list with the objects to be added.
+        """
+        if len(objects_to_add) == 0:
+            return
+        if len(objects_to_add) == 1:
+            return self.add_object(objects_to_add)
+
+        for obj in objects_to_add:
+            self.add_object(obj)
+
     def intersection(self, ray):
         """
         Returns the intersection points and associated objects of a ray in no particular order.
@@ -108,7 +126,7 @@ class Scene(object):
             return None, None
         return points, intersection_objects
 
-    def sort(self, points, objects, ray, container=None, remove_ray_intersection=True, show_log=False):
+    def sort(self, points, objects, ray, container=None, remove_ray_intersection=True):
         """
         Returns points and objects sorted by separation from the ray position.
 
@@ -117,7 +135,6 @@ class Scene(object):
         :param ray: a ray with global coordinate frame
         :param container: the container
         :param remove_ray_intersection: if the ray is on an intersection points remove this point from both lists
-        :param show_log: if true objects and points are printed to stout (*very* verbose, set a low throw!)
         """
 
         # Filter arrays for intersection points that are ahead of the ray's direction

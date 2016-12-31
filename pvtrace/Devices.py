@@ -394,7 +394,7 @@ class Channel(Register):
 
             self.shape.append_transform(tf.translation_matrix(origin))
         else:
-            self.logger.warn("The channel shape is invalid (neither box nor cylinder. It was " + shape)
+            self.logger.warn("The channel shape is invalid (neither box nor cylinder. It was " + str(shape))
             raise Exception("Channel has invalid shape")
         self.material = SimpleMaterial(bandgap)
         self.name = "Channel"

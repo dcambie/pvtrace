@@ -225,6 +225,11 @@ class PhotonDatabase(object):
         self.cursor.close()
     
     def endpoint_uids(self):
+        """
+        Per each photon returns the highest uid, corresponding to its endpoint
+
+        :rtype: list
+        """
         return itemise(self.cursor.execute('SELECT MAX(uid) FROM photon GROUP BY pid;').fetchall())
     
     def endpoint_uids_for_object(self, obj):

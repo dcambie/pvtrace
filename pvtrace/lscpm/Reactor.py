@@ -50,8 +50,9 @@ class SolarSimulator(object):
         """
         Create a SolarSimulator instance
 
-        :param parameters: list with sizes (x and y)
-        :return: PlanarSource
+        :param size: irradiated area
+        :param wavelength_range: range of wavelength for emitted photons
+        :param direction: direction of emitted photons
         """
         if len(parameters) < 2:
             raise Exception('Missing parameters for SolarSimulator! Dimensions (x,y in meters) are needed')

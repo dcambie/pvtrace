@@ -28,6 +28,8 @@ from pvtrace.Trace import *
 from pvtrace.Trajectory import *
 from pvtrace.Visualise import *
 
+from pvtrace.lscpm import *
+
 import os
 import sys
 import logging

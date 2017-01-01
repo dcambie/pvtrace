@@ -1,15 +1,18 @@
 from pvtrace import *
-from pvtrace.lscpm.Reactor import Reactor
+from pvtrace.lscpm.Reactor import *
 
 scene = pvtrace.Scene()
 logger = logging.getLogger('pvtrace')
 
-reactor = Reactor(reactor_name="5x5_6ch_squared", dye="Red305", dye_concentration=0.20, photocatalyst="MB",
+# Create LSC-PM DYE material
+lr305 = LuminophoreMaterial('Red305', 0.20)
+
+reactor = Reactor(reactor_name="5x5_6ch_squared", luminophore=lr305, photocatalyst="MB",
                   photocatalyst_concentration=0.0004)
 scene.add_objects(reactor.scene_obj)
 
 lamp = LightSource(lamp_type='SolarSimulator', irradiated_area=(0.05, 0.05), distance=0.025)
-trace = pvtrace.Tracer(scene=scene, source=lamp.source, seed=None, throws=100, use_visualiser=True,
+trace = pvtrace.Tracer(scene=scene, source=lamp.source, throws=100, use_visualiser=True,
                        show_axis=True, show_counter=False, db_split=True, preserve_db_tables=True)
 trace.show_lines = True
 trace.show_path = False
@@ -40,7 +43,7 @@ logger.info('Simulation Ended (time: ' + str(toc) + ', elapsed: ' + str(toc - ti
 #         obj.print_store()
 # spectrum = obj.spectrum_face(surface_names=('far', 'near', 'right', 'left'))
 # print(spectrum)
-# For reproducibility reasons always append git version to results (tested on linux only)
+
 label = subprocess.check_output(["git", "describe"], cwd=PVTDATA, shell=True)
 logger.info('PvTrace ' + str(label) + ' simulation ended')
 
@@ -56,7 +59,5 @@ print(scene.stats.print_excel() + "\n")
 # scene.pov_render(camera_position=(-0.05, 0.025, 0.05), camera_target=(0.025, 0.025, 0), height=1080, width=1920)
 # stats.history()
 # stats.save_db()
-
-
 
 sys.exit(0)

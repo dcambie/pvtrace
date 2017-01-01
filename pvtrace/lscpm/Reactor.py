@@ -88,8 +88,7 @@ class Reactor(object):
     Object to model the experimental device
     """
 
-    def __init__(self, reactor_name, dye, dye_concentration, photocatalyst=None, photocatalyst_concentration=0.001,
-                 solvent=None):
+    def __init__(self, reactor_name, luminophore, photocatalyst=None, photocatalyst_concentration=0.001, solvent=None):
 
         # 0. CONFIGURATION
         # 0.1 REACTOR TYPE
@@ -108,7 +107,7 @@ class Reactor(object):
         reactor_logger = logging.getLogger('pvtrace.reactor')
 
         reactor_logger.info('Creating a reactor [' + str(reactor_name) + ']')
-        reactor_logger.info('Dye = ' + str(dye) + '(Conc: ' + str(dye_concentration) + ')')
+        reactor_logger.info('Luminophore = ' + str(luminophore.description()))
 
         # 1. REACTION MIXTURE
 
@@ -165,13 +164,18 @@ class Reactor(object):
         # Create LSC-PM Matrix material
         matrix_material = Material(absorption_data=pdms_abs, emission_data=pdms_ems, quantum_efficiency=0.0, refractive_index=1.41)
 
-        # Create LSC-PM DYE material
-        dye_material = DyeMaterial(dye, dye_concentration, thickness)
 
         # LSC CompositeMaterial made of dye+PDMS
-        lsc.material = CompositeMaterial([matrix_material, dye_material.material()],
+        lsc.material = CompositeMaterial([matrix_material, luminophore.material()],
                                          refractive_index=matrix_refractive_index, silent=True)
         lsc.name = lsc_name
         self.scene_obj.append(lsc)
 
         reactor_logger.info('Reactor volume (calculated): ' + str(self.reaction_volume * 1000000) + ' mL')
+
+        # 4. LAMP
+        # FIXME add class parameters for lamp
+        lamp_name = 'SolarSimulator'
+        lamp_parameters = (0.05, 0.05)
+        self.source = LightSource(lamp_type=lamp_name, irradiated_area=lamp_parameters)
+        # self.source.plot() # Plots source spectrum to pvtrace_data folder

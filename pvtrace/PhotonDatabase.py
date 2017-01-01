@@ -124,21 +124,18 @@ class PhotonDatabase(object):
     def log(self, photon, surface_normal=None, surface_id=None, ray_direction_bound=None,
             emitter_material=None, absorber_material=None):
         """
-        Adds a new row to the database. NB Every time this function is called the uid of the photon is incremented.
+        Adds a photon state (uid) in the database.
+        Note: Every time this function is called the uid of the photon is incremented
         """
         values = (self.uid, photon.id, float(photon.wavelength))
-        # import pdb; pdb.set_trace()
         self.cursor.execute('INSERT INTO photon VALUES (?, ?, ?)', values)
         
         values = (float(photon.position[0]), float(photon.position[1]), float(photon.position[2]), self.uid)
-        # print values
-        # for v in values:
-        #    print type(v)
         self.cursor.execute('INSERT INTO position VALUES (?, ?, ?, ?)', values)
         
         values = (float(photon.direction[0]), float(photon.direction[1]), float(photon.direction[2]), self.uid)
         self.cursor.execute('INSERT INTO direction VALUES (?, ?, ?, ?)', values)
-        
+
         try:
             values = (float(photon.polarisation[0]), float(photon.polarisation[1]),
                       float(photon.polarisation[2]), self.uid)
@@ -166,12 +163,12 @@ class PhotonDatabase(object):
                   str(ray_direction_bound), photon.reaction, self.uid)
         self.cursor.execute('INSERT INTO state VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)', values)
         
-        # the last line of this method update the unique photon ID (i.e. the row number)
-        self.uid += 1
-        
         # Every 100 times write data to dbfile
-        if not self.uid % 100:
+        if self.uid % 100 == 0:
             self.connection.commit()
+
+        # The last line of this method update the unique photon ID (i.e. the row number)
+        self.uid += 1
 
     def dump_to_file(self, location=None):
         """

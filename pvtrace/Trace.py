@@ -564,23 +564,35 @@ class Tracer(object):
     def __init__(self, scene=None, source=None, throws=1, steps=50, seed=None, use_visualiser=True,
                  background=(0.957, 0.957, 1), ambient=0.5, show_axis=True,
                  show_counter=False, db_split=None, preserve_db_tables=False):
+        # Tracer options
         super(Tracer, self).__init__()
         self.scene = scene
         self.source = source
         self.throws = throws
         self.steps = steps
         self.total_steps = 0
-        self.seed = seed
         self.killed = 0
-        self.database = pvtrace.PhotonDatabase(None)
-        self.show_counter = show_counter
+
         # From Scene, link db with analytics and get uuid
         self.uuid = self.scene.uuid
-        self.db_save_all_tables = preserve_db_tables
 
+        self.show_counter = show_counter
+
+        # Visualiser options
+        self.show_lines = True
+        self.show_exit = True
+        self.show_path = True
+        self.show_start = False
+        self.show_normals = False
+
+        self.seed = seed
+        np.random.seed(self.seed)
+
+        # DB SETTINGS
+        self.database = pvtrace.PhotonDatabase(None)
         # DB splitting (performance tweak)
+        # After 20k photons performance decrease is greater than 20% (compared vs. first photon simulated)
         self.split_num = self.database.split_size
-
         if db_split is None:
             if throws < self.split_num:
                 self.db_split = False
@@ -588,11 +600,10 @@ class Tracer(object):
                 self.db_split = True
         else:
             self.db_split = bool(db_split)
+        self.dumped = []  # Keeps a list with filenames of dumped dbs (if db_split is True and throws>split_num
+        self.db_save_all_tables = preserve_db_tables
 
-        self.dumped = []  # Keeps a list with filenames of dumped db (if db_split is True and throws>split_num
-        # After 20k photons performance decrease is greater than 20% (compared vs. first photon simulated)
-
-        np.random.seed(self.seed)
+        # Object-specific settings for visualiser
         if not use_visualiser:
             pvtrace.Visualiser.VISUALISER_ON = False
         else:
@@ -604,32 +615,28 @@ class Tracer(object):
                     if not isinstance(obj.shape, CSGadd) and not isinstance(obj.shape, CSGint)\
                             and not isinstance(obj.shape, CSGsub):
 
-                        # import pdb; pdb.set_trace()
+                        # RayBin
                         if isinstance(obj, RayBin):
-                            # checkerboard = ( (0,0.01,0,0.01), (0.01,0,0.01,0), (0,0.01,0,1), (0.01,0,0.01,0) )
-                            # checkerboard = ( (0,1,0,1), (1,0,1,0), (0,1,0,1), (1,0,1,0) )
-                            # material = visual.materials.texture(data=checkerboard, mapping="rectangular",
-                            #                                     interpolate=False)
                             material = visual.materials.wood
                             colour = visual.color.blue
                             opacity = 1.
-
+                        # Channel
                         elif isinstance(obj, Channel):
                             material = visual.materials.plastic
                             colour = visual.color.blue
                             opacity = 1
-                        # Dario's edit: LSC color set to red/
-                        # this breaks multiple lSC colours in the same scene. sorry :)
+                        # LSC
                         elif isinstance(obj, LSC):
                             material = visual.materials.plastic
+                            # FIXME LSC color set to red!
                             colour = visual.color.red
                             opacity = 0.4
-
+                        # PlanarReflector
                         elif isinstance(obj, PlanarReflector):
                             colour = visual.color.white
                             opacity = 1.
                             material = visual.materials.plastic
-
+                        # Coating
                         elif isinstance(obj, Coating):
                             colour = visual.color.white
                             opacity = 0.5
@@ -641,7 +648,7 @@ class Tracer(object):
                                     colour = visual.color.white
                                     opacity = 1.
                                     material = visual.materials.plastic
-
+                        # Obj whose material is SimpleMaterial
                         elif isinstance(obj.material, SimpleMaterial):
                             # import pdb; pdb.set_trace()
                             wavelength = obj.material.bandgap
@@ -661,8 +668,6 @@ class Tracer(object):
                                 opacity = 0.5
                                 material = visual.materials.plastic
                             else:
-                                # It is possible to processes the most likely colour of a spectrum in a better way than this
-                                # TODO: reimplement me
                                 colour = (0.2, 0.2, 0.2)
                                 opacity = 0.5
                                 material = visual.materials.plastic
@@ -672,63 +677,48 @@ class Tracer(object):
 
                         self.visualiser.addObject(obj.shape, colour=colour, opacity=opacity, material=material)
 
-        self.show_lines = True  # False
-        self.show_exit = True
-        self.show_path = True  # False
-        self.show_start = False  # Was True
-        self.show_normals = False
-
     def start(self):
         global a, b
         logged = 0
         db_num = 0
+
+        # Main photon loop, throws photons to the scene
         for throw in range(0, self.throws):
-            # import pdb; pdb.set_trace()
             # Delete last ray from visualiser
             # fixme: if channels are cylindrical in shape they will be removed from the view if this is active!
             # if pvtrace.Visualiser.VISUALISER_ON:
             #     for obj in self.visualiser.display.objects:
             #         if obj.__class__ is visual.cylinder and obj.radius < 0.001:
             #             obj.visible = False
-            # DB speed statistics
-            # if throw == 0:
-            #     then = time.clock()
-            # elif throw % 100 == 0:
-            #     now = time.clock()
-            #     zeit = now - then
-            #     sys.stdout.write('\r' + str(throw) + " " + str(zeit).rjust(6, ' '))
-            #     print
-            #     then = now
 
-            self.scene.log.debug("Photon number: "+str(throw))
+            # SHOW COUNTER (every 10 photons)
             if throw % 10 == 0 and self.show_counter:
                 sys.stdout.write('\r Photon number: ' + str(throw))
                 sys.stdout.flush()
 
             # Create random photon from lightsource and set relative variables
+            self.scene.log.debug("Emitting photon number: " + str(throw))
             photon = self.source.photon()
             photon.scene = self.scene
             photon.material = self.source
 
+            # Sets bits for visualiser and, if show_start, shows the photon origin (with a small sphere)
             if pvtrace.Visualiser.VISUALISER_ON:
                 photon.visualiser = self.visualiser
                 a = list(photon.position)
                 if self.show_start:
                     self.visualiser.addSmallSphere(a)
 
+            # Photon tracing loop (up to self.steps) max iterations
             step = 0
             while photon.active and step < self.steps:
-
+                # Save to DB the previous step (either termination or simple step)
                 if photon.exit_device is not None:
-
-                    # The exit
+                    # Adds info about exit surface, if possible
                     if photon.exit_device.shape.on_surface(photon.position):
-
                         # Is the ray heading towards or out of a surface?
                         normal = photon.exit_device.shape.surface_normal(photon.ray, acute=False)
                         rads = angle(normal, photon.ray.direction)
-                        # print(photon.exit_device.shape.surface_identifier(photon.position),
-                        #       'normal', normal, 'ray dir', photon.direction, 'angle' , np.degrees(rads))
                         if rads < np.pi / 2:
                             bound = "Out"
                         else:
@@ -746,6 +736,7 @@ class Tracer(object):
                 wavelength = photon.wavelength
                 photon = photon.trace()
 
+                self.scene.log.debug('Photon ' + str(throw) + ' step ' + str(step) + '...')
                 if step == 0:
                     # The ray has hit the first object. 
                     # Cache this for later use. If the ray is not killed then log data.
@@ -771,67 +762,60 @@ class Tracer(object):
                                                      colour=wav2RGB(wavelength)))
                     # Record photon that has made it to the bounds
                     if step == 0:
-                        self.scene.log.debug("   * Photon hit scene bounds without previous intersections "
-                                             "(maybe reconsider light source position?) *")
+                        self.scene.log.warn("   * Photon hit scene bounds without previous intersections "
+                                            "(maybe reconsider light source position?) *")
                     else:
-                        self.scene.log.debug("   * Reached Bounds *")
+                        self.scene.log.debug("   * Photon reached Bounds! (died)")
                         photon.exit_device.log(photon)
                         # This is not really needed and pollutes statistics
                         # self.database.log(photon)
 
                     # entering_photon.exit_device.log(entering_photon)
-                    # assert logged == throw, "Logged (%s) and thorw (%s) not equal" % (str(logged), str(throw))
+                    assert logged == throw, "Logged (%s) and throw (%s) not equal" % (str(logged), str(throw))
                     logged += 1
 
                 elif not photon.active:
                     photon.exit_device = photon.container
                     photon.container.log(photon)
                     self.database.log(photon)
-                    if entering_photon.container == photon.scene.bounds:
-                        self.scene.log.debug("   * Photon hit scene bounds without previous intersections *")
-                    else:
-                        # try:
-                        entering_photon.container.log(entering_photon)
-                        # self.database.log(photon)
-                        # except:
-                        #    entering_photon.container.log_in_volume(entering_photon)
-                    # assert logged == throw, "Logged (%s) and throw (%s) are not equal" % (str(logged), str(throw))
+                    # try:
+                    entering_photon.container.log(entering_photon)
+                    # self.database.log(photon)
+                    # except:
+                    #    entering_photon.container.log_in_volume(entering_photon)
+                    assert logged == throw, "Logged (%s) and throw (%s) are not equal" % (str(logged), str(throw))
                     logged += 1
 
-                    # if photon.absorption_counter == 0:
-                    #     #print(photon.visual_obj)
-                    #     for obj in photon.visual_obj:
-                    #         obj.visible = False
-                    # else:
-                    #     print("ok ")
-
-                # Needed since VPyhton6
                 if pvtrace.Visualiser.VISUALISER_ON:
-                    visual.rate(100000)
+                    visual.rate(100000) # Needed since VPyhton6
                     a = b
 
                 step += 1
                 self.total_steps += 1
-                if step >= self.steps:
-                    # We need to kill the photon because it is bouncing around in a locked path
+                if step >= self.steps: # We need to kill the photon because it is bouncing around in a locked path
                     self.killed += 1
                     photon.killed = True
                     self.database.log(photon)
                     self.scene.log.debug("   * Reached Max Steps *")
 
-            # Split DB if needed
+            # DB SPLIT
             if self.db_split and throw % self.split_num == 0 and throw > 0:
+                # Incremental number
                 db_num = int(throw / self.split_num)
+                # Commit all queries
                 self.database.connection.commit()
-                # db_file_dump = os.path.join(os.path.expanduser('~'), "~pvtrace_tmp" + str(db_num) + ".sql")
+                # Dump file location
                 db_file_dump = os.path.join(self.scene.working_dir, "~pvtrace_tmp" + str(db_num) + ".sql")
+                # Dump DB
                 self.database.dump_to_file(location=db_file_dump)
+                # Add DB dumped file to dumped list for later recovery
                 self.dumped.append(db_file_dump)
-                # Empty DB
+                # Empty current DB
                 self.database.empty()
 
         # Commit DB
         self.database.connection.commit()
+        # If DB split is active, split the remaining photons and then merge everything
         if self.db_split:
             db_num += 1
             db_file_dump = os.path.join(self.scene.working_dir, "~pvtrace_tmp" + str(db_num) + ".sql")
@@ -841,7 +825,7 @@ class Tracer(object):
             # MERGE DB before statistics
             # this will be done in memory only (RAM is cheap nowadays)
             self.database = pvtrace.PhotonDatabase(dbfile=None)
-            # Check whether to save all the DB tables of just photon and state (faster and smaller but with losses)
+            # Check whether to save all the DB tables of just photon and state (faster and smaller but with data loss)
             if self.db_save_all_tables:
                 tables_to_save = None
             else:
@@ -849,10 +833,10 @@ class Tracer(object):
             
             for db_file in self.dumped:
                 self.database.add_db_file(filename=db_file, tables=tables_to_save)
+                # Removes dumps
                 os.remove(db_file)
-                # print "merged ",db_file
 
-        # Finalize merged DB
+        # Save DB to Scene as db.sqlite file (merged DB if split is active, the only active DB otherwise)
         self.scene.stats.add_db(self.database)
         db_final_location = os.path.join(self.scene.working_dir, 'db.sqlite')
         self.database.dump_to_file(db_final_location)

@@ -3,21 +3,27 @@ from pvtrace import *
 import numpy as np
 import os
 
-class DyeMaterial(object):
+
+class LuminophoreMaterial(object):
     """
     Abstract class for LSC's dye material
     """
-
-    def __init__(self, dye_name, concentration, thickness):
+    def __init__(self, dye_name, concentration):
         if dye_name == 'Red305':
-            self.dye = Red305(concentration, thickness)
+            self.dye = Red305(concentration)
         else:
             raise Exception('Unknown dye! (', self.dye, ')')
+
+    def name(self):
+        return self.dye.name
+
+    def description(self):
+        return self.dye.description()
 
     def material(self):
         # Note that refractive index is not important here since it will be overwritten with CompositeMaterial's one
         return Material(absorption_data=self.dye.absorption(), emission_data=self.dye.emission(),
-                        quantum_efficiency=self.dye.quantum_efficiency, refractive_index=1.41)
+                        quantum_efficiency=self.dye.quantum_efficiency, refractive_index=1)
 
 
 class Red305(object):
@@ -25,15 +31,18 @@ class Red305(object):
     Class to generate spectra for Red305-based devices
     """
 
-    def __init__(self, concentration, thickness):
+    def __init__(self, concentration):
+        self.name = 'BASF Lumogen F Red 305'
         self.quantum_efficiency = 0.95
         self.concentration = concentration
-        self.thickness = thickness
         self.logger = logging.getLogger('pvtrace.red305')
 
+    def description(self):
+        return self.name + ' (Concentration : ' + str(self.concentration) + 'mg/g)'
+
     def absorption(self):
-        if self.thickness is None or self.concentration is None:
-            raise Exception('Missing data for dye absorption. Concentration and/or thickness unknown')
+        if self.concentration is None:
+            raise Exception('Missing data for dye absorption. Concentration unknown')
         # Red305 absorption spectrum (reference at 0.10 mg/g)
         absorption_data = np.loadtxt(os.path.join(PVTDATA, 'dyes', 'Red305_010mg_g_1m-1.txt'))
 
@@ -44,11 +53,6 @@ class Red305(object):
         # Applying correction to spectrum
         absorption_data[:, 1] = absorption_data[:, 1] * phi
 
-        # Create a reference spectrum for the computed absorption of device (z axis, thickness as optical path)
-        # abs_scaled = absorption_data
-        # abs_scaled[:, 1] = abs_scaled[:, 1] * self.thickness
-        # xyplot(x=abs_scaled[:, 0], y=abs_scaled[:, 1], filename='spectrum_abs_lsc')
-        # return Spectrum elements
         return Spectrum(x=absorption_data[:, 0], y=absorption_data[:, 1])
 
     @staticmethod

@@ -4,7 +4,6 @@ from pvtrace import *
 import numpy as np
 import os
 import ConfigParser
-from pvtrace.lscpm.Dyes import *
 from pvtrace.lscpm.Photocatalysts import *
 from pvtrace.lscpm.Solvents import *
 import ast
@@ -88,7 +87,8 @@ class Reactor(object):
     Object to model the experimental device
     """
 
-    def __init__(self, reactor_name, luminophore, photocatalyst=None, photocatalyst_concentration=0.001, solvent=None):
+    def __init__(self, reactor_name, luminophore, matrix, photocatalyst=None, photocatalyst_concentration=0.001,
+                 solvent=None):
 
         # 0. CONFIGURATION
         # 0.1 REACTOR TYPE
@@ -104,10 +104,9 @@ class Reactor(object):
         self.reaction_volume = 0
 
         # 0. LOGGER
-        reactor_logger = logging.getLogger('pvtrace.reactor')
-
-        reactor_logger.info('Creating a reactor [' + str(reactor_name) + ']')
-        reactor_logger.info('Luminophore = ' + str(luminophore.description()))
+        self.log = logging.getLogger('pvtrace.reactor')
+        self.log.info('Creating a reactor [' + str(reactor_name) + ']')
+        self.log.info('Luminophore = ' + str(luminophore.description))
 
         # 1. REACTION MIXTURE
 
@@ -146,32 +145,15 @@ class Reactor(object):
         lsc_name = config.get('Main', 'name')
         lsc_desc = config.get('Main', 'description')
 
+        # 3.2 LSC object creation
         lsc = LSC(origin=(0, 0, 0), size=(lsc_x, lsc_y, thickness))
-
-        # 3.2 MATRIX
-        # Since matrix data is m-1 it gets corrected for thickness....
-
-        # Fixme implement this! Only PDMS for now
-        # matrix_material = MatrixMaterial(material)
-
-        # Get Abs data for PDMS
-        pdms_data = np.loadtxt(os.path.join(PVTDATA, 'PDMS.txt'))
-        pdms_abs = Spectrum(x=pdms_data[:, 0], y=pdms_data[:, 1] * thickness)
-        # Giving emission suppress error. Not used due to quantum_efficiency = 0 :)
-        pdms_ems = Spectrum([0, 1000], [0.1, 0])
-        matrix_refractive_index = 1.4118
-
-        # Create LSC-PM Matrix material
-        matrix_material = Material(absorption_data=pdms_abs, emission_data=pdms_ems, quantum_efficiency=0.0, refractive_index=1.41)
-
-
-        # LSC CompositeMaterial made of dye+PDMS
-        lsc.material = CompositeMaterial([matrix_material, luminophore.material()],
-                                         refractive_index=matrix_refractive_index, silent=True)
+        # CompositeMaterial made of matrix + luminophore
+        lsc.material = CompositeMaterial([matrix.material(), luminophore.material()],
+                                         refractive_index=matrix.refractive_index(), silent=True)
         lsc.name = lsc_name
         self.scene_obj.append(lsc)
 
-        reactor_logger.info('Reactor volume (calculated): ' + str(self.reaction_volume * 1000000) + ' mL')
+        self.log.info('Reactor volume (calculated): ' + str(self.reaction_volume * 1000000) + ' mL')
 
         # 4. LAMP
         # FIXME add class parameters for lamp

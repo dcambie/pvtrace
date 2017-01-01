@@ -1,13 +1,15 @@
-from pvtrace import *
 from pvtrace.lscpm.Reactor import *
+from pvtrace.lscpm.Dyes import *
+from pvtrace.lscpm.Matrix import *
 
 scene = pvtrace.Scene()
 logger = logging.getLogger('pvtrace')
 
 # Create LSC-PM DYE material
 lr305 = LuminophoreMaterial('Red305', 0.20)
+pdms = Matrix('pdms')
 
-reactor = Reactor(reactor_name="5x5_6ch_squared", luminophore=lr305, photocatalyst="MB",
+reactor = Reactor(reactor_name="5x5_6ch_squared", luminophore=lr305, matrix=pdms, photocatalyst="MB",
                   photocatalyst_concentration=0.0004)
 scene.add_objects(reactor.scene_obj)
 

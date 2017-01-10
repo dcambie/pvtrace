@@ -26,17 +26,16 @@ class Reactor(object):
         except Exception:
             raise Exception('The configuration file for the requested reactor (', reactor_name, ') was not found.')
 
-        # Set default values
+        # 0.2 default values
         self.scene_obj = []
         self.reaction_volume = 0
 
-        # 0. LOGGER
+        # 0.3 LOGGER
         self.log = logging.getLogger('pvtrace.reactor')
         self.log.info('Creating a reactor [' + str(reactor_name) + ']')
-        self.log.info('Luminophore = ' + str(luminophore.description))
+        self.log.info('Luminophore = ' + str(luminophore.description()))
 
         # 1. REACTION MIXTURE
-
         # 1.1 Photocatalyst
         self.photocat = Photocatalyst(compound=photocatalyst, concentration=photocatalyst_concentration)
         abs_spectrum = self.photocat.spectrum()
@@ -64,7 +63,6 @@ class Reactor(object):
             self.reaction_volume += channel.volume
 
         # 3. LSC-PM
-
         # 3.1 LSC-PM GEOMETRY
         thickness = config.getfloat('LSC', 'thickness')
         lsc_x = config.getfloat('LSC', 'width')

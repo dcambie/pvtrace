@@ -1,3 +1,4 @@
+from __future__ import division
 import logging
 from pvtrace import *
 import numpy as np
@@ -7,10 +8,11 @@ import os
 class LuminophoreMaterial(object):
     """
     Abstract class for LSC's dye material
+
     """
     def __init__(self, dye_name, concentration):
         if dye_name == 'Red305':
-            self.dye = Red305(concentration)
+            self.dye = Red305(concentration/1000)
         else:
             raise Exception('Unknown dye! (', self.dye, ')')
 
@@ -36,6 +38,7 @@ class Red305(object):
         self.quantum_efficiency = 0.95
         self.concentration = concentration
         self.logger = logging.getLogger('pvtrace.red305')
+        self.logger.info('concentration at red305 is  ' + str(concentration) + ' (this should approximately be target concentration / 100 ppm')
 
     def description(self):
         return self.name + ' (Concentration : ' + str(self.concentration) + 'mg/g)'

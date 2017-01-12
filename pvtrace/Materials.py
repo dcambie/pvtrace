@@ -78,6 +78,7 @@ def common_abscissa(a, b):
 
 def wav2RGB(wavelength):
     """
+    Credits: Dan Bruton
     See: http://codingmess.blogspot.com/2009/05/conversion-of-wavelength-in-nanometers.html
     """
     w = int(wavelength)

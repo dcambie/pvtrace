@@ -38,7 +38,11 @@ class Scene(object):
         open(LOG_FILENAME, 'a').close()
 
         # LOGGING SETTINGS
-        # logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG)
+        # Ensure that existing handlers are removed so that the new location for log file can be enforced
+        log = logging.getLogger()
+        for hdlr in log.handlers[:]:  # remove all old handlers
+            log.removeHandler(hdlr)
+        # Start logging on output.log in Scene directory
         logging.basicConfig(filename=LOG_FILENAME, filemode='a', level=logging.INFO)
 
         logger = logging.getLogger('pvtrace.scene')

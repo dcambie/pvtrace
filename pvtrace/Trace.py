@@ -771,23 +771,26 @@ class Tracer(object):
                         # self.database.log(photon)
 
                     # entering_photon.exit_device.log(entering_photon)
-                    assert logged == throw, "Logged (%s) and throw (%s) not equal" % (str(logged), str(throw))
+                    # assert logged == throw, "Logged (%s) and throw (%s) not equal" % (str(logged), str(throw))
                     logged += 1
 
                 elif not photon.active:
                     photon.exit_device = photon.container
                     photon.container.log(photon)
                     self.database.log(photon)
-                    # try:
-                    entering_photon.container.log(entering_photon)
-                    # self.database.log(photon)
-                    # except:
-                    #    entering_photon.container.log_in_volume(entering_photon)
-                    assert logged == throw, "Logged (%s) and throw (%s) are not equal" % (str(logged), str(throw))
+                    if entering_photon.container == photon.scene.bounds:
+                        self.scene.log.debug("   * Photon hit scene bounds without previous intersections *")
+                    else:
+                        # try:
+                        entering_photon.container.log(entering_photon)
+                        # self.database.log(photon)
+                        # except:
+                        #    entering_photon.container.log_in_volume(entering_photon)
+                        # assert logged == throw, "Logged (%s) and thorw (%s) not equal" % (str(logged), str(throw))
                     logged += 1
 
                 if pvtrace.Visualiser.VISUALISER_ON:
-                    visual.rate(100000) # Needed since VPyhton6
+                    visual.rate(100000)  # Needed since VPyhton6
                     a = b
 
                 step += 1

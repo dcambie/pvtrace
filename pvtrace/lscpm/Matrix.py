@@ -46,5 +46,5 @@ class PDMS(object):
 
     def absorption(self):
         # PDMS absorption spectrum
-        absorption_data = np.loadtxt(os.path.join(PVTDATA, 'PDMS.txt'))
-        return Spectrum(x=absorption_data[:, 0], y=absorption_data[:, 1])
+        # 0.5/m based on SI@ DOI: 10.1039/C0LC00707B
+        return Spectrum([0, 1000], [0.5, 0.5])

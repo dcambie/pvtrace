@@ -187,8 +187,13 @@ class PhotonDatabase(object):
             filename = location
 
         file_connection = sql.connect(filename)
+        # disable journaling for faster operations
+        cursor = file_connection.cursor()
+        cursor.execute("PRAGMA synchronous = OFF")
+        cursor.execute("PRAGMA journal_mode = OFF")
+
         sqlitebck.copy(self.connection, file_connection)
-        print("\r DB copy saved as ", filename)
+        self.logger.info("DB copy saved as "+str(filename))
 
     def add_db_file(self, filename=None, tables=None):
         """
@@ -202,8 +207,11 @@ class PhotonDatabase(object):
         if tables is None:
             tables = ("photon", "state", "direction", "position", "surface_normal", "polarisation")
         self.cursor.execute("ATTACH DATABASE ? AS  toMerge", [filename])
+
+        # self.cursor.execute("BEGIN TRANSACTION")
         for table in tables:
             self.cursor.execute("INSERT INTO "+table+" SELECT * FROM toMerge."+table)
+        # self.connection.commit()
         self.cursor.execute("DETACH DATABASE toMerge")
 
     def empty(self):

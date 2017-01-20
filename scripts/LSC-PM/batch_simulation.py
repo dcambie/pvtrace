@@ -6,7 +6,8 @@ from pvtrace.lscpm.SolarSimulators import *
 
 file_path = os.path.join(os.path.expanduser('~'), 'pvtrace_data',
                          'output_reflection.txt')
-for mainloop_i in range(1, 26):
+
+for mainloop_i in range(15, 16):
     lr305_conc = mainloop_i*10
 
     # This implicitly restart logging on the new location

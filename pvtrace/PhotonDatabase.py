@@ -224,6 +224,7 @@ class PhotonDatabase(object):
         self.cursor.execute("DELETE FROM position")
         self.cursor.execute("DELETE FROM surface_normal")
         self.cursor.execute("DELETE FROM photon")
+        self.cursor.execute("VACUUM")
         self.connection.commit()
 
     def __del__(self):
@@ -453,6 +454,18 @@ class PhotonDatabase(object):
         """ Returns the number of bounces for a given uid. """
         # Note: if uid is not max(uid) of pid then this might be lower than expected!
         return itemise(self.cursor.execute('SELECT intersection_counter FROM state WHERE uid=?', (uid,)))
+
+    def uids_top_reflections(self):
+        return itemise(self.cursor.execute(
+            "SELECT MAX(uid) FROM photon GROUP BY pid HAVING uid IN"
+            "(SELECT uid FROM state WHERE ray_direction_bound = 'Out'"
+            "AND surface_id='top' AND intersection_counter = 1  GROUP BY uid);").fetchall())
+
+    # This is about 2x faster than the implementation above, but slightly less safe (depending on obj in scene)
+    def count_top_reflections(self):
+        return itemise(self.cursor.execute(
+            "SELECT COUNT(*) FROM (SELECT uid FROM state WHERE ray_direction_bound = 'Out' AND surface_id='top'"
+            "AND intersection_counter = 1  GROUP BY uid)").fetchall())
 
     def uids_nonradiative_losses(self):
         return itemise(self.cursor.execute(

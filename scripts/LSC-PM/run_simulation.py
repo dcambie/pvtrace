@@ -48,7 +48,7 @@ logger.info('Simulation Ended (time: ' + str(toc) + ', elapsed: ' + str(toc - ti
 # spectrum = obj.spectrum_face(surface_names=('far', 'near', 'right', 'left'))
 # print(spectrum)
 
-label = subprocess.check_output(["git", "describe"], cwd=PVTDATA, shell=True)
+label = subprocess.check_output(["git", "describe", "--always"], cwd=PVTDATA, shell=True)
 logger.info('PvTrace ' + str(label) + ' simulation ended')
 
 print(scene.stats.print_excel_header() + "\n")

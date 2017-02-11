@@ -9,6 +9,7 @@ data = np.loadtxt("lr300.abs.txt")
 # L = hc/E hcE^-1
 # dL/dE = -hc/E^2
 
+
 def nm2eV(nm):
     return 1.9864454e-25 / (nm * 1e-9) * 6.2415097e+18
 

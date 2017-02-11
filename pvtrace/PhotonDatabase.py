@@ -175,7 +175,7 @@ class PhotonDatabase(object):
         Saves to file the current DB to a given location. Useful for in-memory DBs
 
         NOTE: it doesn't update self.connection with the new location, so the old db will still be used for further
-         query (intended behaviour since, if it's :memory:, is presumably faster
+         query (intended behaviour since, if it's :memory:, is presumably faster)
 
         :param location: complete URL (path+filename) to save the db to
         :return:

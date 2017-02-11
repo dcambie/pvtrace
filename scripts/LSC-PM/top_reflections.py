@@ -1,6 +1,6 @@
 from __future__ import division
 from pvtrace.lscpm.Reactor import *
-from pvtrace.lscpm.dyes import *
+from pvtrace.lscpm.Dyes import *
 from pvtrace.lscpm.Matrix import *
 from pvtrace.lscpm.SolarSimulators import *
 

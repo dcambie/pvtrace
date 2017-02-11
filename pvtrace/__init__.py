@@ -33,6 +33,7 @@ from pvtrace.lscpm import *
 import os
 import sys
 import logging
+import sqlitebck
 
 pvtrace_containing_directory = False
 
@@ -47,10 +48,12 @@ for path in sys.path:
         break
 
 if pvtrace_containing_directory is not False:
-    while pvtrace_containing_directory.find('pvtrace') != -1:
-        pvtrace_containing_directory = os.path.abspath(os.path.join(pvtrace_containing_directory))
+    while os.path.dirname(pvtrace_containing_directory).find('pvtrace') != -1:
+        pvtrace_containing_directory = os.path.dirname(pvtrace_containing_directory)
+    pvtrace_containing_directory = os.path.abspath(os.path.join(pvtrace_containing_directory))
 else:
-    pvtrace_containing_directory = os.path.expanduser('~')
+    print("Cannot find PvTrace root directory! (Consider setting pvtrace_containing_directory explicitly")
+    sys.exit(1)
 
 PVTDATA = os.path.join(pvtrace_containing_directory, 'data')
 logger.info('PVTDATA set to '+PVTDATA)

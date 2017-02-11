@@ -22,17 +22,17 @@ class Scene(object):
     A collection of objects. All intersection points can be found or a ray can be traced through.
     """
 
-    def __init__(self, uuid=None, force=False):
+    def __init__(self, uuid=None, force=False, level=logging.INFO):
         super(Scene, self).__init__()
         self.bounds = Bounds()  # Create boundaries to world and apply to scene
         self.objects = [self.bounds]
         self.uuid = ''
         self.working_dir = self.get_new_working_dir(uuid=uuid, use_existing=force)
         print("Working directory: ", self.working_dir)
-        self.log = self.start_logging()
+        self.log = self.start_logging(level)
         self.stats = pvtrace.Analysis(uuid=self.uuid)
 
-    def start_logging(self):
+    def start_logging(self, level=None):
         LOG_FILENAME = os.path.join(self.working_dir, 'output.log')
         # Create file if needed and without truncating (appending useful for post-mortem DB analysis)
         open(LOG_FILENAME, 'a').close()
@@ -43,7 +43,10 @@ class Scene(object):
         for hdlr in log.handlers[:]:  # remove all old handlers
             log.removeHandler(hdlr)
         # Start logging on output.log in Scene directory
-        logging.basicConfig(filename=LOG_FILENAME, filemode='a', level=logging.INFO)
+        if level is not None:
+            logging.basicConfig(filename=LOG_FILENAME, filemode='a', level=level)
+        else:
+            logging.basicConfig(filename=LOG_FILENAME, filemode='a', level=logging.INFO)
 
         logger = logging.getLogger('pvtrace.scene')
         logger.debug('*** NEW SIMULATION ***')
@@ -186,8 +189,8 @@ class Scene(object):
         del objects_copy
 
         if self.log.isEnabledFor(logging.DEBUG):
-            self.log("Obj: \t" + str(objects))
-            self.log("Points: \t" + str(points))
+            self.log.debug("Obj: \t" + str(objects))
+            self.log.debug("Points: \t" + str(points))
 
         objects, points, separations = Scene.order_duplicates(objects, points, separations)
 

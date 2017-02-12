@@ -382,12 +382,15 @@ class Analysis(object):
         photon_balance = {}
         counter = 0
         for photon_fraction in fractions:
-            wavelength, photons = self.histogram_raw_data(data=self.uids[photon_fraction], wavelength_range=(350, 700))
+            self.log.info("Calculating "+photon_fraction)
+            wavelength, photons = self.histogram_raw_data(
+                data=self.db.original_wavelength_for_uid(self.uids[photon_fraction]), wavelength_range=(350, 700))
             if counter == 0:
-                photon_balance[0] = ('wavelength',) + wavelength
+                wl = ['{:.0f}'.format(x) for x in wavelength]
+                # print(wl)
+                photon_balance[0] = ['wavelength', ] + wl
                 counter += 1
             photon_balance[counter] = (photon_fraction,) + photons
-            print(photons)
             counter += 1
 
         return photon_balance
@@ -410,9 +413,9 @@ class Analysis(object):
         else:
             prefix = os.path.join(os.path.expanduser('~'), 'pvtrace_data')
 
-        file_path = os.path.join(prefix, file_name+'.csv')
+        file_path = os.path.join(prefix, file_name+'.tsv')
         with open(file_path, 'wb') as csv_file:
-            writer = csv.writer(csv_file, dialect='excel')
+            writer = csv.writer(csv_file, dialect='excel', delimiter="\t")
 
             for key, value in photon_balance.items():
                 writer.writerow(value)

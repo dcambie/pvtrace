@@ -1,6 +1,6 @@
 from pvtrace import *
 
-study = Scene(uuid="A3kggZUogY7cwRrR7VDCmk", force=True)
+study = Scene(uuid="provaprova", force=True)
 
 # db = pvtrace.PhotonDatabase(dbfile=None)
 # db.add_db_file(filename=os.path.join(study.working_dir, 'db.sqlite'))

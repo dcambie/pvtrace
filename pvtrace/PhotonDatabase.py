@@ -294,13 +294,8 @@ class PhotonDatabase(object):
     
     def killed(self):
         """ Returns the uid of killed photons (one that took too many steps to complete). """
-        return self.cursor.execute('SELECT uid FROM state WHERE killed = 1').fetchall()
+        return itemise(self.cursor.execute('SELECT uid FROM state WHERE killed = 1').fetchall())
 
-    # fixme: Needs implementation
-    def missed(self):
-        """ Returns the uid of photons that did not hit any scene objects. """
-        pass
-    
     def objects_with_records(self):
         """ Returns a list of which scene object have been hit by rays. """
         objects_keys = self.cursor.execute(
@@ -430,7 +425,7 @@ class PhotonDatabase(object):
     
     def uids_generated_photons(self):
         """ Returns the unique identifier of the first step of each generated photon. """
-        return self.cursor.execute('SELECT MIN(uid) FROM photon GROUP BY pid;').fetchall()
+        return itemise(self.cursor.execute('SELECT MIN(uid) FROM photon GROUP BY pid;').fetchall())
     
     def pid_from_uid(self, uid):
         """ Returns the photon ID of a given uid. """

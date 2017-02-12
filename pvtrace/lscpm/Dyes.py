@@ -38,7 +38,7 @@ class Red305(object):
         self.quantum_efficiency = 0.95
         self.concentration = concentration
         self.logger = logging.getLogger('pvtrace.red305')
-        self.logger.info('concentration at red305 is  ' + str(concentration) + ' (this should approximately be target concentration / 100 ppm')
+        self.logger.info('concentration at red305 is  ' + str(concentration*1000) + ' ppm')
 
     def description(self):
         return self.name + ' (Concentration : ' + str(self.concentration) + 'mg/g)'

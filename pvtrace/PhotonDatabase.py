@@ -525,6 +525,7 @@ class PhotonDatabase(object):
             return self.cursor.execute(cmd).fetchall()
 
     # Returns the wavelength of the selected uid or list of uids
+    # SEE ALSO: original_wavelength_for_uid() for the lightsource-emitted photon wavelength (e.g. for photon balance)
     def wavelength_for_uid(self, uid):
         if isinstance(uid, int) or isinstance(uid, float):
             return np.array(self.cursor.execute("SELECT wavelength FROM photon WHERE uid = ?", (uid,)).fetchall()[0])
@@ -533,3 +534,28 @@ class PhotonDatabase(object):
             cmd = "SELECT wavelength FROM photon WHERE uid IN (%s)" % (items,)
             values = itemise(self.cursor.execute(cmd).fetchall())
             return values
+
+    # Returns the wavelength of the selected pid or list of pids
+    def wavelength_for_pid(self, pid):
+        if isinstance(pid, int) or isinstance(pid, float):
+            return np.array(self.cursor.execute("SELECT min(wavelength) FROM photon WHERE pid = ? GROUP BY pid",
+                                                (pid,)).fetchall()[0])
+        elif isinstance(pid, list) or isinstance(pid, tuple):
+            items = str(pid)[1:-1]
+            cmd = "SELECT min(wavelength) FROM photon WHERE pid IN (%s) GROUP BY pid" % (items,)
+            values = itemise(self.cursor.execute(cmd).fetchall())
+            return values
+
+    # Returns the initial wavelength of the selected uid or list of uids
+    def original_wavelength_for_uid(self, uid):
+        if isinstance(uid, int) or isinstance(uid, float):
+            return np.array(self.cursor.execute("SELECT min(wavelength) FROM photon GROUP BY pid HAVING pid IN"
+                                                "(SELECT pid FROM photon WHERE uid = ?)",
+                                                (uid,)).fetchall()[0])
+        elif isinstance(uid, list) or isinstance(uid, tuple):
+            items = str(uid)[1:-1]
+            cmd = "SELECT min(wavelength) FROM photon GROUP BY pid HAVING pid IN" \
+                  "(SELECT pid FROM photon WHERE uid IN (%s))" % (items,)
+            values = itemise(self.cursor.execute(cmd).fetchall())
+            return values
+

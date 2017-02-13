@@ -423,9 +423,12 @@ class PhotonDatabase(object):
         """ Returns the unique identifier of the first intersection for all photons. """
         return self.cursor.execute('SELECT uid FROM state WHERE intersection_counter = 1;').fetchall()
     
-    def uids_generated_photons(self):
-        """ Returns the unique identifier of the first step of each generated photon. """
-        return itemise(self.cursor.execute('SELECT MIN(uid) FROM photon GROUP BY pid;').fetchall())
+    def uids_generated_photons(self, max=False):
+        """ Returns the unique identifier of the first (or last) step of each generated photon. """
+        if max:
+            return itemise(self.cursor.execute('SELECT MAX(uid) FROM photon GROUP BY pid;').fetchall())
+        else:
+            return itemise(self.cursor.execute('SELECT MIN(uid) FROM photon GROUP BY pid;').fetchall())
     
     def pid_from_uid(self, uid):
         """ Returns the photon ID of a given uid. """

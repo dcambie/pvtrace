@@ -1,14 +1,14 @@
 from pvtrace import *
 
-study = Scene(uuid="provaprova", force=True)
+study = Scene(uuid="Fang_2ch - Copy", force=True, level=logging.DEBUG)
 
 # db = pvtrace.PhotonDatabase(dbfile=None)
 # db.add_db_file(filename=os.path.join(study.working_dir, 'db.sqlite'))
 # study.stats.add_db(db)
-# study.stats.print_detailed()
+study.stats.print_detailed()
 
-a = study.stats.calculate_photon_balance()
-study.stats.save_photon_balance(a, 'photon_balance')
+# a = study.stats.calculate_photon_balance()
+# study.stats.save_photon_balance(a, 'photon_balance')
 #uids = study.stats.db.endpoint_uids()
 #a=study.stats.history_from_uid(uid=(63, 6, 125))
 

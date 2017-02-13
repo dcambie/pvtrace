@@ -64,7 +64,7 @@ class Analysis(object):
         self.count = {}
 
         # PHOTON GENERATED
-        self.uids['generated'] = self.db.uids_generated_photons()
+        self.uids['generated'] = self.db.uids_generated_photons(max=True)
         # PHOTON KILLED
         self.uids['killed'] = self.db.killed()
         # TOTAL PHOTON SIMULATED
@@ -100,11 +100,16 @@ class Analysis(object):
         difference = self.count['channels_tot'] - self.count['luminescent_channel']
         assert self.count['channels_direct'] == difference, "Difference of array failed"
 
-        if self.count['tot'] == self.count['solar_apertures'] + self.count['luminescent_faces'] +\
-                self.count['losses'] + self.count['channels_tot']:
+        delta = abs(self.count['tot'] - (self.count['solar_apertures'] + self.count['luminescent_faces'] +\
+                self.count['losses'] + self.count['channels_tot']))
+
+        if delta == 0:
             self.log.info("[db_stats()] Results sanity check OK!")
         else:
-            self.log.warn("[db_stats()] Results FAILED sanity check!!!")
+            if (delta / self.count['tot']) < 0.001:
+                self.log.warn("[db_stats()] Results FAILED sanity check!!!")
+            else:
+                raise ArithmeticError('Sum of photons per fate and generate do not match! [Error > 0.1%!]')
 
     def percent(self, num_photons):
         """
@@ -124,7 +129,7 @@ class Analysis(object):
         """
         self.db_stats()
 
-        self.log.debug('Print_detailed() called on DB with ' + str(self.photon_generated) + ' photons')
+        self.log.debug('Print_detailed() called on DB with ' + str(self.count['generated']) + ' photons')
 
         self.log.info("Technical details:")
         self.log.info("\t Generated \t" + str(self.count['generated']))
@@ -345,6 +350,7 @@ class Analysis(object):
                 file_path = os.path.join(prefix, plot)
                 self.save_histogram(data=wavelengths, filename=file_path)
 
+        return True
         self.log.info("Plotting bounces luminescent to channels")
         uids = self.db.uids_in_reactor_and_luminescent()
         if len(uids) < 10:
@@ -352,16 +358,15 @@ class Analysis(object):
         else:
             data = self.get_bounces(photon_list=uids)
             file_path = os.path.join(prefix, 'bounces channel')
-            # xyplot(x=data[0], y=data[1], filename=file_path)
-            # self.log.info("[bounces channel] Plot saved to " + file_path)
+            xyplot(x=data[0], y=data[1], filename=file_path)
+            self.log.info("[bounces channel] Plot saved to " + file_path)
 
         uids = self.db.uids_luminescent()
         if len(uids) < 10:
             self.log.info("[bounces channel] The database doesn't have enough photons to generate this graph!")
         else:
-            pass
-            # data = self.get_bounces(photon_list=uids)
-            # xyplot(x=data[0], y=data[1], filename=os.path.join(prefix, 'bounces_all'))
+            data = self.get_bounces(photon_list=uids)
+            xyplot(x=data[0], y=data[1], filename=os.path.join(prefix, 'bounces_all'))
 
     def calculate_photon_balance(self, detailed=False):
         """

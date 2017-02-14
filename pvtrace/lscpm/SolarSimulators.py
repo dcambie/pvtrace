@@ -1,4 +1,5 @@
 from pvtrace import *
+from pvtrace.Analysis import xyplot
 
 
 class LightSource(object):
@@ -6,66 +7,58 @@ class LightSource(object):
     Lightsources used by lscpm, are almost always implementation of PlanarSource
     """
 
-    def __init__(self, lamp_type, irradiated_area=(0.05, 0.05), distance=0.025):
+    def __init__(self, lamp_type):
         self.logger = logging.getLogger('pvtrace.lightsource')
+
+        self.ready = False
+        self.prefix = False
+        self.spectrum = None
+        self.source = None
+
         if lamp_type == 'SolarSimulator':
-            spectrum_file = os.path.join(PVTDATA, 'sources', 'Oriel_solar_sim.txt')
-            lamp_name = 'Solar Simulator LS0110-100 L.O.T.-Oriel GmbH & Co.'
+            self.spectrum_file = os.path.join(PVTDATA, 'sources', 'Oriel_solar_sim.txt')
+            self.lamp_name = 'Solar Simulator LS0110-100 L.O.T.-Oriel GmbH & Co.'
         elif lamp_type == 'Sun':
-            spectrum_file = os.path.join(PVTDATA, 'sources', 'AM1.5g-full.txt')
-            lamp_name = 'Solar Spectrum AM 1.5G'
+            self.spectrum_file = os.path.join(PVTDATA, 'sources', 'AM1.5g-full.txt')
+            self.lamp_name = 'Solar Spectrum AM 1.5G'
+        elif lamp_type == 'Blue LEDs':
+            self.prefix = 'Blue_LED_'
+            self.lamp_name = 'Paulmann 702.11 blue LEDs'
+        elif lamp_type == 'White LEDs':
+            self.prefix = 'White_LED_'
+            self.lamp_name = 'Paulmann 703.18 white LEDs'
         else:
             raise Exception('Unknown light source')
 
-        self.spectrum = load_spectrum(spectrum_file, xbins=np.arange(350, 700))
+    def set_lightsource(self, irradiated_area=(0.05, 0.05), distance=0.025):
+        if self.spectrum_file is None:
+            raise ValueError('LightSource spectrum is not set!')
+        self.spectrum = load_spectrum(self.spectrum_file, xbins=np.arange(350, 700))
         self.source = PlanarSource(direction=(0, 0, -1), spectrum=self.spectrum, length=irradiated_area[0],
                                    width=irradiated_area[1])
-        self.source.name = lamp_name
+        self.source.name = self.lamp_name
 
-        # Distance from device (it matters only for Visualizer as collimation of PlanarSource is perfect)
+        # Distance from device (it matters only for Visualizer as PlanarSource is collimated)
         self.source.translate((0, 0, distance))
+        self.ready = True
+
+    def set_LED_voltage(self, voltage=12):
+        if self.ready is True:
+            raise NameError('Cannot set voltage for this lightsource! Either already set or wrong lamp type!')
+
+        voltage_string = str('%.1f' % voltage) + 'V'
+        filename = self.prefix + voltage_string + '.txt'
+        print(filename)
+        self.spectrum_file = os.path.join(PVTDATA, 'sources', filename)
+        self.lamp_name += '_' + voltage_string
 
     def plot(self):
         """
-        Plots the lightsource spectrum
+        Plots the lightsource spectrum (y-axis normalized)
         """
-        pvtrace.Analysis.xyplot(x=self.light.spectrum.x, y=self.light.spectrum.y,
-                                filename='lightsource_' + self.name + '_spectrum')
+        normalization_factor = np.linalg.norm(self.source.spectrum.y, ord=1)
+        y = self.source.spectrum.y/normalization_factor
 
-
-class SolarSimulator(object):
-    def __init__(self, size=(0.05, 0.05), wavelength_range=np.arange(350, 700), direction=(0, 0, -1)):
-        """
-        Create a SolarSimulator instance
-
-        :param size: irradiated area
-        :param wavelength_range: range of wavelength for emitted photons
-        :param direction: direction of emitted photons
-        """
-        if len(parameters) < 2:
-            raise Exception('Missing parameters for SolarSimulator! Dimensions (x,y in meters) are needed')
-
-        spectrum_file = os.path.join(PVTDATA, 'sources', 'Oriel_solar_sim.txt')
-        self.spectrum = load_spectrum(spectrum_file, xbins=wavelength_range)
-
-        self.source = PlanarSource(direction=direction, spectrum=self.spectrum, length=size[0],
-                                   width=size[1])
-        self.source.name = 'Solar simulator LS0110-100 L.O.T.-Oriel GmbH & Co.'
-
-
-class Sun(object):
-    def __init__(self, parameters):
-        """
-        Create a SolarSimulator instance
-
-        :param parameters: list with sizes (x and y)
-        :return: PlanarSource
-        """
-        if len(parameters) < 2:
-            raise Exception('Missing parameters for SolarSimulator! Dimensions (x,y in meters) are needed')
-        spectrum_file = os.path.join(PVTDATA, 'sources', 'AM1.5g-full.txt')
-
-        self.spectrum = load_spectrum(spectrum_file, xbins=np.arange(350, 700))
-        self.source = PlanarSource(direction=(0, 0, -1), spectrum=self.spectrum, length=parameters[0],
-                                   width=parameters[1])
-        self.source.name = 'Solar Spectrum AM 1.5G'
+        plt.switch_backend('Qt4Agg')
+        xyplot(x=self.source.spectrum.x, y=y,
+               filename='lightsource_' + self.source.name + '_spectrum')

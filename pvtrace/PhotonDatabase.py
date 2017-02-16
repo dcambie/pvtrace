@@ -468,7 +468,7 @@ class PhotonDatabase(object):
     def uids_nonradiative_losses(self):
         return itemise(self.cursor.execute(
             "SELECT uid FROM state WHERE reaction = 0 AND surface_id = 'None' AND absorption_counter > 0 AND killed = 0"
-            " GROUP BY uid HAVING uid IN (SELECT MAX(uid) FROM photon group BY pid)").fetchall())
+            " GROUP BY uid HAVING uid IN (SELECT MAX(uid) FROM photon GROUP BY pid)").fetchall())
     
     def value_for_table_column_uid(self, table, column, uid):
         """

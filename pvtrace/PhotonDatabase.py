@@ -24,30 +24,10 @@ def counted(fn):
 
 
 def itemise(array):
-    """Extracts redundant nested arrays from a parent array e.g. [(1,), (2,), (3,), (4,)] becomes (1,2,3,4)."""
-    # New implementation under testing
+    """
+    Extracts redundant nested arrays from a parent array e.g. [(1,), (2,), (3,), (4,)] becomes (1,2,3,4).
+    """
     return list(chain.from_iterable(array))
-    
-    new = []
-    is_values = None
-    is_points = None
-    for item in array:
-        
-        if isinstance(item, list) or isinstance(item, tuple):
-            
-            if len(item) == 1:
-                # The data is comprised of single values
-                new.append(item[0])
-                is_values = True
-            
-            if len(item) == 3:
-                # The data is comprised of cartesian points
-                is_points = True
-                new.append(item)
-            
-            if is_values == is_points:
-                raise ValueError("All elements of the array must be singleton arrays (i.e. single element arrays)")
-    return new
 
 
 class PhotonDatabase(object):

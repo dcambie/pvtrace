@@ -91,7 +91,7 @@ class Analysis(object):
         self.uids['channels_tot'] = self.db.uids_in_reactor()
         self.uids['channels_direct'] = diff(self.uids['channels_tot'], self.uids['luminescent_channel'])
 
-        # Calculate sum
+        # Calculate sum (for loop iterates only the keys of the dictionary)
         for key in self.uids:
             self.count[key] = len(self.uids[key])
         self.count['luminescent_faces'] = self.count['luminescent_edges'] + self.count['luminescent_apertures']
@@ -109,7 +109,8 @@ class Analysis(object):
             if (delta / self.count['tot']) < 0.001:
                 self.log.warn("[db_stats()] Results FAILED sanity check!!!")
             else:
-                raise ArithmeticError('Sum of photons per fate and generate do not match! [Error > 0.1%!]')
+                raise ArithmeticError('Sum of photons per fate and generate do not match!'
+                                      '(Delta: '+delta+'/'+self.count['tot']+' [Error > 0.1%!]')
 
     def percent(self, num_photons):
         """

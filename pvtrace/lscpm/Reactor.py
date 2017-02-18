@@ -14,7 +14,7 @@ class Reactor(object):
     Object to model the experimental device
     """
 
-    def __init__(self, reactor_name, luminophore, matrix, photocatalyst=None, photocatalyst_concentration=0.001,
+    def __init__(self, reactor_name, luminophore, matrix, photocatalyst, photocatalyst_concentration=0.001,
                  solvent=None):
 
         # 0. CONFIGURATION

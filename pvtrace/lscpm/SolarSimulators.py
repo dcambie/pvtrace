@@ -4,7 +4,7 @@ from pvtrace.Analysis import xyplot
 
 class LightSource(object):
     """
-    Lightsources used by lscpm, are almost always implementation of PlanarSource
+    Lightsources used by LSC-PM, are almost always implementation of PlanarSource
     """
 
     def __init__(self, lamp_type):

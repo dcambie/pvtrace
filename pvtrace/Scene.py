@@ -95,7 +95,7 @@ class Scene(object):
             # The name of the new object is a duplicate
             raise ValueError("The name of the object being added, '%s' is not unique. All seem objects (i.e. Devices) "
                              "must have unique name. You can change the name easily by doing:"
-                             "my_device.name='my unique name'.", object_to_add.name)
+                             "my_device.name='my unique name'." % object_to_add.name)
         self.objects.append(object_to_add)
 
     def add_objects(self, objects_to_add):

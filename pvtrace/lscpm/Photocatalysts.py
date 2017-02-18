@@ -6,7 +6,7 @@ from pvtrace import *
 class Photocatalyst(object):
     def __init__(self, compound, concentration):
         self.logger = logging.getLogger('pvtrace.photocat')
-        self.logger.info('Photocat: "' + compound + '", conc: ' + str(concentration))
+        self.logger.info('Photocat: "' + str(compound) + '", conc: ' + str(concentration))
 
         if compound == 'MB':
             self.compound = MethyleneBlue()

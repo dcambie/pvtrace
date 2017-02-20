@@ -7,12 +7,12 @@ from math import pow
 
 photocatalyst = 'MB'
 dye = 'Red305'
-dye_conc = 50
+dye_conc = 100
 
 file_path = os.path.join(os.path.expanduser('~'), 'pvtrace_data',
                          'MB_grad_'+str(dye_conc)+'.txt')
 
-for mainloop_i in range(0, 21):
+for mainloop_i in range(9, 11):
     exp = (-50 + mainloop_i)/10
     pc_conc = pow(10, exp)
 

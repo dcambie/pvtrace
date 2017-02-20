@@ -796,7 +796,9 @@ class Box(object):
         """
 
         # pdb.set_trace()
-        assert self.on_surface(ray.position), "The point is not on the surface of the box." + str(ray.position)
+        assert self.on_surface(ray.position), "The point is not on the surface of the box.\n" \
+                                              "This can be caused by two object sharing a face" \
+                                              "(Position: " + str(ray.position) + ")"
         inv_trans = tf.inverse_matrix(self.transform)
         ray_pos = transform_point(ray.position, inv_trans)
         ray_dir = transform_direction(ray.direction, inv_trans)

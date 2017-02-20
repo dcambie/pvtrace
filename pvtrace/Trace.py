@@ -20,11 +20,13 @@ import sys
 from copy import copy
 
 import shortuuid
+import logging
 
 import pvtrace.Analysis
 import pvtrace.PhotonDatabase
 import pvtrace.Scene
 from pvtrace.Devices import *
+
 
 try:
     import visual
@@ -123,6 +125,7 @@ class Photon(object):
         self.reaction = False
         self.previous_container = None
         self.visual_obj = []
+        self.log = logging.getLogger("pvtrace.Photon")
 
     def __copy__(self):
         photon_copy = Photon()
@@ -215,7 +218,6 @@ class Photon(object):
                 index = i
                 break
 
-        # import pdb; pdb.set_trace()
         intersection_object = intersection_objects[index]
         assert intersection_object is not None, "No intersection points can be found with the scene."
 
@@ -563,7 +565,7 @@ class Tracer(object):
     """
     def __init__(self, scene=None, source=None, throws=1, steps=50, seed=None, use_visualiser=True,
                  background=(0.957, 0.957, 1), ambient=0.5, show_axis=True,
-                 show_counter=False, db_split=None, preserve_db_tables=False):
+                 show_counter=False, db_name=None, db_split=None, preserve_db_tables=False):
         # Tracer options
         super(Tracer, self).__init__()
         self.scene = scene
@@ -589,7 +591,7 @@ class Tracer(object):
         np.random.seed(self.seed)
 
         # DB SETTINGS
-        self.database = pvtrace.PhotonDatabase(None)
+        self.database = pvtrace.PhotonDatabase(db_name)
         # DB splitting (performance tweak)
         # After 20k photons performance decrease is greater than 20% (compared vs. first photon simulated)
         self.split_num = self.database.split_size

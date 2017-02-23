@@ -52,15 +52,16 @@ class Reactor(object):
         # 2. CHANNELS
         # Create the channels described in reactor_type with the given reaction_mixture and adds them to the scene
         channels_raw = config.get('Channels', 'channels')
-        channels = ast.literal_eval(channels_raw)
+        if channels_raw is not '':
+            channels = ast.literal_eval(channels_raw)
 
-        for channel_data in channels:
-            channel = Channel(origin=channel_data[0],
-                              size=channel_data[1], shape=channel_data[2])
-            channel.material = reaction_mixture
-            channel.name = channel_data[3]
-            self.scene_obj.append(channel)
-            self.reaction_volume += channel.volume
+            for channel_data in channels:
+                channel = Channel(origin=channel_data[0],
+                                  size=channel_data[1], shape=channel_data[2])
+                channel.material = reaction_mixture
+                channel.name = channel_data[3]
+                self.scene_obj.append(channel)
+                self.reaction_volume += channel.volume
 
         # 3. LSC-PM
         # 3.1 LSC-PM GEOMETRY

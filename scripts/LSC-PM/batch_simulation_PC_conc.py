@@ -7,7 +7,7 @@ from math import pow
 
 photocatalyst = 'MB'
 dye = 'Red305'
-dye_conc = 100
+dye_conc = 200
 
 file_path = os.path.join(os.path.expanduser('~'), 'pvtrace_data',
                          'MB_grad_'+str(dye_conc)+'.txt')

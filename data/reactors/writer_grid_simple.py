@@ -4,8 +4,8 @@ from math import pow
 
 config = ConfigParser.SafeConfigParser()
 config.add_section('Main')
-config.set('Main', 'name', 'Reactor (1 sq. m  2.5 cm spacing, grid 1 direction w/ borders)')
-config.set('Main', 'description', '1x1m reactor, 500um channels full-width grid in 1 direction every 2.5 cm + borders')
+config.set('Main', 'name', 'Reactor (1 sq. m  2.5 cm spacing, grid w/ borders)')
+config.set('Main', 'description', '1x1m reactor with 500um channels full-width grid every 2.5 cm + borders')
 config.add_section('LSC')
 config.set('LSC', 'thickness', '0.003')
 config.add_section('Channels')
@@ -17,17 +17,18 @@ num = 40
 halfwidth = width/2
 side = num * spacing
 
-config.set('LSC', 'width', str(side/1000))
-config.set('LSC', 'length', str(side/1000))
+config.set('LSC', 'width', str((side+2*epsilon)/1000))
+config.set('LSC', 'length', str((side+2*epsilon)/1000))
+
 
 geometry = []
-for x in range(0, num):
+for x in range(1, num):
     #        ORIGIN:  X        Y     Z  L:   X      Y   Z
-    geometry.append(((x*spacing, 0.000, epsilon), (width, side, 3-2*epsilon)))  # Vertical channels
-    for y in range(0, num):
-        geometry.append(((x*spacing+width, y*spacing, epsilon), (spacing-width, width, 3 - 2 * epsilon)))
+    geometry.append(((x*spacing-halfwidth, 0.000, epsilon), (width, side, 3-2*epsilon)))  # Vertical channels
 
-geometry.append(((num * spacing-width, 0.000, epsilon), (width, side, 3 - 2 * epsilon)))  # Vertical channels
+# Borders
+geometry.append(((0, 0.000, epsilon), (width, side, 3-2*epsilon)))               # Vertical
+geometry.append(((side-width, 0.000, epsilon), (width, side, 3-2*epsilon)))      # Vertical
 
 # Transform mm into meters (overly complicated code to multiply all values im geometry per 0.001)
 geometry = [[[coord * 0.001 for coord in tuples] for tuples in channel] for channel in geometry]
@@ -40,5 +41,5 @@ for i in range(0, len(geometry)):
 config.set('Channels', 'channels', str(channel))
 
 # Writing our configuration file to 'example.cfg'
-with open('1sqm_2dir_2.5cm.ini', 'wb') as configfile:
+with open('1sqm_2.5cm_borders.ini', 'wb') as configfile:
     config.write(configfile)

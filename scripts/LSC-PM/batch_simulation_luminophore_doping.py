@@ -5,13 +5,13 @@ from pvtrace.lscpm.Matrix import *
 from pvtrace.lscpm.SolarSimulators import *
 
 luminophore_name = 'Red305'
-solvent = 'Air'
+solvent = 'ACN'
 
 file_path = os.path.join(os.path.expanduser('~'), 'pvtrace_data',
                          'output_'+luminophore_name+'_gradient_'+solvent+'.txt')
 
 # Loop 0 to 250ppm
-for mainloop_i in range(20, 26):
+for mainloop_i in range(3, 6):
     luminophore_conc = mainloop_i * 10
 
     # This implicitly restart logging on the new location
@@ -22,7 +22,7 @@ for mainloop_i in range(20, 26):
     pdms = Matrix('pdms')
 
     reactor = Reactor(reactor_name="5x5_6ch_squared", luminophore=luminophore, matrix=pdms, photocatalyst="MB",
-                      photocatalyst_concentration=0, solvent=solvent)
+                      photocatalyst_concentration=0.0004, solvent=solvent)
     scene.add_objects(reactor.scene_obj)
 
     lamp = LightSource(lamp_type='SolarSimulator')

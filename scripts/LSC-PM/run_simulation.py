@@ -3,7 +3,7 @@ from pvtrace.lscpm.Dyes import *
 from pvtrace.lscpm.Matrix import *
 from pvtrace.lscpm.SolarSimulators import *
 
-scene = pvtrace.Scene(level=logging.INFO, uuid="overwrite_me")
+scene = pvtrace.Scene(level=logging.INFO, uuid="1sqm_2dir_borders_50mm")
 logger = logging.getLogger('pvtrace')
 
 # Create LSC-PM DYE material
@@ -11,7 +11,7 @@ lr305 = LuminophoreMaterial('Red305', 200)
 # Create polymeric matrix
 pdms = Matrix('pdms')
 
-reactor = Reactor(reactor_name="0.25sqm_10cm_borders", luminophore=lr305, matrix=pdms, photocatalyst="MB",
+reactor = Reactor(reactor_name="1sqm_2dir_5cm", luminophore=lr305, matrix=pdms, photocatalyst="MB",
                   photocatalyst_concentration=0.0004, solvent='ACN')
 scene.add_objects(reactor.scene_obj)
 
@@ -19,9 +19,9 @@ scene.add_objects(reactor.scene_obj)
 # lamp.set_LED_voltage(voltage=8)
 # lamp.set_lightsource(irradiated_area=(0.05, 0.05), distance=0.025)
 lamp = LightSource(lamp_type='SolarSimulator')
-lamp.set_lightsource(irradiated_area=(0.5, 0.5), distance=0.025)
+lamp.set_lightsource(irradiated_area=(1, 1), distance=0.025)
 
-trace = pvtrace.Tracer(scene=scene, source=lamp.source, throws=10000, use_visualiser=False,
+trace = pvtrace.Tracer(scene=scene, source=lamp.source, throws=100000, use_visualiser=False,
                        show_axis=True, show_counter=False, db_split=False, preserve_db_tables=True)
 # trace.show_lines = True
 # trace.show_path = False

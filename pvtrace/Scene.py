@@ -107,7 +107,8 @@ class Scene(object):
         if len(objects_to_add) == 0:
             return
         if len(objects_to_add) == 1:
-            return self.add_object(objects_to_add)
+            self.add_object(objects_to_add[0])
+            return True
 
         for obj in objects_to_add:
             self.add_object(obj)

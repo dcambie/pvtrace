@@ -454,4 +454,3 @@ class Face(Register):
         self.shape = shape
         self.material = None
         self.name = "FACE"
-

@@ -36,7 +36,6 @@ except Exception:
 
 # import multiprocessing
 # cpu_count = multiprocessing.cpu_count()
-POVRAY_BINARY = ("pvengine.exe" if os.name == 'nt' else "pvtrace")
 
 
 def remove_duplicates(the_list):

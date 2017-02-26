@@ -4,8 +4,8 @@ from math import pow
 
 config = ConfigParser.SafeConfigParser()
 config.add_section('Main')
-config.set('Main', 'name', 'Reactor (1 sq. m  2.5 cm spacing, grid w/ borders)')
-config.set('Main', 'description', '1x1m reactor with 500um channels full-width grid every 2.5 cm + borders')
+config.set('Main', 'name', 'Reactor (1 sq. m  2.5 cm spacing, grid)')
+config.set('Main', 'description', '1x1m reactor with 500um channels full-width grid every 2.5 cm')
 config.add_section('LSC')
 config.set('LSC', 'thickness', '0.003')
 config.add_section('Channels')
@@ -17,8 +17,8 @@ num = 40
 halfwidth = width/2
 side = num * spacing
 
-config.set('LSC', 'width', str((side+2*epsilon)/1000))
-config.set('LSC', 'length', str((side+2*epsilon)/1000))
+config.set('LSC', 'width', str(side/1000))
+config.set('LSC', 'length', str(side/1000))
 
 
 geometry = []

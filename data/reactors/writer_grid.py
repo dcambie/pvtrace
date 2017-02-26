@@ -22,10 +22,14 @@ config.set('LSC', 'length', str(side/1000))
 
 geometry = []
 for x in range(0, num):
-    #        ORIGIN:  X        Y     Z  L:   X      Y   Z
+    # This creates vertical (y-long) channels from 0+num*spacing to start+width
     geometry.append(((x*spacing, 0.000, epsilon), (width, side, 3-2*epsilon)))  # Vertical channels
     for y in range(0, num):
+        # This makes the horizontal (x-long) pieces to complete the grid
+        # per each x:
         geometry.append(((x*spacing+width, y*spacing, epsilon), (spacing-width, width, 3 - 2 * epsilon)))
+    # Last horizontal piece in the right position note the additional "-width" in Y-origin to prevent misplacement
+    geometry.append(((x * spacing + width, num * spacing-width, epsilon), (spacing - width, width, 3 - 2 * epsilon)))
 
 geometry.append(((num * spacing-width, 0.000, epsilon), (width, side, 3 - 2 * epsilon)))  # Vertical channels
 

@@ -11,7 +11,7 @@ file_path = os.path.join(os.path.expanduser('~'), 'pvtrace_data',
                          'output_'+luminophore_name+'_gradient_'+solvent+'.txt')
 
 # Loop 0 to 250ppm
-for mainloop_i in range(3, 6):
+for mainloop_i in range(0, 1):
     luminophore_conc = mainloop_i * 10
 
     # This implicitly restart logging on the new location

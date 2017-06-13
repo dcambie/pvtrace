@@ -72,11 +72,11 @@ class Reactor(object):
         lsc_desc = config.get('Main', 'description')
 
         # 3.2 LSC object creation
-        lsc = LSC(origin=(0, 0, 0), size=(lsc_x, lsc_y, thickness))
+        self.lsc = LSC(origin=(0, 0, 0), size=(lsc_x, lsc_y, thickness))
         # CompositeMaterial made of matrix + luminophore
-        lsc.material = CompositeMaterial([matrix.material(), luminophore.material()],
+        self.lsc.material = CompositeMaterial([matrix.material(), luminophore.material()],
                                          refractive_index=matrix.refractive_index(), silent=True)
-        lsc.name = lsc_name
-        self.scene_obj.append(lsc)
+        self.lsc.name = lsc_name
+        self.scene_obj.append(self.lsc)
 
         self.log.info('Reactor volume (calculated): ' + str(self.reaction_volume * 1000000) + ' mL')

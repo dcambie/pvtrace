@@ -57,6 +57,7 @@ class Visualiser (object):
                 self.display.center = (self.display.center[0], self.display.center[1] + 0.0005, self.display.center[2])
             if s == '0':
                 self.display.center = (0.035, 0.03, 0)
+                self.display.center = (1.6, 1.611, 0)
                 self.display.forward = (0, 0.75, -0.5)
             if s == 'z':
                 self.display.center = (0.025, 0.025, 0.0015)

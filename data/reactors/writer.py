@@ -2,87 +2,68 @@ import os, ConfigParser
 
 config = ConfigParser.SafeConfigParser()
 config.add_section('Main')
-config.set('Main', 'name', 'Reactor (Fang, 24 channels, 0.35 mm nozzle)')
-config.set('Main', 'description', 'PDMS-based LSC-PM 5x5cm 24 channels Fang')
+config.set('Main', 'name', 'Reactor (Fang bifurcation, 8 channels, 1.5mm spacing)')
+config.set('Main', 'description', 'PDMS-based LSC-PM for scale-up, 8 channels 1.5mm spacing - Fang')
 config.add_section('LSC')
 config.set('LSC', 'thickness', '0.003')
-config.set('LSC', 'width', '0.05')
-config.set('LSC', 'length', '0.05')
+config.set('LSC', 'width', '0.0163')
+config.set('LSC', 'length', '0.18505')
 config.add_section('Channels')
 
 
 geometry = []
 #        ORIGIN:  X        Y     Z  L:   X      Y   Z
-geometry.append(((4.975, 0.000, 1), (1.05, 10.00, 1)))  # Inlet, bigger for the first 10 mm
-geometry.append(((5.325, 10.00, 1), (0.35, 37.675, 1)))  # 1st channel top
 
-geometry.append(((5.675, 47.325, 1), (1.346, 0.35, 1)))  # 1st connection
-geometry.append(((7.021, 14.825, 1), (0.35, 32.85, 1)))  # 2nd channel (shorter!)
-geometry.append(((7.371, 14.825, 1), (1.345, 0.35, 1)))  # 2nd connection
-geometry.append(((8.716, 14.825, 1), (0.35, 32.85, 1)))  # 3rd channel
-geometry.append(((9.066, 47.325, 1), (1.346, 0.35, 1)))  # 3rd connection
-geometry.append(((10.412, 2.325, 1), (0.35, 45.35, 1)))  # 4th channel
-geometry.append(((10.762, 2.325, 1), (1.346, 0.35, 1)))  # 4th connection
+geometry.append(((7.625, 0.000, 1), (1.05, 7.00, 1)))  # Inlet
 
-geometry.append(((12.108, 2.325, 1), (0.35, 45.35, 1)))  # 5th channel
-geometry.append(((12.458, 47.325, 1), (1.345, 0.35, 1)))  # 5th connection
+geometry.append(((3.650, 7.000, 1), (9.00, 1.60, 1)))  # 1st bifurcation
 
-geometry.append(((13.803, 2.325, 1), (0.35, 45.35, 1)))  # 6th channel
-geometry.append(((14.153, 2.325, 1), (1.346, 0.35, 1)))  # 6th connection
+geometry.append(((3.650, 8.600, 1), (1.60, 4.50, 1)))  # Left branch
+geometry.append(((11.05, 8.600, 1), (1.60, 4.50, 1)))  # Right branch
 
-geometry.append(((15.499, 2.325, 1), (0.35, 45.35, 1)))  # 7th channel
-geometry.append(((15.849, 47.325, 1), (1.346, 0.35, 1)))  # 7th connection
+geometry.append(((2.200, 13.10, 1), (4.5, 0.80, 1)))  # 2nd bifurcation, left
+geometry.append(((9.600, 13.10, 1), (4.5, 0.80, 1)))  # 2nd bifurcation, right
 
-geometry.append(((17.195, 2.325, 1), (0.35, 45.35, 1)))  # 8th channel
-geometry.append(((17.545, 2.325, 1), (1.345, 0.35, 1)))  # 8th connection
+geometry.append(((2.200, 13.90, 1), (0.8, 3.10, 1)))  # Left, left branch
+geometry.append(((5.900, 13.90, 1), (0.8, 3.10, 1)))  # Left, right branch
+geometry.append(((9.600, 13.90, 1), (0.8, 3.10, 1)))  # Right, left branch
+geometry.append(((13.300, 13.90, 1), (0.8, 3.10, 1)))  # Right, right branch
 
-geometry.append(((18.890, 2.325, 1), (0.35, 45.35, 1)))  # 9th channel
-geometry.append(((19.240, 47.325, 1), (1.346, 0.35, 1)))  # 9th connection
+geometry.append(((1.500, 17.00, 1), (2.2, 0.35, 1)))  # 3rd bifurcation, left left
+geometry.append(((5.200, 17.00, 1), (2.2, 0.35, 1)))  # 3rd bifurcation, left right
+geometry.append(((8.900, 17.00, 1), (2.2, 0.35, 1)))  # 3rd bifurcation, right left
+geometry.append(((12.60, 17.00, 1), (2.2, 0.35, 1)))  # 3rd bifurcation, right right
 
-geometry.append(((20.586, 2.325, 1), (0.35, 45.35, 1)))  # 10th channel
-geometry.append(((20.936, 2.325, 1), (1.346, 0.35, 1)))  # 10th connection
+geometry.append(((1.500, 17.35, 1), (0.35, 150.35, 1)))  # 1st channel
+geometry.append(((3.350, 17.35, 1), (0.35, 150.35, 1)))  # 2nd channel
+geometry.append(((5.200, 17.35, 1), (0.35, 150.35, 1)))  # 3rd channel
+geometry.append(((7.050, 17.35, 1), (0.35, 150.35, 1)))  # 4th channel
+geometry.append(((8.900, 17.35, 1), (0.35, 150.35, 1)))  # 5th channel
+geometry.append(((10.75, 17.35, 1), (0.35, 150.35, 1)))  # 6th channel
+geometry.append(((12.60, 17.35, 1), (0.35, 150.35, 1)))  # 7th channel
+geometry.append(((14.45, 17.35, 1), (0.35, 150.35, 1)))  # 8th channel
 
-geometry.append(((22.282, 2.325, 1), (0.35, 45.35, 1)))  # 11th channel
-geometry.append(((22.632, 47.325, 1), (1.345, 0.35, 1)))  # 11th connection
+geometry.append(((7.625, 178.05, 1), (1.05, 7.00, 1)))  # Outlet
 
-geometry.append(((23.977, 2.325, 1), (0.35, 45.35, 1)))  # 12th channel
-geometry.append(((24.327, 2.325, 1), (1.346, 0.35, 1)))  # 12th connection
+geometry.append(((3.650, 176.45, 1), (9.00, 1.60, 1)))  # 1st bifurcation
 
-geometry.append(((25.673, 2.325, 1), (0.35, 45.35, 1)))  # 13th channel
-geometry.append(((26.023, 47.325, 1), (1.345, 0.35, 1)))  # 13th connection
+geometry.append(((3.650, 171.95, 1), (1.60, 4.50, 1)))  # Left branch
+geometry.append(((11.05, 171.95, 1), (1.60, 4.50, 1)))  # Right branch
 
-geometry.append(((27.368, 2.325, 1), (0.35, 45.35, 1)))  # 14th channel
-geometry.append(((27.718, 2.325, 1), (1.346, 0.35, 1)))  # 14th connection
+geometry.append(((2.200, 171.15, 1), (4.5, 0.80, 1)))  # 2nd bifurcation, left
+geometry.append(((9.600, 171.15, 1), (4.5, 0.80, 1)))  # 2nd bifurcation, right
 
-geometry.append(((29.064, 2.325, 1), (0.35, 45.35, 1)))  # 15th channel
-geometry.append(((29.414, 47.325, 1), (1.346, 0.35, 1)))  # 15th connection
+geometry.append(((2.200, 168.05, 1), (0.8, 3.10, 1)))  # Left, left branch
+geometry.append(((5.900, 168.05, 1), (0.8, 3.10, 1)))  # Left, right branch
+geometry.append(((9.600, 168.05, 1), (0.8, 3.10, 1)))  # Right, left branch
+geometry.append(((13.30, 168.05, 1), (0.8, 3.10, 1)))  # Right, right branch
 
-geometry.append(((30.760, 2.325, 1), (0.35, 45.35, 1)))  # 16th channel
-geometry.append(((31.110, 2.325, 1), (1.345, 0.35, 1)))  # 16th connection
+geometry.append(((1.500, 167.7, 1), (2.2, 0.35, 1)))  # 3rd bifurcation, left left
+geometry.append(((5.200, 167.7, 1), (2.2, 0.35, 1)))  # 3rd bifurcation, left right
+geometry.append(((8.900, 167.7, 1), (2.2, 0.35, 1)))  # 3rd bifurcation, right left
+geometry.append(((12.60, 167.7, 1), (2.2, 0.35, 1)))  # 3rd bifurcation, right right
 
-geometry.append(((32.455, 2.325, 1), (0.35, 45.35, 1)))  # 17th channel
-geometry.append(((32.805, 47.325, 1), (1.346, 0.35, 1)))  # 17th connection
 
-geometry.append(((34.151, 2.325, 1), (0.35, 45.35, 1)))  # 18th channel
-geometry.append(((34.501, 2.325, 1), (1.346, 0.35, 1)))  # 18th connection
-
-geometry.append(((35.847, 2.325, 1), (0.35, 45.35, 1)))  # 19th channel
-geometry.append(((36.197, 47.325, 1), (1.345, 0.35, 1)))  # 19th connection
-
-geometry.append(((37.542, 2.325, 1), (0.35, 45.35, 1)))  # 20th channel
-geometry.append(((37.892, 2.325, 1), (1.346, 0.35, 1)))  # 20th connection
-
-geometry.append(((39.238, 2.325, 1), (0.35, 45.35, 1)))  # 21th channel
-geometry.append(((39.588, 47.325, 1), (1.346, 0.35, 1)))  # 21th connection
-
-geometry.append(((40.934, 14.825, 1), (0.35, 32.85, 1)))  # 22th channel
-geometry.append(((41.284, 14.825, 1), (1.345, 0.35, 1)))  # 22th connection
-
-geometry.append(((42.629, 14.825, 1), (0.35, 32.85, 1)))  # 23th channel
-geometry.append(((42.979, 47.325, 1), (1.346, 0.35, 1)))  # 23th connection
-
-geometry.append(((44.325, 10.000, 1), (0.35, 37.675, 1)))  # last channel bottom
-geometry.append(((43.975,  0.000, 1), (1.05, 10.00, 1)))  # Outlet, bigger for the first 10 mm
 
 # Transform mm into meters (overly complicated code to multiply all values im geometry per 0.001)
 geometry = [[[coord * 0.001 for coord in tuples] for tuples in channel] for channel in geometry]
@@ -95,5 +76,5 @@ for i in range(0, len(geometry)):
 config.set('Channels', 'channels', str(channel))
 
 # Writing our configuration file to 'example.cfg'
-with open('5x5_fang_24ch.ini', 'wb') as configfile:
+with open('Fang_8ch_1.5mm.ini', 'wb') as configfile:
     config.write(configfile)

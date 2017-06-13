@@ -42,6 +42,11 @@ class LightSource(object):
         self.source.translate((0, 0, distance))
         self.ready = True
 
+    def move_lightsource(self, vector=(0, 0)):
+        x = vector[0]
+        y = vector[1]
+        self.source.translate((x, y, 0))
+
     def set_LED_voltage(self, voltage=12):
         if self.ready is True:
             raise NameError('Cannot set voltage for this lightsource! Either already set or wrong lamp type!')

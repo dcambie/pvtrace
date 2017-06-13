@@ -1,5 +1,3 @@
-[![DOI](https://zenodo.org/badge/7342/danieljfarrell/pvtrace.png)](http://dx.doi.org/10.5281/zenodo.12820)
-
 pvtrace - Optical ray tracing for photovoltaic devices and luminescent materials
 -------
 
@@ -37,6 +35,7 @@ Carl Poelking -- Constructive Solid Geometry
 Karl C Godel -- Convex objects, Faces, and Polygons
 Markus Fuhrer -- povray scene rendering and multiprocessing
 Amanda Chatten -- Windows friendly
+Dario Cambié -- LSC-PM adjustments
 
 Installation:
 

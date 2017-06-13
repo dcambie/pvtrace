@@ -25,7 +25,7 @@ from __future__ import division, print_function
 #        print "It seems that you don't have interpolate... bugger... Python FAIL."
 
 from pvtrace.Geometry import *
-from pvtrace.Interpolation import interp1d, BilinearInterpolation
+from pvtrace.Interpolation import Interp1d, BilinearInterpolation
 from pvtrace.ConstructiveGeometry import CSGadd, CSGint, CSGsub
 from pvtrace.external.transformations import translation_matrix, rotation_matrix
 import pvtrace.external.transformations as tf
@@ -35,7 +35,7 @@ import os
 
 
 def load_spectrum(filename, xbins=None, base10=True):
-    assert os.path.exists(filename) == True, "File '%s' does not exist." % filename
+    assert os.path.exists(filename), "File '%s' does not exist." % filename
     spectrum = Spectrum(filename=filename, base10=base10)
 
     # Truncate the spectrum using the xbins
@@ -78,6 +78,7 @@ def common_abscissa(a, b):
 
 def wav2RGB(wavelength):
     """
+    Credits: Dan Bruton
     See: http://codingmess.blogspot.com/2009/05/conversion-of-wavelength-in-nanometers.html
     """
     w = int(wavelength)
@@ -241,7 +242,7 @@ class Spectrum(object):
         if base10:
             self.y *= 1/np.log10(math.e)
         # Make the 'spectrum'
-        self.spectrum = interp1d(self.x, self.y, bounds_error=False, fill_value=0.0)
+        self.spectrum = Interp1d(self.x, self.y, bounds_error=False, fill_value=0.0)
 
         # Make the pdf for wavelength lookups
         try:
@@ -254,8 +255,8 @@ class Spectrum(object):
         if not (max(cdf) == 0):
             pdf = cdf / max(cdf)
             pdf = np.hstack([0, pdf[:]])
-            self.pdf_lookup = interp1d(bins, pdf, bounds_error=False, fill_value=0.0)
-            self.pdfinv_lookup = interp1d(pdf, bins, bounds_error=False, fill_value=0.0)
+            self.pdf_lookup = Interp1d(bins, pdf, bounds_error=False, fill_value=0.0)
+            self.pdfinv_lookup = Interp1d(pdf, bins, bounds_error=False, fill_value=0.0)
 
     def __call__(self, nanometers):
         """
@@ -636,7 +637,7 @@ class CompositeMaterial(Material):
             cdf = np.cumsum(absorptions)
             pdf = cdf / max(cdf)
             pdf = np.hstack([0, pdf[:]])
-            pdfinv_lookup = interp1d(pdf, bins, bounds_error=False, fill_value=0.0)
+            pdfinv_lookup = Interp1d(pdf, bins, bounds_error=False, fill_value=0.0)
             absorber_index = int(np.floor(pdfinv_lookup(np.random.uniform())))
             material = self.materials[absorber_index]
             # print 'the absorber was ',absorber_index

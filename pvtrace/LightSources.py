@@ -353,19 +353,18 @@ class PointSource(object):
         photon = Photon()
         photon.source = self.source_id
         photon.id = self.throw
-        self.throw = self.throw + 1
+        self.throw += 1
         
-		
-		#This does not work, since the area element scales with Sin(theta) d theta d phi
-		#See  http://mathworld.wolfram.com/SpherePointPicking.html
-		#Reimplementing the Randomizer
-		
+        # This does not work, since the area element scales with Sin(theta) d theta d phi
+        # See  http://mathworld.wolfram.com/SpherePointPicking.html
+        # Reimplementing the Randomizer
+
         phi = np.random.uniform(self.phi_min, self.phi_max)
-        #theta = np.random.uniform(self.theta_min, self.theta_max)
-		
+        # theta = np.random.uniform(self.theta_min, self.theta_max)
+        
         theta = -1
-        while theta > self.theta_max or theta < self.theta_min :
-            theta = np.arccos(2* np.random.uniform(0,1)-1)
+        while theta > self.theta_max or theta < self.theta_min:
+            theta = np.arccos(2 * np.random.uniform(0, 1)-1)
         
         x = np.cos(phi) * np.sin(theta)
         y = np.sin(phi) * np.sin(theta)

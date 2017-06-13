@@ -99,7 +99,7 @@ for channel in channels:
 pwd = os.getcwd()
 dbfile = os.path.join(pwd, 'reactor2_db.sql') # <--- the name of the database file
 
-trace = Tracer(scene=scene, source=source, seed=1, throws=250, database_file=dbfile, use_visualiser=True, show_log=False, show_axis=False)
+trace = Tracer(scene=scene, source=source, seed=1, throws=250, database_file=dbfile, use_visualiser=True, show_axis=False)
 trace.show_lines = True
 trace.show_path = True
 import time

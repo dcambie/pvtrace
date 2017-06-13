@@ -35,19 +35,19 @@ class CSGadd(object):
     Constructive Solid Geometry Boolean Addition
     """
 
-    def __init__(self, ADDone, ADDtwo):
+    def __init__(self, add_one, add_two):
         super(CSGadd, self).__init__()
-        self.ADDone = ADDone
-        self.ADDtwo = ADDtwo
+        self.ADDone = add_one
+        self.ADDtwo = add_two
         self.reference = 'CSGadd'
         self.transform = tf.identity_matrix()
 
-    def append_name(self, namestring):
+    def append_name(self, name_string):
         """
         In case a scene contains several CSG objects, this helps
         with surface identification (see return value of def surface_identifier(..))
         """
-        self.reference = namestring
+        self.reference = name_string
         
     def append_transform(self, new_transform):
         self.transform = tf.concatenate_matrices(new_transform, self.transform)

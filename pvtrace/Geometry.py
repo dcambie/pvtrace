@@ -16,7 +16,6 @@ from __future__ import division, print_function
 import numpy as np
 
 import pvtrace.external.transformations as tf
-from pvtrace.external.quickhull import qhull3d
 from pvtrace.external.transformations import translation_matrix, rotation_matrix
 
 
@@ -28,6 +27,7 @@ def cmp_floats(a, b):
     :param b: second value
     :return: boolean
     """
+    
     abs_diff = abs(a - b)
     if abs_diff < 1e-12:
         return True
@@ -63,7 +63,7 @@ def interval_check(a, b, c, strict=False):
     :param c: third point
     :param strict: boolean, if false a <= b <= c, if true a < b < c
     """
-    if not strict and cmp_floats(a, b) == True or cmp_floats(b, c) == True:
+    if not strict and cmp_floats(a, b) or cmp_floats(b, c):
         return True
     if a < b < c:
         return True
@@ -185,19 +185,18 @@ def transform_point(point, transform):
 
 def transform_direction(direction, transform):
     try:
-        angle, axis, point = tf.rotation_from_matrix(transform)
+        rotation_angle, rotation_axis, point = tf.rotation_from_matrix(transform)
     except ValueError:
         if tf.is_same_transform(tf.identity_matrix() * -1, transform):
             # The ray direction needs to be reversed
             return np.array(direction) * -1.
-    rotation_transform = tf.rotation_matrix(angle, axis)
-    return np.array(np.dot(rotation_transform, np.matrix(np.concatenate((direction, [1.]))).transpose()).transpose()[0,
-                    0:3]).squeeze()
+    rotation_transform = tf.rotation_matrix(rotation_angle, rotation_axis)
+    return np.array(np.dot(rotation_transform,
+                           np.matrix(np.concatenate((direction, [1.]))).transpose()).transpose()[0,0:3]).squeeze()
 
 
 def rotation_matrix_from_vector_alignment(before, after):
     """
-
     :param before: vector before rotation
     :param after: vector after rotation
     :return: rotation matrix
@@ -227,19 +226,19 @@ def rotation_matrix_from_vector_alignment(before, after):
     """
     # The angle between the vectors must not be 0 or 180 (i.e. so we can take a cross product)
     # import pdb; pdb.set_trace()
-    thedot = np.dot(before, after)
-    if cmp_floats(thedot, 1.):
+    the_dot = np.dot(before, after)
+    if cmp_floats(the_dot, 1.):
         # Vectors are parallel
         return tf.identity_matrix()
 
-    if cmp_floats(thedot, -1.):
+    if cmp_floats(the_dot, -1.):
         # Vectors are anti-parallel
         # print "Vectors are anti-parallel this might crash."
         return tf.identity_matrix() * -1.
 
-    axis = np.cross(before, after)  # get the axis of rotation
-    angle = np.arccos(np.dot(before, after))  # get the rotation angle
-    return rotation_matrix(angle, axis)
+    rotation_axis = np.cross(before, after)  # get the axis of rotation
+    rotation_angle = np.arccos(np.dot(before, after))  # get the rotation angle
+    return rotation_matrix(rotation_angle, rotation_axis)
 
 
 class Ray(object):
@@ -374,6 +373,7 @@ class Plane(object):
 
     def surface_normal(self, ray, acute=True):
         normal = transform_direction((0, 0, 1), self.transform)
+        rdir = ray.direction
         if acute:
             if angle(normal, rdir) > np.pi / 2:
                 normal *= -1.0
@@ -462,8 +462,8 @@ class FinitePlane(Plane):
         :return: boolean
         """
         inv_transform = tf.inverse_matrix(self.transform)
-        ray_pos = transform_point(ray.position, inv_transform)
-        if cmp_floats(ray_pos, 0.) and (0. < ray_pos[0] <= self.length) and (0. < ray_pos[1] <= self.width):
+        position = transform_point(point, inv_transform)
+        if cmp_floats(position[2], 0.) and (0. < position[0] <= self.length) and (0. < position[1] <= self.width):
             return True
         return False
 
@@ -474,7 +474,11 @@ class FinitePlane(Plane):
         :param ray: Ray to intersect the plane with
         :return: point / None
         """
+                
         points = super(FinitePlane, self).intersection(ray)
+        if points is None:
+            return None
+        print(points)
         # Is point in the finite plane bounds
         local_point = transform_point(points[0], self.transform)
         if (0. <= local_point[0] <= self.length) and (0. <= local_point[1] <= self.width):
@@ -691,7 +695,7 @@ class Box(object):
                         bool_array[j] = True
 
         if assert_on_surface:
-            assert bool_array[0] == bool_array[1] == bool_array[2] == True
+            assert bool_array[0] == bool_array[1] == bool_array[2] is True
 
         surface_name = []
 
@@ -763,7 +767,7 @@ class Box(object):
                     if interval_check(def_points[j], local_point[j], def_points[j + 3]):
                         bool_array[j] = True
 
-        if bool_array[0] == bool_array[1] == bool_array[2] == True:
+        if bool_array[0] == bool_array[1] == bool_array[2] is True:
             return True
 
         return False
@@ -792,7 +796,9 @@ class Box(object):
         """
 
         # pdb.set_trace()
-        assert self.on_surface(ray.position), "The point is not on the surface of the box." + str(ray.position)
+        assert self.on_surface(ray.position), "The point is not on the surface of the box.\n" \
+                                              "This can be caused by two object sharing a face" \
+                                              "(Position: " + str(ray.position) + ")"
         inv_trans = tf.inverse_matrix(self.transform)
         ray_pos = transform_point(ray.position, inv_trans)
         ray_dir = transform_direction(ray.direction, inv_trans)
@@ -819,7 +825,7 @@ class Box(object):
                     for val in ray_pos:
                         # logging.debug(str((ref,val)))
                         if cmp_floats(ref, val):
-                            # logging.debug("Common value found, " + str(val) + " at index" + str(list(ray_pos).index(val)))
+                            # logging.debug("Common value found, " + str(val) + " at " + str(list(ray_pos).index(val)))
                             common_index = list(ray_pos).index(val)
                             exit_loop = True
                             break
@@ -994,7 +1000,7 @@ class Cylinder(object):
 
         origin_z = 0.
         xy_distance = np.sqrt(local_point[0] ** 2 + local_point[1] ** 2)
-        if interval_check(origin_z, local_point[2], self.length, strict=True) == True and xy_distance < self.radius:
+        if interval_check(origin_z, local_point[2], self.length, strict=True) and xy_distance < self.radius:
             return True
         else:
             return False
@@ -1104,7 +1110,7 @@ class Cylinder(object):
                 return True
 
         if smaller_equal_to(xy_distance, self.radius):
-            if cmp_floats(local_point[2], origin_z) == True or cmp_floats(local_point[2], self.length) == True:
+            if cmp_floats(local_point[2], origin_z) or cmp_floats(local_point[2], self.length) == True:
                 return True
 
         return False
@@ -1466,108 +1472,7 @@ class Sphere(object):
         return False
 
 
-class Convex(object):
-    """
-    docstring for Convex
-    """
-
-    def __init__(self, points):
-        super(Convex, self).__init__()
-        self.points = points
-        verts, triangles = qhull3d(points)
-        self.faces = range(len(triangles))
-
-        for i in range(len(triangles)):
-            a = triangles[i][0]
-            b = triangles[i][1]
-            c = triangles[i][2]
-            self.faces[i] = Polygon([verts[a], verts[b], verts[c]])
-
-    def on_surface(self, point):
-        for face in self.faces:
-            if face.on_surface(point):
-                return True
-        return False
-
-    def surface_normal(self, ray, acute=False):
-        for face in self.faces:
-            if face.on_surface(ray.position):
-                normal = face.surface_normal(ray, acute=acute)
-                if angle(normal, ray.direction) > np.pi / 2:
-                    normal *= -1
-                return normal
-
-        assert "Have not found the surface normal for this ray. Are you sure the ray is on the surface of this object?"
-
-    @staticmethod
-    def surface_identifier(surface_point, assert_on_surface=True):
-        return "Convex"
-
-    def intersection(self, ray):
-        points = []
-        for face in self.faces:
-            pt = face.intersection(ray)
-            if pt is not None:
-                points.append(np.array(pt[0]))
-        if len(points) > 0:
-            return points
-        return None
-
-    def contains(self, point):
-        ray = Ray(position=point, direction=norm(np.random.random(3)))
-        hit_counter = 0
-        for face in self.faces:
-
-            if face.on_surface(ray.position):
-                return False
-
-            pt = face.intersection(ray)
-            if pt is not None:
-                hit_counter += 1
-
-        even_or_odd = hit_counter % 2
-        if even_or_odd == 0:
-            return False
-        return True
-
-    def centroid(self):
-        """
-        Credit:
-        http://orion.math.iastate.edu:80/burkardt/c_src/geometryc/geometryc.html
-        
-        Returns the 'centroid' of the Convex polynomial.
-        """
-        raise NotImplementedError("The centroid method of the Convex class is not yet implemented.")
-        # area = 0.0;
-        # for ( i = 0; i < n - 2; i++ ) {
-        # areat = triangle_area_3d ( x[i], y[i], z[i], x[i+1],
-        #  y[i+1], z[i+1], x[n-1], y[n-1], z[n-1] );
-        #    
-        # area = area + areat;
-        # *cx = *cx + areat * ( x[i] + x[i+1] + x[n-1] ) / 3.0;
-        # *cy = *cy + areat * ( y[i] + y[i+1] + y[n-1] ) / 3.0;
-        # *cz = *cz + areat * ( z[i] + z[i+1] + z[n-1] ) / 3.0;
-        #
-        # }
-        #
-        # *cx = *cx / area;
-        # *cy = *cy / area;
-        # *cz = *cz / area;
-        #
-
-
 if __name__ == "__main__":
     import doctest
 
     doctest.testmod()
-
-    if False:
-        # Catch the special case in which we cannot take the cross product
-        V1 = [0, 0, 1]
-        V2 = [0, 0, -1]
-        # import pdb; pdb.set_trace()
-        R = rotation_matrix_from_vector_alignment(V1, V2)
-        R2 = rotation_matrix(np.pi, [1, 0, 0])
-        V3 = transform_direction(V1, R)
-        print(R2)
-        print(cmp_points(V2, V3))

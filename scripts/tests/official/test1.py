@@ -36,7 +36,7 @@ lsc.name = "LSC"
 scene = Scene()
 scene.add_object(lsc)
 
-trace = Tracer(scene=scene, source=source, seed=1, throws=250, use_visualiser=True, show_log=False)
+trace = Tracer(scene=scene, source=source, seed=1, throws=250, use_visualiser=True)
 trace.show_lines = True
 trace.show_path = True
 

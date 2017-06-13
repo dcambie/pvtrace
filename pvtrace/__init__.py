@@ -13,34 +13,47 @@
 from __future__ import division
 import numpy as np
 from pvtrace.external import transformations
-from pvtrace.external import pov
-from pvtrace.external import quickhull
 from pvtrace.external import mathutils
 
-from pvtrace.Materials import *
+from pvtrace.Analysis import *
+from pvtrace.ConstructiveGeometry import *
 from pvtrace.Devices import *
 from pvtrace.Geometry import *
-from pvtrace.ConstructiveGeometry import *
-from pvtrace.LightSources import *
-from pvtrace.Visualise import *
-from pvtrace.Trace import *
 from pvtrace.Interpolation import *
+from pvtrace.LightSources import *
+from pvtrace.Materials import *
+from pvtrace.PhotonDatabase import *
+from pvtrace.Scene import *
+from pvtrace.Trace import *
+from pvtrace.Trajectory import *
+from pvtrace.Visualise import *
+
+from pvtrace.lscpm import *
 
 import os
 import sys
+import logging
+import sqlitebck
 
-print("pvtrace pre-flight checks...")
+pvtrace_containing_directory = False
+
+logger = logging.getLogger('pvtrace')
+logger.info('pvtrace pre-flight checks...')
 
 # Module constants -- location of the data folder
-# print(sys.path)
+logger.info('System Path: '+str(sys.path))
 for path in sys.path:
     if path.find('pvtrace') != -1:
         pvtrace_containing_directory = path
         break
-while pvtrace_containing_directory.find('pvtrace') != -1:
-    pvtrace_containing_directory = os.path.abspath(os.path.join(pvtrace_containing_directory, '..'))
 
-PVTDATA = os.path.join(pvtrace_containing_directory, 'pvtrace', 'data')
+if pvtrace_containing_directory is not False:
+    while os.path.dirname(pvtrace_containing_directory).find('pvtrace') != -1:
+        pvtrace_containing_directory = os.path.dirname(pvtrace_containing_directory)
+    pvtrace_containing_directory = os.path.abspath(os.path.join(pvtrace_containing_directory))
+else:
+    print("Cannot find PvTrace root directory! (Consider setting pvtrace_containing_directory explicitly")
+    sys.exit(1)
 
-# print("Pvtrace data directory:")
-# print(PVTDATA)
+PVTDATA = os.path.join(pvtrace_containing_directory, 'data')
+logger.info('PVTDATA set to '+PVTDATA)

@@ -206,7 +206,7 @@ for i in range(1,2):
     pwd = os.getcwd()
     dbfile = os.path.join(pwd, config['db_file']) # <--- the name of the database file
 
-    trace = Tracer(scene=scene, source=source, seed=random_seed, throws=config['photons_to_throw'], database_file=dbfile, use_visualiser=config['visualizer'], show_log=config['debug'], show_axis=True)
+    trace = Tracer(scene=scene, source=source, seed=random_seed, throws=config['photons_to_throw'], database_file=dbfile, use_visualiser=config['visualizer'], show_axis=True)
     trace.show_lines = config['show_lines']
     trace.show_path  = config['show_path']
     import time
@@ -277,9 +277,9 @@ for i in range(1,2):
     # oNLY PHOTONS IN CHANNELS!
     for photon in photons:
         if config['debug']:
-            print "Wavelenght: ",trace.database.wavelengthForUid(photon)# Nice output
+            print "Wavelenght: ",trace.database.wavelength_for_uid(photon)# Nice output
         elif config['print_wavelegths']:
-            print " ".join(map(str,trace.database.wavelengthForUid(photon) )) # Clean output (for elaborations)
+            print " ".join(map(str, trace.database.wavelength_for_uid(photon))) # Clean output (for elaborations)
 
     if config['debug']:
         print channel.name," photons: ",photons_in_channels_tot/thrown * 100,"% (",photons_in_channels_tot,")"

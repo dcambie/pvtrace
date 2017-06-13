@@ -6,6 +6,8 @@ import types
 import os
 import pvtrace
 import logging
+from itertools import chain
+
 
 # The database schema lives inside the pvtrace module directory
 DB_SCHEMA = os.path.join(os.path.dirname(pvtrace.__file__), "dbschema.sql")
@@ -22,27 +24,10 @@ def counted(fn):
 
 
 def itemise(array):
-    """Extracts redundant nested arrays from a parent array e.g. [(1,), (2,), (3,), (4,)] becomes (1,2,3,4)."""
-    new = []
-    is_values = None
-    is_points = None
-    for item in array:
-        
-        if isinstance(item, list) or isinstance(item, tuple):
-            
-            if len(item) == 1:
-                # The data is comprised of single values
-                new.append(item[0])
-                is_values = True
-            
-            if len(item) == 3:
-                # The data is comprised of cartesian points
-                is_points = True
-                new.append(item)
-            
-            if is_values == is_points:
-                raise ValueError("All elements must of the array must be singleton arrays (i.e. single element arrays)")
-    return new
+    """
+    Extracts redundant nested arrays from a parent array e.g. [(1,), (2,), (3,), (4,)] becomes (1,2,3,4).
+    """
+    return list(chain.from_iterable(array))
 
 
 class PhotonDatabase(object):
@@ -50,7 +35,7 @@ class PhotonDatabase(object):
     An object the wraps a mysql database.
     """
 
-    def __init__(self, dbfile=None):
+    def __init__(self, dbfile=None, readonly=False):
         """
         Create the database and loads the schema into it.
 
@@ -61,21 +46,28 @@ class PhotonDatabase(object):
         self.uid = 0
         self.split_size = 20000
         self.logger = logging.getLogger('pvtrace.PhotonDatabase')
+        self.readonly = readonly
 
         if dbfile is not None:
-            # There is a default
             self.file = dbfile
             
             # Delete this dbfile and start again
             if os.path.exists(self.file):
-                if os.path.split(self.file)[1] == "pvtracedb.sql":
+                if os.path.split(self.file)[1] == "pvtracedb.sql" and self.readonly is not True:
                     os.remove(self.file)
+                elif self.readonly is True:
+                    self.logger.debug('Found DB file '+self.file)
                 else:
                     raise ValueError("A database already exist at '%s', please rename your database" % self.file)
             
-            # print "Attempting to creating database dbfile...", self.file
+            if self.readonly:
+                mode = 'r'
+            else:
+                mode = 'w+'
+            
             try:
-                open(self.file, 'w+')
+                open(self.file, mode)
+                self.logger.debug('DB opened with '+mode+' mode')
             except:
                 raise IOError("Could not create file, %s" % self.file)
             
@@ -83,7 +75,9 @@ class PhotonDatabase(object):
         else:
             self.file = None
             self.connection = sql.connect(":memory:")
+            self.logger.debug('Using in-memory DB')
 
+        self.logger.debug("Attempting DB connection")
         self.cursor = self.connection.cursor()
 
         # Faster DB on disk without journaling
@@ -91,38 +85,37 @@ class PhotonDatabase(object):
             self.cursor.execute("PRAGMA synchronous = OFF")
             self.cursor.execute("PRAGMA journal_mode = OFF")
 
-        try:
-            # print "Attempting to loading schema into database from dbfile ... ", DB_SCHEMA
-            dbfile = open(os.path.abspath(DB_SCHEMA), "r")
-            for line in dbfile:
-                self.cursor.execute(line)
-        except Exception:
-            print("Could not load DB schema file. (", DB_SCHEMA, ")")
-            exit(1)
+        if self.readonly is False:
+            try:
+                # print "Attempting to loading schema into database from dbfile ... ", DB_SCHEMA
+                dbfile = open(os.path.abspath(DB_SCHEMA), "r")
+                for line in dbfile:
+                    self.cursor.execute(line)
+                self.logger.debug("DB schema loaded into db")
+            except Exception:
+                print("Could not load DB schema file. (", DB_SCHEMA, ")")
+                exit(1)
 
     def load(self, dbfile):
-        """Loads and existing photon database into memory from a dbfile path."""
+        """ Loads an existing photon database into memory from a dbfile path. """
         self.connection = sql.connect(dbfile)
         self.cursor = self.connection.cursor()
 
     def log(self, photon, surface_normal=None, surface_id=None, ray_direction_bound=None,
             emitter_material=None, absorber_material=None):
         """
-        Adds a new row to the database. NB Every time this function is called the uid of the photon is incremented.
+        Adds a photon state (uid) in the database.
+        Note: Every time this function is called the uid of the photon is incremented
         """
         values = (self.uid, photon.id, float(photon.wavelength))
-        # import pdb; pdb.set_trace()
         self.cursor.execute('INSERT INTO photon VALUES (?, ?, ?)', values)
         
         values = (float(photon.position[0]), float(photon.position[1]), float(photon.position[2]), self.uid)
-        # print values
-        # for v in values:
-        #    print type(v)
         self.cursor.execute('INSERT INTO position VALUES (?, ?, ?, ?)', values)
         
         values = (float(photon.direction[0]), float(photon.direction[1]), float(photon.direction[2]), self.uid)
         self.cursor.execute('INSERT INTO direction VALUES (?, ?, ?, ?)', values)
-        
+
         try:
             values = (float(photon.polarisation[0]), float(photon.polarisation[1]),
                       float(photon.polarisation[2]), self.uid)
@@ -150,19 +143,19 @@ class PhotonDatabase(object):
                   str(ray_direction_bound), photon.reaction, self.uid)
         self.cursor.execute('INSERT INTO state VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)', values)
         
-        # the last line of this method update the unique photon ID (i.e. the row number)
-        self.uid += 1
-        
         # Every 100 times write data to dbfile
-        if not self.uid % 100:
+        if self.uid % 100 == 0:
             self.connection.commit()
+
+        # The last line of this method update the unique photon ID (i.e. the row number)
+        self.uid += 1
 
     def dump_to_file(self, location=None):
         """
         Saves to file the current DB to a given location. Useful for in-memory DBs
 
         NOTE: it doesn't update self.connection with the new location, so the old db will still be used for further
-         query (intended behaviour since, if it's :memory:, is presumably faster
+         query (intended behaviour since, if it's :memory:, is presumably faster)
 
         :param location: complete URL (path+filename) to save the db to
         :return:
@@ -174,11 +167,15 @@ class PhotonDatabase(object):
             filename = location
 
         file_connection = sql.connect(filename)
-        sqlitebck.copy(self.connection, file_connection)
-        print("\r DB copy saved as ", filename)
+        # disable journaling for faster operations
+        cursor = file_connection.cursor()
+        cursor.execute("PRAGMA synchronous = OFF")
+        cursor.execute("PRAGMA journal_mode = OFF")
 
-    def add_db_file(self, filename=None,
-                    tables=("photon", "state", "direction", "position", "surface_normal", "polarisation")):
+        sqlitebck.copy(self.connection, file_connection)
+        self.logger.info("DB copy saved as "+str(filename))
+
+    def add_db_file(self, filename=None, tables=None):
         """
         Adds the data in the give filename db to the current DB (only the tables in tables)
 
@@ -187,14 +184,19 @@ class PhotonDatabase(object):
         :param filename: Filename of the db to be added
         :param tables: Tables to be added
         """
+        if tables is None:
+            tables = ("photon", "state", "direction", "position", "surface_normal", "polarisation")
         self.cursor.execute("ATTACH DATABASE ? AS  toMerge", [filename])
+
+        # self.cursor.execute("BEGIN TRANSACTION")
         for table in tables:
             self.cursor.execute("INSERT INTO "+table+" SELECT * FROM toMerge."+table)
+        # self.connection.commit()
         self.cursor.execute("DETACH DATABASE toMerge")
 
     def empty(self):
         """
-        Empties DB
+        Empties the DB
         """
         self.cursor.execute("DELETE FROM state")
         self.cursor.execute("DELETE FROM direction")
@@ -202,12 +204,18 @@ class PhotonDatabase(object):
         self.cursor.execute("DELETE FROM position")
         self.cursor.execute("DELETE FROM surface_normal")
         self.cursor.execute("DELETE FROM photon")
+        self.cursor.execute("VACUUM")
         self.connection.commit()
 
     def __del__(self):
         self.cursor.close()
     
     def endpoint_uids(self):
+        """
+        Per each photon returns the highest uid, corresponding to its endpoint
+
+        :rtype: list
+        """
         return itemise(self.cursor.execute('SELECT MAX(uid) FROM photon GROUP BY pid;').fetchall())
     
     def endpoint_uids_for_object(self, obj):
@@ -265,16 +273,11 @@ class PhotonDatabase(object):
             "GROUP BY uid HAVING uid IN (SELECT MAX(uid) FROM photon group BY pid)", (obj,)).fetchall())
     
     def killed(self):
-        """Returns the uid of killed photons (one that took too many steps to complete)."""
-        return self.cursor.execute('SELECT uid FROM state WHERE killed = 1').fetchall()
+        """ Returns the uid of killed photons (one that took too many steps to complete). """
+        return itemise(self.cursor.execute('SELECT uid FROM state WHERE killed = 1').fetchall())
 
-    # fixme: Needs implementation
-    def missed(self):
-        """Returns the uid of photons that did not hit any scene objects"""
-        pass
-    
     def objects_with_records(self):
-        """Returns a list of which scene object have been hit by rays."""
+        """ Returns a list of which scene object have been hit by rays. """
         objects_keys = self.cursor.execute(
             'SELECT DISTINCT(container_obj) FROM state GROUP BY container_obj;').fetchall()
         objects_keys = itemise(objects_keys)
@@ -287,8 +290,7 @@ class PhotonDatabase(object):
         return filtered_keys
 
     def surfaces_with_records(self):
-        """Returns surfaces that have been hit by a ray for all exiting objects.
-        """
+        """ Returns surfaces that have been hit by a ray for all exiting objects. """
         keys = self.cursor.execute(
             'SELECT DISTINCT surface_id FROM state WHERE uid IN (SELECT uid FROM surface_normal'
             'WHERE uid IN (SELECT MAX(uid) FROM photon GROUP BY pid));').fetchall()
@@ -302,7 +304,7 @@ class PhotonDatabase(object):
         return filtered_keys
     
     def surfaces_with_records_for_object(self, obj):
-        """Returns a list of surface to 'object' that have been hit by a ray."""
+        """ Returns a list of surface to 'object' that have been hit by a ray. """
         keys = self.cursor.execute(
             'SELECT DISTINCT surface_id FROM state WHERE uid IN (SELECT uid FROM surface_normal'
             'WHERE uid IN (SELECT MAX(uid) FROM photon GROUP BY pid))'
@@ -381,45 +383,72 @@ class PhotonDatabase(object):
             return []
     
     def uids_in_reactor(self):
-        """Returns photons in reactor"""
+        """ Returns the uids of all the photons in the reactor channels. """
         return itemise(self.cursor.execute(
             "SELECT MAX(uid) FROM photon GROUP BY pid INTERSECT SELECT uid FROM state WHERE reaction = 1"))
     
     def uids_in_reactor_and_luminescent(self):
-        """Returns photons in reactor and luminescent One absorption is.the reaction mixture, so >1"""
+        """ Returns photons in reactor and luminescent."""
+        # One absorption is the reaction mixture itself, so > 1 to account for dye absorption (i.e. luminescent).
         return itemise(self.cursor.execute(
             "SELECT MAX(uid) FROM photon GROUP BY pid INTERSECT "
             "SELECT uid FROM state WHERE reaction = 1 AND absorption_counter > 1"))
     
     def uids_luminescent(self):
-        """Returns luminescent photons"""
+        """ Returns luminescent photons. """
         return itemise(self.cursor.execute(
             "SELECT MAX(uid) FROM photon GROUP BY pid INTERSECT SELECT uid FROM state WHERE absorption_counter > 1"))
 
     def uids_first_intersection(self):
-        """Returns the unique identifier of the first intersection for all photons"""
+        """ Returns the unique identifier of the first intersection for all photons. """
         return self.cursor.execute('SELECT uid FROM state WHERE intersection_counter = 1;').fetchall()
     
-    def uids_generated_photons(self):
-        return self.cursor.execute('SELECT MIN(uid) FROM photon GROUP BY pid;').fetchall()
+    def uids_generated_photons(self, max=False):
+        """ Returns the unique identifier of the first (or last) step of each generated photon. """
+        if max:
+            return itemise(self.cursor.execute('SELECT MAX(uid) FROM photon GROUP BY pid;').fetchall())
+        else:
+            return itemise(self.cursor.execute('SELECT MIN(uid) FROM photon GROUP BY pid;').fetchall())
     
     def pid_from_uid(self, uid):
-        return self.cursor.execute('SELECT pid FROM photon WHERE uid=?', (uid,)).fetchall()
+        """ Returns the photon ID of a given uid. """
+        if isinstance(uid, int) or isinstance(uid, float):
+            return itemise(self.cursor.execute("SELECT pid FROM photon WHERE uid=?", (uid,)).fetchall())[0]
+        elif isinstance(uid, list) or isinstance(uid, tuple):
+            items = str(uid)[1:-1]
+            cmd = "SELECT pid FROM photon WHERE uid IN ({0})".format(items)
+            return itemise(self.cursor.execute(cmd).fetchall())
 
     def uids_for_pid(self, pid):
+        """ Returns all the uids associated to a given photon ID. """
         return itemise(self.cursor.execute('SELECT uid FROM photon WHERE pid=?', (pid,)))
     
     def bounces_for_pid(self, pid):
+        """ Returns the number of bounces for a given photon ID. """
         last_uid_for_pid = max(self.uids_for_pid(pid))
-        return itemise(self.cursor.execute('SELECT absorption_counter FROM state WHERE uid=?', (last_uid_for_pid,)))
+        return itemise(self.cursor.execute('SELECT intersection_counter FROM state WHERE uid=?', (last_uid_for_pid,)))
 
     def bounces_for_uid(self, uid):
-        return itemise(self.cursor.execute('SELECT absorption_counter FROM state WHERE uid=?', (uid,)))
+        """ Returns the number of bounces for a given uid. """
+        # Note: if uid is not max(uid) of pid then this might be lower than expected!
+        return itemise(self.cursor.execute('SELECT intersection_counter FROM state WHERE uid=?', (uid,)))
+
+    def uids_top_reflections(self):
+        return itemise(self.cursor.execute(
+            "SELECT MAX(uid) FROM photon GROUP BY pid HAVING uid IN"
+            "(SELECT uid FROM state WHERE ray_direction_bound = 'Out'"
+            "AND surface_id='top' AND intersection_counter = 1  GROUP BY uid);").fetchall())
+
+    # This is about 2x faster than the implementation above, but slightly less safe (depending on obj in scene)
+    def count_top_reflections(self):
+        return itemise(self.cursor.execute(
+            "SELECT COUNT(*) FROM (SELECT uid FROM state WHERE ray_direction_bound = 'Out' AND surface_id='top'"
+            "AND intersection_counter = 1  GROUP BY uid)").fetchall())
 
     def uids_nonradiative_losses(self):
         return itemise(self.cursor.execute(
             "SELECT uid FROM state WHERE reaction = 0 AND surface_id = 'None' AND absorption_counter > 0 AND killed = 0"
-            " GROUP BY uid HAVING uid IN (SELECT MAX(uid) FROM photon group BY pid)").fetchall())
+            " GROUP BY uid HAVING uid IN (SELECT MAX(uid) FROM photon GROUP BY pid)").fetchall())
     
     def value_for_table_column_uid(self, table, column, uid):
         """
@@ -428,20 +457,25 @@ class PhotonDatabase(object):
         Column can also be array-like so multiple columns can be specified provided they come from the same table.
         """
         if isinstance(column, str) or isinstance(column, unicode):
-            return self.cursor.execute("SELECT ? FROM ? WHERE uid = ?", (column, table, uid)).fetchall()
+            cmd = "SELECT " + column + " FROM " + table + " WHERE uid = " + str(uid)
+            self.logger.debug(cmd)
+            return itemise(self.cursor.execute(cmd).fetchall())
         elif isinstance(column, list) or isinstance(column, tuple):
             col_headers = ""
             for header in column:
-                col_headers += header
+                col_headers += str(header)
                 if header is not column[-1]:
                     col_headers += ', '
-            return self.cursor.execute("SELECT (?) FROM ? WHERE uid = ?", (col_headers, table, uid)).fetchall()
+            cmd = "SELECT "+col_headers+" FROM "+table+" WHERE uid = "+str(uid)
+            self.logger.debug(cmd)
+            return itemise(self.cursor.execute(cmd).fetchall())
         else:
             self.logger.info("Cannot return any uids for this question."
                              "Are you using the function value_for_table_column_uid correctly?")
             return []
 
-    def directionForUid(self, uid):
+    # Returns the direction of the selected uid or list of uids
+    def direction_for_uid(self, uid):
         if isinstance(uid, int) or isinstance(uid, float):
             return np.array(self.cursor.execute("SELECT x,y,z FROM direction WHERE uid = ?", (uid,)).fetchall()[0])
         elif isinstance(uid, list) or isinstance(uid, tuple):
@@ -449,16 +483,18 @@ class PhotonDatabase(object):
             items = str(uid)[1:-1]
             cmd = "SELECT x,y,z FROM direction WHERE uid IN (%s)" % (items,)
             return self.cursor.execute(cmd).fetchall()
-    
-    def polarisationForUid(self, uid):
+
+    # Returns the polarization of the selected uid or list of uids
+    def polarisation_for_uid(self, uid):
         if isinstance(uid, int) or isinstance(uid, float):
             return np.array(self.cursor.execute("SELECT x,y,z FROM polarisation WHERE uid = ?", (uid,)).fetchall()[0])
         elif isinstance(uid, list) or isinstance(uid, tuple):
             items = str(uid)[1:-1]
             cmd = "SELECT x,y,z FROM polarisation WHERE uid IN (%s)" % (items,)
             return self.cursor.execute(cmd).fetchall()
-    
-    def positionForUid(self, uid):
+
+    # Returns the position of the selected uid or list of uids
+    def position_for_uid(self, uid):
         if isinstance(uid, int) or isinstance(uid, float):
             return np.array(self.cursor.execute("SELECT x,y,z FROM position WHERE uid = ?", (uid,)).fetchall()[0])
         elif isinstance(uid, list) or isinstance(uid, tuple):
@@ -466,7 +502,9 @@ class PhotonDatabase(object):
             cmd = "SELECT x,y,z FROM position WHERE uid IN (%s)" % items
             return self.cursor.execute(cmd).fetchall()
 
-    def wavelengthForUid(self, uid):
+    # Returns the wavelength of the selected uid or list of uids
+    # SEE ALSO: original_wavelength_for_uid() for the lightsource-emitted photon wavelength (e.g. for photon balance)
+    def wavelength_for_uid(self, uid):
         if isinstance(uid, int) or isinstance(uid, float):
             return np.array(self.cursor.execute("SELECT wavelength FROM photon WHERE uid = ?", (uid,)).fetchall()[0])
         elif isinstance(uid, list) or isinstance(uid, tuple):
@@ -474,3 +512,28 @@ class PhotonDatabase(object):
             cmd = "SELECT wavelength FROM photon WHERE uid IN (%s)" % (items,)
             values = itemise(self.cursor.execute(cmd).fetchall())
             return values
+
+    # Returns the wavelength of the selected pid or list of pids
+    def wavelength_for_pid(self, pid):
+        if isinstance(pid, int) or isinstance(pid, float):
+            return np.array(self.cursor.execute("SELECT min(wavelength) FROM photon WHERE pid = ? GROUP BY pid",
+                                                (pid,)).fetchall()[0])
+        elif isinstance(pid, list) or isinstance(pid, tuple):
+            items = str(pid)[1:-1]
+            cmd = "SELECT min(wavelength) FROM photon WHERE pid IN (%s) GROUP BY pid" % (items,)
+            values = itemise(self.cursor.execute(cmd).fetchall())
+            return values
+
+    # Returns the initial wavelength of the selected uid or list of uids
+    def original_wavelength_for_uid(self, uid):
+        if isinstance(uid, int) or isinstance(uid, float):
+            return np.array(self.cursor.execute("SELECT min(wavelength) FROM photon GROUP BY pid HAVING pid IN"
+                                                "(SELECT pid FROM photon WHERE uid = ?)",
+                                                (uid,)).fetchall()[0])
+        elif isinstance(uid, list) or isinstance(uid, tuple):
+            items = str(uid)[1:-1]
+            cmd = "SELECT min(wavelength) FROM photon GROUP BY pid HAVING pid IN" \
+                  "(SELECT pid FROM photon WHERE uid IN (%s))" % (items,)
+            values = itemise(self.cursor.execute(cmd).fetchall())
+            return values
+

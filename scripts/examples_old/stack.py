@@ -61,7 +61,7 @@ dbfile = os.path.join(pwd, 'stack_db1.sql') # <--- the name of the database file
 scene = Scene()
 scene.add_object(lsc_bottom)
 scene.add_object(lsc_top)
-trace = Tracer(scene=scene, source=source, seed=None, database_file=dbfile, throws=250, use_visualiser=True, show_log=False)
+trace = Tracer(scene=scene, source=source, seed=None, database_file=dbfile, throws=250, use_visualiser=True)
 trace.show_lines = True
 trace.show_path = True
 import time

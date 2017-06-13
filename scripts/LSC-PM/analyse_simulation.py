@@ -1,6 +1,6 @@
 from pvtrace import *
 import numpy as np
-uuid = '1sqm_1dir_borders_100mm'
+uuid = '1sqm_2dir_2.5cm'
 
 study = Scene(uuid=uuid, force=True, level=logging.INFO)
 logger = logging.getLogger('pvtrace.postrun_analysis')
@@ -12,6 +12,11 @@ tic = time.clock()
 study.stats.db_stats()
 # uids = study.stats.db.endpoint_uids()
 uids = study.stats.uids['luminescent_edges'] + study.stats.uids['luminescent_channel']
+
+# To speed up calculation sample a subset of 1k photons
+#uids = np.sort(uids)
+#uids = list(uids[0:1000])
+
 history = study.stats.history_from_uid(uid=uids)
 
 path_length = []
@@ -23,13 +28,5 @@ logger.info("The average Photon-path Lumi_edge + Lumi_channels is "+str(avg*100)
 
 toc = time.clock()
 logger.info('Calculating this took ' + str(toc - tic) + ' seconds!')
-
-
-#
-# dis = []
-# for trj in trjs:
-#    trj.pathlength_per_obj()
-#     dis.append(trj.total_pathlength())
-# print(dis)
 
 sys.exit(0)

@@ -11,13 +11,13 @@ file_path = os.path.join(os.path.expanduser('~'), 'pvtrace_data',
                          'output_photon_count.txt')
 
 # Loop 0 to 250ppm
-for mainloop_i in range(1, 6):
+for mainloop_i in range(6, 7):
     luminophore_conc = 200
     print(mainloop_i)
     photon_count = pow(10, mainloop_i)
 
     # This implicitly restart logging on the new location
-    scene = pvtrace.Scene(luminophore_name + '_' + str(luminophore_conc) + '_' + solvent + '_' + str(photon_count))
+    scene = pvtrace.Scene(luminophore_name + '_' + str(luminophore_conc) + '_' + solvent + '_ter_' + str(photon_count))
 
     logger = logging.getLogger('pvtrace')
     luminophore = LuminophoreMaterial(luminophore_name, luminophore_conc)

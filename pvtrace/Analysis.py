@@ -110,7 +110,7 @@ class Analysis(object):
                 self.log.warn("[db_stats()] Results FAILED sanity check!!!")
             else:
                 raise ArithmeticError('Sum of photons per fate and generate do not match!'
-                                      '(Delta: '+delta+'/'+self.count['tot']+' [Error > 0.1%!]')
+                                      '(Delta: '+delta+'/'+str(self.count['tot'])+' [Error > 0.1%!]')
 
     def percent(self, num_photons):
         """
@@ -284,7 +284,7 @@ class Analysis(object):
                 return_values.append(self.describe_photon_path(trajectory))
             return return_values
     
-    def describe_photon_path(self, path):
+    def describe_photon_path(self, path, full_description=False):
         """
         Describe a photon trajectory
         
@@ -297,18 +297,12 @@ class Analysis(object):
             direction = self.db.value_for_table_column_uid(table='direction', column=('x', 'y', 'z'), uid=step)
             polarization = self.db.value_for_table_column_uid(table='polarisation', column=('x', 'y', 'z'), uid=step)
             wavelength = self.db.value_for_table_column_uid(table='photon', column='wavelength', uid=step)
-            state = self.db.value_for_table_column_uid(table='state', column=('absorption_counter',
-                                                                              'intersection_counter',
-                                                                              'active',
-                                                                              'killed',
-                                                                              'source',
-                                                                              'emitter_material',
-                                                                              'absorber_material',
-                                                                              'container_obj',
-                                                                              'on_surface_obj',
-                                                                              'surface_id',
-                                                                              'ray_direction_bound',
-                                                                              'reaction'), uid=step)
+            state = self.db.value_for_table_column_uid(table='state',
+                                                       column=('absorption_counter', 'intersection_counter', 'active',
+                                                               'killed', 'source', 'emitter_material',
+                                                               'absorber_material', 'container_obj', 'on_surface_obj',
+                                                               'surface_id', 'ray_direction_bound', 'reaction'),
+                                                       uid=step)
             self.log.debug("state is "+str(state))
 
             trajectory.add_step(position=position, direction=direction, polarization=polarization,

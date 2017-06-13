@@ -55,7 +55,8 @@ class Scene(object):
         return logger
 
     def get_new_working_dir(self, uuid=None, use_existing=None):
-        if uuid is None:
+        # Check if uuid is None or empty
+        if uuid is None or not uuid:
             try_uuid = shortuuid.uuid()
         else:
             try_uuid = uuid

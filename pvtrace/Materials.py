@@ -13,6 +13,7 @@
 
 from __future__ import division, print_function
 
+import logging
 # try:
 # import scipy as sp
 # from scipy import interpolate
@@ -210,6 +211,11 @@ class Spectrum(object):
 
             self.x = np.array(data[:, 0], dtype=np.float32)
             self.y = np.array(data[:, 1], dtype=np.float32)
+
+            # Sort array based on ASC X if needed
+            arr1inds = self.x.argsort()
+            self.x = self.x[arr1inds[::1]]
+            self.y = self.y[arr1inds[::1]]
 
         elif x is not None and y is not None:
             self.x = np.array(x, dtype=np.float32)
@@ -570,7 +576,7 @@ class CompositeMaterial(Material):
     well as the absorption and emission properties of the dyes.
     """
 
-    def __init__(self, materials, refractive_index=None, silent=False):
+    def __init__(self, materials, refractive_index=None):
         """Initialised by a list or array of material objects."""
         super(CompositeMaterial, self).__init__()
         self.materials = materials
@@ -582,11 +588,11 @@ class CompositeMaterial(Material):
             print("For example try using, CompositeMaterial([pmma, dye1, dye2], refractive_index=1.5]).\n")
             raise ValueError
         self.refractive_index = refractive_index
-        self.silent = silent
         # These parameters are dynamically set to those of the relative material within self.trace()
         self.emission = None
         self.absorption = None
         self.quantum_efficiency = None
+        self.log = logging.getLogger('pvtrace.compositeMaterial')
 
     def all_absorption_coefficients(self, nanometers):
         """Returns and array of all the the materials absorption coefficients at the specified wavelength."""
@@ -620,6 +626,7 @@ class CompositeMaterial(Material):
         absorptions = self.all_absorption_coefficients(photon.wavelength)
         # print 'At ',photon.wavelength,' nm the absorption of the materials are:',absorptions
         absorption_coefficient = absorptions.sum()
+        assert absorption_coefficient > 0, "Sum of absorption at "+str(photon.wavelength)+" nm is 0! Check emission!"
         # See WolframAlpha "-ln(1-x)/y from x=0 to 1 from y=0 to 2"
         sampled_pathlength = -np.log(1 - np.random.uniform()) / absorption_coefficient
         # print "sampled is: ",sampled_pathlength
@@ -649,8 +656,7 @@ class CompositeMaterial(Material):
 
             # Emission occurs.
             if np.random.uniform() < material.quantum_efficiency:
-                if not self.silent:
-                    print("   * Re-emitted *")
+                self.log.debug("   *  Photon re-emitted!")
                 photon.reabs += 1
                 photon.emitter_material = material
                 # Generates a new photon with red-shifted wavelength, new direction and polarisation
@@ -658,8 +664,7 @@ class CompositeMaterial(Material):
                 return photon
 
             else:
-                if not self.silent:
-                    print("   * Photon Lost *")
+                self.log.debug("   *  Photon lost!")
                 # Emission does not occur. Now set active = False ans return
                 photon.active = False
                 return photon

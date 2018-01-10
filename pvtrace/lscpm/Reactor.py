@@ -6,6 +6,7 @@ import os
 import ConfigParser
 from pvtrace.lscpm.Photocatalysts import *
 from pvtrace.lscpm.Solvents import *
+from pvtrace.lscpm.Capillary import *
 import ast
 
 
@@ -51,7 +52,11 @@ class Reactor(object):
 
         # 2. CHANNELS
         # Create the channels described in reactor_type with the given reaction_mixture and adds them to the scene
-        channels_raw = config.get('Channels', 'channels')
+        try:
+            channels_raw = config.get('Channels', 'channels')
+        except ConfigParser.NoOptionError:
+            channels_raw = ''
+
         if channels_raw is not '':
             channels = ast.literal_eval(channels_raw)
 
@@ -62,6 +67,24 @@ class Reactor(object):
                 channel.name = channel_data[3]
                 self.scene_obj.append(channel)
                 self.reaction_volume += channel.volume
+
+        try:
+            capillaries_raw = config.get('Channels', 'capillaries')
+        except ConfigParser.NoOptionError:
+            capillaries_raw = ''
+
+        if capillaries_raw is not '':
+            capillaries = ast.literal_eval(capillaries_raw)
+
+            for capillary_data in capillaries:
+                capillary = Capillary(axis_origin=capillary_data[0], axis=capillary_data[1],
+                                      length=capillary_data[2], outer_diameter=capillary_data[3],
+                                      inner_diameter=capillary_data[4], reaction_material=reaction_mixture)
+                capillary.tubing.name = capillary_data[5]+'_tubing'
+                capillary.reaction.name = capillary_data[5] + '_reaction'
+                self.scene_obj.append(capillary.tubing)
+                self.scene_obj.append(capillary.reaction)
+                self.reaction_volume += capillary.reaction.volume
 
         # 3. LSC-PM
         # 3.1 LSC-PM GEOMETRY
@@ -75,7 +98,7 @@ class Reactor(object):
         self.lsc = LSC(origin=(0, 0, 0), size=(lsc_x, lsc_y, thickness))
         # CompositeMaterial made of matrix + luminophore
         self.lsc.material = CompositeMaterial([matrix.material(), luminophore.material()],
-                                         refractive_index=matrix.refractive_index(), silent=True)
+                                              refractive_index=matrix.refractive_index())
         self.lsc.name = lsc_name
         self.scene_obj.append(self.lsc)
 

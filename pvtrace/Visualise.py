@@ -46,7 +46,7 @@ class Visualiser (object):
                 print(self.display.forward)
                 
             if s == 'd':
-                self.display.center = (self.display.center[0]+0.005, self.display.center[1], self.display.center[2])
+                self.display.center = (self.display.center[0]+0.05, self.display.center[1], self.display.center[2])
             if s == 's':
                 self.display.center = (self.display.center[0], self.display.center[1]-0.005, self.display.center[2])
             if s == 'a':
@@ -100,8 +100,8 @@ class Visualiser (object):
         self.display.bind('keydown', self.keyInput)
         self.display.exit = False
 
-        self.display.center = (0.025, 0.015, 0)
-        self.display.forward = (0, 0.83205, -0.5547)
+        self.display.center = (0., 0., -1)
+        self.display.forward = (0, 0.83205, -1.5547)
         
         show_axis = False
         if show_axis:

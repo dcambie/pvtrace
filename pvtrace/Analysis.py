@@ -110,7 +110,7 @@ class Analysis(object):
                 self.log.warn("[db_stats()] Results FAILED sanity check!!!")
             else:
                 raise ArithmeticError('Sum of photons per fate and generate do not match!'
-                                      '(Delta: '+delta+'/'+str(self.count['tot'])+' [Error > 0.1%!]')
+                                      '(Delta: '+str(delta)+'/'+str(self.count['tot'])+' [Error > 0.1%!]')
 
     def percent(self, num_photons):
         """
@@ -334,7 +334,8 @@ class Analysis(object):
             'lsc-edges': self.uids['luminescent_edges'],
             'lsc-apertures': self.uids['luminescent_apertures'],
             'lsc-reflected': self.uids['solar_top'],
-            'lsc-transmitted': self.uids['solar_bottom']}
+            'lsc-transmitted': self.uids['solar_bottom'],
+            'losses': self.uids['losses']}
 
         # noinspection PyCompatibility
         for plot, uid in six.iteritems(graphs):

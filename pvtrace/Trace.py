@@ -624,8 +624,12 @@ class Tracer(object):
                         # Channel
                         elif isinstance(obj, Channel):
                             material = visual.materials.plastic
-                            colour = visual.color.blue
-                            opacity = 1
+                            if obj.name.endswith('tubing'):
+                                colour = visual.color.white
+                                opacity = 0.6
+                            else:
+                                colour = visual.color.blue
+                                opacity = 1
                         # LSC
                         elif isinstance(obj, LSC):
                             material = visual.materials.plastic
@@ -765,6 +769,9 @@ class Tracer(object):
                     if step == 0:
                         self.scene.log.warn("   * Photon hit scene bounds without previous intersections "
                                             "(maybe reconsider light source position?) *")
+                        print("Photon "+str(throw)+" reached BOUNDS without any intersection with scene objects!"
+                                                   "[POSITION: "+str(photon.position)+","
+                                                   "DIRECTION: "+str(photon.direction)+"]")
                     else:
                         self.scene.log.debug("   * Photon reached Bounds! (died)")
                         photon.exit_device.log(photon)

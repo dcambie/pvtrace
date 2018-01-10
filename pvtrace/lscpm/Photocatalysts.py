@@ -3,13 +3,25 @@ import numpy as np
 import os
 from pvtrace import *
 
+
 class Photocatalyst(object):
     def __init__(self, compound, concentration):
         self.logger = logging.getLogger('pvtrace.photocat')
         self.logger.info('Photocat: "' + str(compound) + '", conc: ' + str(concentration))
 
-        if compound == 'MB':
+        MB_list = ('MB', 'Methylene Blue', 'methylene blue', 'methyleneblue', 'methylene blauw', 'mb')
+        eosin_list = ('Eosin', 'eosin', 'EY', 'Eosin Y', 'eosin y')
+        rubpz_list = ('Ru(bpz)3', 'Rubpz', 'Ru(bpz)')
+        # rubpy_list = ('Ru(bpy)3', 'Rubpy', 'Ru(bpy)')
+
+        if compound in MB_list:
             self.compound = MethyleneBlue()
+        elif compound in eosin_list:
+            self.compound = EosinY()
+        elif compound in rubpz_list:
+            self.compound = Rubpz()
+        # elif compound == 'Ru(bpy)3':
+        #     self.compound = Rubpy()
         elif compound == 'Air':
             self.compound = Air()
         else:
@@ -34,6 +46,21 @@ class MethyleneBlue(object):
         # abs_data= np.loadtxt(os.path.join(PVTDATA, "dyes", 'MB_abs.txt'))
         # abs_data[:, 1] = abs_data[:, 1] * 100 * mat.log(10)
         return np.loadtxt(os.path.join(PVTDATA, "photocatalysts", 'MB_1M_1m_ACN.txt'))
+
+
+class EosinY(object):
+    @staticmethod
+    def abs():
+        # Load 1M Abs spectrum of MB. Values from
+        # return NotImplementedError
+        return np.loadtxt(os.path.join(PVTDATA, "photocatalysts", 'EY_1M_1m_EtOH_+base.txt'))
+
+
+class Rubpz(object):
+    @staticmethod
+    def abs():
+        # Load 1M Abs spectrum of MB. Values from
+        return np.loadtxt(os.path.join(PVTDATA, "photocatalysts", 'Ru(bpz)3_1M_1m_ACN.txt'))
 
 
 class Air(object):

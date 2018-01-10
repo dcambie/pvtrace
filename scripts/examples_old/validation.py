@@ -158,7 +158,7 @@ for i in range(1,2):
     if config['transparent']:
         lsc.material = pdms
     else:
-        lsc.material = CompositeMaterial([pdms, fluro_red], refractive_index=1.41, silent=True)
+        lsc.material = CompositeMaterial([pdms, fluro_red], refractive_index=1.41)
     
     lsc.name = "LSC"
     scene = Scene()

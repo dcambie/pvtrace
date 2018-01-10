@@ -14,8 +14,8 @@ study.stats.db_stats()
 uids = study.stats.uids['luminescent_edges'] + study.stats.uids['luminescent_channel']
 
 # To speed up calculation sample a subset of 1k photons
-#uids = np.sort(uids)
-#uids = list(uids[0:1000])
+# uids = np.sort(uids)
+# uids = list(uids[0:1000])
 
 history = study.stats.history_from_uid(uid=uids)
 

@@ -1,7 +1,7 @@
 from __future__ import division
 import os, ConfigParser
 
-spacing = 5.0  # in mm
+spacing = 10  # in mm
 width = 0.35 * 8 + spacing * 9  # in mm
 
 config = ConfigParser.SafeConfigParser()
@@ -49,7 +49,8 @@ for n in range(1, 9):
 
     # Collecting chamber
     if n == 1:
-        geometry.append(((x_start, 167.7, 1), (37.8, 1, 1)))  # chamber
+        chamber_size = 0.35*8 + spacing * 7
+        geometry.append(((x_start, 167.7, 1), (chamber_size, 1, 1)))  # chamber
     geometry.append(((x_start, 17.35, 1), (0.35, 150.35, 1)))  # n channel
     x_lenght = spacing + 0.35 * 2
     if n % 2 == 1:

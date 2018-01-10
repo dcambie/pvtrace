@@ -26,7 +26,7 @@ class Capillary(object):
         self.reaction = Channel(origin=axis_origin, size=tubing_inner_size, shape="cylinder")
 
         emission = Spectrum([0, 1000], [0.1, 0])
-        if tubing == "PFA": # high-purity PFA, "normal" PFA is 1.35
+        if tubing == "PFA":  # high-purity PFA, "normal" PFA is 1.35
             absorbance = Spectrum([0, 1000], [0.1, 0])  # FIXME Polymer transmittance data needed!
             tubing_material = Material(absorption_data=absorbance, emission_data=emission, quantum_efficiency=0.0,
                                        refractive_index=1.340)

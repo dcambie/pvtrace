@@ -41,29 +41,34 @@ class Visualiser (object):
         s = evt.key
 
         if len(s) == 1:
-            if s == 'x':
-                print(self.display.center)
-                print(self.display.forward)
-                
             if s == 'd':
                 self.display.center = (self.display.center[0]+0.05, self.display.center[1], self.display.center[2])
             if s == 's':
                 self.display.center = (self.display.center[0], self.display.center[1]-0.005, self.display.center[2])
             if s == 'a':
-                self.display.center = (self.display.center[0]-0.005, self.display.center[1], self.display.center[2])
+                self.display.center = (self.display.center[0]-0.05, self.display.center[1], self.display.center[2])
             if s == 'w':
                 self.display.center = (self.display.center[0], self.display.center[1]+0.005, self.display.center[2])
             if s == 'r':
-                self.display.center = (self.display.center[0], self.display.center[1] + 0.0005, self.display.center[2])
-            if s == '0':
-                self.display.center = (0.035, 0.03, 0)
-                self.display.center = (1.6, 1.611, 0)
-                self.display.forward = (0, 0.75, -0.5)
+                self.display.center = (self.display.center[0], self.display.center[1] , self.display.center[2]+ 0.005)
+            if s == 'e':
+                self.display.center = (self.display.center[0], self.display.center[1] , self.display.center[2]- 0.005)
+
+            # seen from the origin, the direction is either from x-axis, y-axis or z-axis
+            if s == 'x':
+                self.display.center = (0, 0, 0)
+                self.display.forward = (1, 0, 0)
+            if s == 'y':
+                self.display.center = (0, 0, 0)
+                self.display.forward = (0, 1, 0)
             if s == 'z':
-                self.display.center = (0.025, 0.025, 0.0015)
-                self.display.forward = (0.5, 0, 0)
+                self.display.center = (0, 0, 0)
+                self.display.forward = (0, 0, -1)
+
             if s == 'q':
                 Visualiser.VISUALISER_ON = False
+
+            # rotate
             if s == '1':
                 self.display.forward = self.display.forward.rotate(angle=0.1, axis=(0, 0, 1))
             if s == '2':
@@ -76,6 +81,8 @@ class Visualiser (object):
                 self.display.forward = self.display.forward.rotate(angle=0.1, axis=(0, 1, 0))
             if s == '6':
                 self.display.forward = self.display.forward.rotate(angle=-0.1, axis=(0, 1, 0))
+
+            #print in the windows
             if s == 'p':
                 print("Forward: " + str(self.display.forward))
                 print("Center: " + str(self.display.center))
@@ -100,10 +107,10 @@ class Visualiser (object):
         self.display.bind('keydown', self.keyInput)
         self.display.exit = False
 
-        self.display.center = (0., 0., -1)
-        self.display.forward = (0, 0.83205, -1.5547)
+        self.display.center = (0., 0., 0.)
+        self.display.forward = (0, 0, 1)
         
-        show_axis = False
+        # show_axis = False // fixed by C.Shen
         if show_axis:
             visual.curve(pos=[(0, 0, 0), (.08, 0, 0)], radius=0.0005, color=visual.color.red)
             visual.curve(pos=[(0, 0, 0), (0, .07, 0)], radius=0.0005, color=visual.color.green)

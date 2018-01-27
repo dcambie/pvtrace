@@ -30,12 +30,12 @@ class LightSource(object):
         else:
             raise Exception('Unknown light source')
 
-    def set_lightsource(self, irradiated_area=(0.05, 0.05), distance=0.025):
+    def set_lightsource(self, irradiated_length=0.05, irradiated_width=0.05, distance=0.025):
         if self.spectrum_file is None:
             raise ValueError('LightSource spectrum is not set!')
         self.spectrum = load_spectrum(self.spectrum_file, xbins=np.arange(350, 700))
-        self.source = PlanarSource(direction=(0, 0, -1), spectrum=self.spectrum, length=irradiated_area[0],
-                                   width=irradiated_area[1])
+        self.source = PlanarSource(direction=(0, 0, -1), spectrum=self.spectrum, length=irradiated_length,
+                                   width=irradiated_width)
         self.source.name = self.lamp_name
 
         # Distance from device (it matters only for Visualizer as PlanarSource is collimated)

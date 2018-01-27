@@ -17,7 +17,7 @@ blue_evonik = LuminophoreMaterial('Evonik_Blue', 1)
 pdms = Matrix('pdms')
 pmma = Matrix('PMMA')
 
-reactor = Reactor(reactor_name="5x5_6ch_squared", luminophore=k160, matrix=pdms, photocatalyst="EY",
+reactor = Reactor(reactor_name="chong_first_try", luminophore=k160, matrix=pdms, photocatalyst="EY",
                   photocatalyst_concentration=0.004, solvent='ACN')
 scene.add_objects(reactor.scene_obj)
 
@@ -25,13 +25,14 @@ scene.add_objects(reactor.scene_obj)
 # lamp.set_LED_voltage(voltage=8)
 # lamp.set_lightsource(irradiated_area=(0.05, 0.05), distance=0.025)
 lamp = LightSource(lamp_type='SolarSimulator')
-lamp.set_lightsource(irradiated_area=(0.05, 0.05), distance=0.025)
+# fixed by chong in order to run the different reactor without altering the scripts
+lamp.set_lightsource(irradiated_length=reactor.lsc_length, irradiated_width=reactor.lsc_width, distance=0.025)
 # lamp.set_lightsource(irradiated_area=(reactor.lsc.size[0], 0.15035), distance=0.025)
 # lamp.move_lightsource(vector=(0, 0.01735))
 
 
 trace = pvtrace.Tracer(scene=scene, source=lamp.source, throws=100, use_visualiser=True,
-                       show_axis=True, show_counter=False, db_split=True, preserve_db_tables=True)
+                       show_axis=False, show_counter=False, db_split=True, preserve_db_tables=True)
 # Run simulation
 tic = time.clock()
 logger.info('Simulation Started (time: ' + str(tic) + ')')
@@ -65,8 +66,10 @@ logger.info("Photons in channels: "+str(photons_in_object))
 print("Channel No, Photons")
 for entry, value in photons_in_object.items():
     print(str(entry)[7:]+", "+str(value))
+toc2 = time.clock()
+t_span = toc2-tic
 # print(photons_in_object)
-
+print("it takes %0.1f secs to complete the whole simulation" % t_span)
 # print("sum is "+str(photonsum))
 scene.stats.create_graphs()
 sys.exit(0)

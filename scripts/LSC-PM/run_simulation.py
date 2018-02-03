@@ -4,20 +4,24 @@ from pvtrace.lscpm.Reactor import *
 from pvtrace.lscpm.Dyes import *
 from pvtrace.lscpm.Matrix import *
 from pvtrace.lscpm.SolarSimulators import *
+# blue red thickness: 3mm green: 4mm
+# blue not yet, green EY, red Methylene Blue,
+# set episilon to prevent the possibility of matching fate and generate
+
 
 # scene = pvtrace.Scene(level=logging.INFO, uuid="Fang_rebuttal2_6")
-scene = pvtrace.Scene(level=logging.DEBUG, uuid="overwrite_me")
+scene = pvtrace.Scene(level=logging.INFO, uuid="Red_chong_20x20x0.3")
 logger = logging.getLogger('pvtrace')
 
 # Create LSC-PM DYE material
-lr305 = LuminophoreMaterial('Red305', 200)
-k160 = LuminophoreMaterial('K160', 1)
-blue_evonik = LuminophoreMaterial('Evonik_Blue', 1)
+lr305 = LuminophoreMaterial('Red305', 200)#red
+k160 = LuminophoreMaterial('K160', 1)#green
+blue_evonik = LuminophoreMaterial('Evonik_Blue', 1)#blue
 # Create polymeric matrix
 pdms = Matrix('pdms')
 pmma = Matrix('PMMA')
 
-reactor = Reactor(reactor_name="chong_first_try", luminophore=k160, matrix=pdms, photocatalyst="EY",
+reactor = Reactor(reactor_name="chong_red_20x20x0.3cm", luminophore=lr305, matrix=pmma, photocatalyst="MB",
                   photocatalyst_concentration=0.004, solvent='ACN')
 scene.add_objects(reactor.scene_obj)
 
@@ -30,9 +34,10 @@ lamp.set_lightsource(irradiated_length=reactor.lsc_length, irradiated_width=reac
 # lamp.set_lightsource(irradiated_area=(reactor.lsc.size[0], 0.15035), distance=0.025)
 # lamp.move_lightsource(vector=(0, 0.01735))
 
-
-trace = pvtrace.Tracer(scene=scene, source=lamp.source, throws=100, use_visualiser=True,
+trace = pvtrace.Tracer(scene=scene, source=lamp.source, throws=10000, use_visualiser=False,
                        show_axis=False, show_counter=False, db_split=True, preserve_db_tables=True)
+# set color on Trace.py while visualizing
+
 # Run simulation
 tic = time.clock()
 logger.info('Simulation Started (time: ' + str(tic) + ')')
@@ -66,10 +71,13 @@ logger.info("Photons in channels: "+str(photons_in_object))
 print("Channel No, Photons")
 for entry, value in photons_in_object.items():
     print(str(entry)[7:]+", "+str(value))
+
+scene.stats.create_graphs()
+
 toc2 = time.clock()
 t_span = toc2-tic
 # print(photons_in_object)
 print("it takes %0.1f secs to complete the whole simulation" % t_span)
 # print("sum is "+str(photonsum))
-scene.stats.create_graphs()
+
 sys.exit(0)

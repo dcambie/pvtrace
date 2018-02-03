@@ -346,7 +346,7 @@ class Analysis(object):
                 file_path = os.path.join(prefix, plot)
                 self.save_histogram(data=wavelengths, filename=file_path)
 
-        return True
+        # return True
         self.log.info("Plotting bounces luminescent to channels")
         uids = self.db.uids_in_reactor_and_luminescent()
         if len(uids) < 10:

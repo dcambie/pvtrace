@@ -16,14 +16,14 @@ class Reactor(object):
     """
 
     def __init__(self, reactor_name, luminophore, matrix, photocatalyst, photocatalyst_concentration=0.001,
-                 solvent=None):
+                 solvent=None, refractive_index_cgchong=1.340):
 
         # 0. CONFIGURATION
         # 0.1 REACTOR TYPE
         config = ConfigParser.SafeConfigParser()
         # FIXME config read does not throw exceptions on file missing
         try:
-            config.read(os.path.join(PVTDATA, 'reactors', reactor_name + '.ini'))
+            config.read(os.path.join(PVTDATA, 'reactors', reactor_name))
         except Exception:
             raise Exception('The configuration file for the requested reactor (', reactor_name, ') was not found.')
 
@@ -83,7 +83,8 @@ class Reactor(object):
             for capillary_data in capillaries:
                 capillary = Capillary(axis_origin=capillary_data[0], axis=capillary_data[1],
                                       length=capillary_data[2], outer_diameter=capillary_data[3],
-                                      inner_diameter=capillary_data[4], reaction_material=self.reaction_mixture)
+                                      inner_diameter=capillary_data[4], tubing="PFA", reaction_material=self.reaction_mixture,
+                                      refractive_index_cg=refractive_index_cgchong)
                 capillary.tubing.name = capillary_data[5]+'_tubing'
                 capillary.reaction.name = capillary_data[5] + '_reaction'
                 self.scene_obj.append(capillary.tubing)

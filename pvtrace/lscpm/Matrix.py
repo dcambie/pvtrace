@@ -68,5 +68,6 @@ class PMMA(object):
 
     def absorption(self):
         # PDMS absorption spectrum
+
         # 2/m based as in dfarrell code
         return Spectrum([0, 1000], [2, 2])

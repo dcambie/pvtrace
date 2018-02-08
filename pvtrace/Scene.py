@@ -61,7 +61,7 @@ class Scene(object):
         else:
             try_uuid = uuid
 
-        working_dir = os.path.join(os.path.expanduser('~'), 'pvtrace_data', try_uuid)
+        working_dir = os.path.join('D:/', 'pvtrace_chongRI', try_uuid)
 
         if not os.path.exists(working_dir):
             os.makedirs(working_dir)

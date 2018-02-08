@@ -5,7 +5,7 @@ from pvtrace.Materials import Spectrum, Material, SimpleMaterial
 class Capillary(object):
     """Class for a capillary, i.e. tubing + reaction mixture channel"""
     def __init__(self, axis_origin=(0, 0, 0), axis=0, length=1, outer_diameter=0.0015875, inner_diameter=0.000750,
-                 tubing="PFA", reaction_material=SimpleMaterial(555)):
+                 tubing="PFA", reaction_material=SimpleMaterial(555), refractive_index_cg=1.340):
 
         outer_radius = outer_diameter/2
         inner_radius = inner_diameter/2
@@ -29,7 +29,7 @@ class Capillary(object):
         if tubing == "PFA":  # high-purity PFA, "normal" PFA is 1.35
             absorbance = Spectrum([0, 1000], [0.1, 0])  # FIXME Polymer transmittance data needed!
             tubing_material = Material(absorption_data=absorbance, emission_data=emission, quantum_efficiency=0.0,
-                                       refractive_index=1.340)
+                                       refractive_index=refractive_index_cg) # original version is 1.340
         elif tubing == "HALAR":
             absorbance = Spectrum([0, 1000], [0.1, 0])  # FIXME Polymer transmittance data needed!
             tubing_material = Material(absorption_data=absorbance, emission_data=emission, quantum_efficiency=0.0,

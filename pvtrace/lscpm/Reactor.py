@@ -23,7 +23,7 @@ class Reactor(object):
         config = ConfigParser.SafeConfigParser()
         # FIXME config read does not throw exceptions on file missing
         try:
-            config.read(os.path.join(PVTDATA, 'reactors', reactor_name))
+            config.read(os.path.join(PVTDATA, 'reactors', reactor_name + '.ini'))
         except Exception:
             raise Exception('The configuration file for the requested reactor (', reactor_name, ') was not found.')
 

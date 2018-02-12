@@ -15,7 +15,7 @@ class Solvent(object):
         self.logger = logging.getLogger('pvtrace.solvent')
 
         # Data at 588nm (D-line sodium) from Burdick & Jackson + Wikipedia for some (ACN, DMSO, AcOEt, CHCl3)
-        solvent_list = {(('acetonitrile', 'ACN', 'CH3CN'), 1.3441),
+        solvent_list = {(('acetonitrile', 'ACN', 'CH3CN'), 1.38),#origin=1.3441
                         (('water', 'H2O'), 1.333),
                         (('Air', ''), 1.0),
                         (('N,N-DiMethylFormammide', 'dimethylformamide', 'DMF'), 1.4305),

@@ -449,7 +449,17 @@ class PhotonDatabase(object):
         return itemise(self.cursor.execute(
             "SELECT uid FROM state WHERE reaction = 0 AND surface_id = 'None' AND absorption_counter > 0 AND killed = 0"
             " GROUP BY uid HAVING uid IN (SELECT MAX(uid) FROM photon GROUP BY pid)").fetchall())
-    
+
+    def reaction_capillary0(self):
+        return itemise(self.cursor.execute(
+            "SELECT MAX(uid) FROM photon GROUP BY pid INTERSECT "
+            "SELECT uid FROM state WHERE reaction = 1 AND container_obj = 'Capillary0_reaction'").fetchall())
+
+    def reaction_capillary3(self):
+        return itemise(self.cursor.execute(
+            "SELECT MAX(uid) FROM photon GROUP BY pid INTERSECT "
+            "SELECT uid FROM state WHERE reaction = 1 AND container_obj = 'Capillary3_reaction'").fetchall())
+
     def value_for_table_column_uid(self, table, column, uid):
         """
         Returns values from the database index my table, column and row, where the row is uniquely defined using

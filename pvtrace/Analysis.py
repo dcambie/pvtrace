@@ -38,7 +38,7 @@ class Analysis(object):
 
         if uuid is not None:
             self.uuid = uuid
-            self.working_dir = os.path.join(os.path.expanduser('~'), 'pvtrace_data', self.uuid)
+            self.working_dir = os.path.join('D:/pvtrace_chongRI_ACN1.38', self.uuid)#changed by chong to fix my computer's problem
             self.graph_dir = os.path.join(self.working_dir, 'graphs')
             try_db_location = os.path.join(self.working_dir, "db.sqlite")
             if database is None and os.access(try_db_location, os.R_OK):
@@ -90,6 +90,10 @@ class Analysis(object):
         self.uids['luminescent_channel'] = self.db.uids_in_reactor_and_luminescent()
         self.uids['channels_tot'] = self.db.uids_in_reactor()
         self.uids['channels_direct'] = diff(self.uids['channels_tot'], self.uids['luminescent_channel'])
+
+        #
+        self.uids['capillary_0react'] = self.db.reaction_capillary0()
+        self.uids['capillary_3react'] = self.db.reaction_capillary3()
 
         # Calculate sum (for loop iterates only the keys of the dictionary)
         for key in self.uids:

@@ -34,7 +34,7 @@ lamp.set_lightsource(irradiated_length=reactor.lsc_length, irradiated_width=reac
 # lamp.set_lightsource(irradiated_area=(reactor.lsc.size[0], 0.15035), distance=0.025)
 # lamp.move_lightsource(vector=(0, 0.01735))
 
-trace = pvtrace.Tracer(scene=scene, source=lamp.source, throws=100, use_visualiser=True,
+trace = pvtrace.Tracer(scene=scene, source=lamp.source, throws=1000, use_visualiser=True,
                        show_axis=False, show_counter=False, db_split=True, preserve_db_tables=True)
 # set color on Trace.py while visualizing
 

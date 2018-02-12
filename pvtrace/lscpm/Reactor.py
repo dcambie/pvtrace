@@ -23,7 +23,7 @@ class Reactor(object):
         config = ConfigParser.SafeConfigParser()
         # FIXME config read does not throw exceptions on file missing
         try:
-            config.read(os.path.join(PVTDATA, 'reactors', reactor_name))
+            config.read(os.path.join(PVTDATA, 'reactors', reactor_name + '.ini'))
         except Exception:
             raise Exception('The configuration file for the requested reactor (', reactor_name, ') was not found.')
 
@@ -47,7 +47,7 @@ class Reactor(object):
 
         # Reaction mixture as abortive medium with no emission. All abs due to photocatalyst
         ems = Spectrum([0, 1000], [0.1, 0])
-        self.reaction_mixture = Material(absorption_data=abs_spectrum, emission_data=ems, quantum_efficiency=0.0,
+        reaction_mixture = Material(absorption_data=abs_spectrum, emission_data=ems, quantum_efficiency=0.0,
                                     refractive_index=n)
 
         # 2. CHANNELS
@@ -61,16 +61,12 @@ class Reactor(object):
             channels = ast.literal_eval(channels_raw)
 
             for channel_data in channels:
-                if channel_data[2] != "circle_cylinder":
-                    channel = Channel(origin=channel_data[0],
-                                      size=channel_data[1], shape=channel_data[2])
-                    channel.material = self.reaction_mixture
-                    channel.name = channel_data[3]
-                    self.scene_obj.append(channel)
-                    self.reaction_volume += channel.volume
-
-                else:
-                    self.curving_channel(channel_data, start_angle=0, end_angle=np.pi)
+                channel = Channel(origin=channel_data[0],
+                                  size=channel_data[1], shape=channel_data[2])
+                channel.material = reaction_mixture
+                channel.name = channel_data[3]
+                self.scene_obj.append(channel)
+                self.reaction_volume += channel.volume
 
         try:
             capillaries_raw = config.get('Channels', 'capillaries')
@@ -83,7 +79,7 @@ class Reactor(object):
             for capillary_data in capillaries:
                 capillary = Capillary(axis_origin=capillary_data[0], axis=capillary_data[1],
                                       length=capillary_data[2], outer_diameter=capillary_data[3],
-                                      inner_diameter=capillary_data[4], tubing="PFA", reaction_material=self.reaction_mixture,
+                                      inner_diameter=capillary_data[4], tubing="PFA", reaction_material=reaction_mixture,
                                       refractive_index_cg=refractive_index_cgchong)
                 capillary.tubing.name = capillary_data[5]+'_tubing'
                 capillary.reaction.name = capillary_data[5] + '_reaction'
@@ -107,27 +103,4 @@ class Reactor(object):
         self.lsc.name = lsc_name
         self.scene_obj.append(self.lsc)
 
-        # collision bug about width and length (lsc and SolarSimulator)
-        self.lsc_length = lsc_x
-        self.lsc_width = lsc_y
-
         self.log.info('Reactor volume (calculated): ' + str(self.reaction_volume * 1000000) + ' mL')
-
-    def curving_channel(self, channel_data, start_angle=0, end_angle=2*np.pi):
-        size = channel_data[1]
-        origin_change = list(channel_data[0])
-
-        length = size[0]
-        circle_radius = size[1]
-        cylinder_radius = size[2]
-
-        theta = np.arange(start_angle, end_angle, np.pi/200)
-        for theta0 in theta:
-            origin_change[0] = channel_data[0][0] + circle_radius - np.cos(theta0) * circle_radius
-            origin_change[1] = channel_data[0][1] + np.sin(theta0) * circle_radius
-            channel = Channel(origin=tuple(origin_change),
-                              size=(length, cylinder_radius, cylinder_radius), shape="cylinder")
-            channel.material = self.reaction_mixture
-            self.reaction_volume += channel.volume
-            channel.name = "circle_cylinder" + str(theta0/(np.pi/200))
-            self.scene_obj.append(channel)

@@ -86,10 +86,18 @@ class Analysis(object):
         for surface in self.apertures:
             self.uids['solar_' + surface] = self.db.uids_out_bound_on_surface(surface, solar=True)
             self.uids['solar_apertures'] += self.uids['solar_' + surface]
+
+        # SOLAR PHOTONS (edges)
+        self.uids['solar_edges'] = []
+        for surface in self.edges:
+            self.uids['solar_'+surface] = self.db.uids_out_bound_on_surface(surface, solar=True)
+            self.uids['solar_edges'] += self.uids['solar_'+surface]
+
         # CHANNELS
         self.uids['luminescent_channel'] = self.db.uids_in_reactor_and_luminescent()
         self.uids['channels_tot'] = self.db.uids_in_reactor()
         self.uids['channels_direct'] = diff(self.uids['channels_tot'], self.uids['luminescent_channel'])
+
 
         #
         self.uids['capillary_0react'] = self.db.reaction_capillary0()
@@ -99,12 +107,13 @@ class Analysis(object):
         for key in self.uids:
             self.count[key] = len(self.uids[key])
         self.count['luminescent_faces'] = self.count['luminescent_edges'] + self.count['luminescent_apertures']
+        self.count['solar_faces'] = self.count['solar_edges'] + self.count['solar_apertures']
 
         # Controls
         difference = self.count['channels_tot'] - self.count['luminescent_channel']
         assert self.count['channels_direct'] == difference, "Difference of array failed"
 
-        delta = abs(self.count['tot'] - (self.count['solar_apertures'] + self.count['luminescent_faces'] +\
+        delta = abs(self.count['tot'] - (self.count['solar_faces'] + self.count['luminescent_faces'] +
                 self.count['losses'] + self.count['channels_tot']))
 
         if delta == 0:

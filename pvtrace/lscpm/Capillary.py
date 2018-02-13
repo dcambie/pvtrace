@@ -50,7 +50,7 @@ class Capillary(object):
             tubing_material = Material(absorption_data=absorbance, emission_data=emission, quantum_efficiency=0.0,
                                        refractive_index=1.40)
         else:
-            raise NotImplementedError("The material specified for the tubing ("+polymer+") is unknown!")
+            raise NotImplementedError("The material specified for the tubing ("+tubing+") is unknown!")
 
         # Materials
         self.reaction.material = reaction_material

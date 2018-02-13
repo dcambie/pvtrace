@@ -109,8 +109,7 @@ class Visualiser (object):
 
         self.display.center = (0., 0., 0.)
         self.display.forward = (0, 0, 1)
-        
-        # show_axis = False // fixed by C.Shen
+
         if show_axis:
             visual.curve(pos=[(0, 0, 0), (.08, 0, 0)], radius=0.0005, color=visual.color.red)
             visual.curve(pos=[(0, 0, 0), (0, .07, 0)], radius=0.0005, color=visual.color.green)

@@ -30,9 +30,12 @@ scene.add_objects(reactor.scene_obj)
 # lamp.set_lightsource(irradiated_area=(0.05, 0.05), distance=0.025)
 lamp = LightSource(lamp_type='SolarSimulator')
 # fixed by chong in order to run the different reactor without altering the scripts
-lamp.set_lightsource(irradiated_length=reactor.lsc.size[0], irradiated_width=reactor.lsc.size[1], distance=0.025)
+# lamp.set_lightsource(irradiated_length=reactor.lsc.size[0], irradiated_width=reactor.lsc.size[1], distance=0.025)
 # lamp.set_lightsource(irradiated_area=(reactor.lsc.size[0], 0.15035), distance=0.025)
 # lamp.move_lightsource(vector=(0, 0.01735))
+lamp.set_lightsource(lamp_direction=(-4.235, -1.743, -1),
+                     irradiated_length=reactor.lsc.size[0], irradiated_width=reactor.lsc.size[1], distance=0.025)
+lamp.move_lightsource(vector=(4.235*0.025, 1.743*0.025))
 
 trace = pvtrace.Tracer(scene=scene, source=lamp.source, throws=100, use_visualiser=True,
                        show_axis=False, show_counter=False, db_split=True, preserve_db_tables=True)

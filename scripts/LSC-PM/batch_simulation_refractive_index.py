@@ -19,7 +19,7 @@ for mainloop_i in range(0, 16):
 
     logger = logging.getLogger('pvtrace')
 
-    reactor = Reactor(reactor_name="chong_red_10x10x0.3cm", luminophore=lr305, matrix=pdms, photocatalyst="MB",
+    reactor = Reactor(reactor_name="10x10_chong_thickness0.3cm", luminophore=lr305, matrix=pdms, photocatalyst="MB",
                       photocatalyst_concentration=0.004, solvent=solvent, refractive_index_cgchong=refractive_c)
     scene.add_objects(reactor.scene_obj)
 

@@ -43,5 +43,5 @@ for i in range(0, len(geometry)):
 config.set('Channels', 'capillaries', str(capillary))
 
 # Writing our configuration file to 'example.cfg'
-with open('chong_red_20x20x0.3cm.ini', 'wb') as configfile:
+with open('20x20_chong_thickness0.3cm.ini', 'wb') as configfile:
     config.write(configfile)

@@ -35,12 +35,12 @@ from types import *
 import os
 
 
-def load_spectrum(filename, xbins=None, base10=True):
+def load_spectrum(filename, xbins=None, base10=True, smarts=True):
     assert os.path.exists(filename), "File '%s' does not exist." % filename
-    spectrum = Spectrum(filename=filename, base10=base10)
+    spectrum = Spectrum(filename=filename, base10 = base10, smarts=smarts)
 
     # Truncate the spectrum using the xbins
-    return spectrum if xbins is None else Spectrum(x=xbins, y=spectrum(xbins), base10=base10)
+    return spectrum if xbins is None else Spectrum(x=xbins, y=spectrum(xbins), base10=False, smarts=False)
     # Note: Spectrum instances are callable thanks to the __call__ decorator of the Spectrum class ;)
 
 
@@ -191,7 +191,7 @@ class Spectrum(object):
     e.g. absorption, emission or refractive index spectrum as a function of wavelength in nanometers.
     """
 
-    def __init__(self, x=None, y=None, filename=None, base10=True):
+    def __init__(self, x=None, y=None, filename=None, base10=True, smarts=False):
         """
         Initialised with x and y which are array-like data of the same length. x must have units of wavelength
         (that is in nanometers), y can an arbitrary units. However, if the Spectrum is representing an
@@ -202,20 +202,41 @@ class Spectrum(object):
 
         if filename is not None:
 
-            try:
-                data = np.loadtxt(filename)
-            except Exception as e:
-                print("Failed to load data from file, %s", str(filename))
-                print(e)
-                exit(1)
+            if smarts:
+                try:
+                    data = np.loadtxt(filename, skiprows=1)
+                except Exception as e:
+                    print("Failed to load data from file, %s", str(filename))
+                    print(e)
+                    exit(1)
 
-            self.x = np.array(data[:, 0], dtype=np.float32)
-            self.y = np.array(data[:, 1], dtype=np.float32)
+                self.x = np.array(data[:, 0], dtype=np.float32)
+                self.y = np.array(data[:, 1], dtype=np.float32)
 
-            # Sort array based on ASC X if needed
-            arr1inds = self.x.argsort()
-            self.x = self.x[arr1inds[::1]]
-            self.y = self.y[arr1inds[::1]]
+                # Sort array based on ASC X if needed
+                arr1inds = self.x.argsort()
+                self.x = self.x[arr1inds[::1]]
+                self.y = self.y[arr1inds[::1]]
+                self.y = 10 ** self.y
+
+            else:
+                try:
+                    data = np.loadtxt(filename, skiprows=0)
+                except Exception as e:
+                    print("Failed to load data from file, %s", str(filename))
+                    print(e)
+                    exit(1)
+
+                self.x = np.array(data[:, 0], dtype=np.float32)
+                self.y = np.array(data[:, 1], dtype=np.float32)
+
+                # Sort array based on ASC X if needed
+                arr1inds = self.x.argsort()
+                self.x = self.x[arr1inds[::1]]
+                self.y = self.y[arr1inds[::1]]
+
+
+
 
         elif x is not None and y is not None:
             self.x = np.array(x, dtype=np.float32)

@@ -18,6 +18,9 @@ class LightSource(object):
         if lamp_type == 'SolarSimulator':
             self.spectrum_file = os.path.join(PVTDATA, 'sources', 'Oriel_solar_sim.txt')
             self.lamp_name = 'Solar Simulator LS0110-100 L.O.T.-Oriel GmbH & Co.'
+        elif lamp_type == 'SMARTSsolar_simulator':
+            self.spectrum_file = os.path.join(PVTDATA, 'smarts', 'june21_6hr.txt')
+            self.lamp_name = 'sun position and spectrum data from SMARTS'
         elif lamp_type == 'Sun':
             self.spectrum_file = os.path.join(PVTDATA, 'sources', 'AM1.5g-full.txt')
             self.lamp_name = 'Solar Spectrum AM 1.5G'
@@ -30,10 +33,10 @@ class LightSource(object):
         else:
             raise Exception('Unknown light source')
 
-    def set_lightsource(self, lamp_direction=(0, 0, -1), irradiated_length=0.05, irradiated_width=0.05, distance=0.025):
+    def set_lightsource(self, lamp_direction=(0, 0, -1), irradiated_length=0.05, irradiated_width=0.05, distance=0.025, smarts=False):
         if self.spectrum_file is None:
             raise ValueError('LightSource spectrum is not set!')
-        self.spectrum = load_spectrum(self.spectrum_file, xbins=np.arange(350, 700))
+        self.spectrum = load_spectrum(self.spectrum_file, xbins=np.arange(350, 700), smarts=smarts)
         self.source = PlanarSource(direction=lamp_direction, spectrum=self.spectrum, length=irradiated_length,
                                    width=irradiated_width)
         self.source.name = self.lamp_name

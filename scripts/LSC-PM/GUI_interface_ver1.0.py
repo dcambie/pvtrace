@@ -76,7 +76,8 @@ class PvTrace_Gui(QWidget):
 
     def Choose_file(self):
         filename = QFileDialog.getOpenFileName(self, "open", "D:\PvTrace_git\pvtrace-fork\data/reactors")[0]
-        filename_lookshort = os.path.basename(filename)
+        filename_look = os.path.basename(filename)
+        filename_lookshort = os.path.splitext(filename_look)[0]
         self.reactorname = filename_lookshort
         self.fileLabel.setText(filename_lookshort)
 
@@ -180,7 +181,7 @@ class PvTrace_Gui(QWidget):
         # lamp.set_lightsource(irradiated_area=(0.05, 0.05), distance=0.025)
         lamp = LightSource(lamp_type=self.lamp)
         # fixed by chong in order to run the different reactor without altering the scripts
-        lamp.set_lightsource(irradiated_length=reactor.lsc_length, irradiated_width=reactor.lsc_width, distance=0.025)
+        lamp.set_lightsource(irradiated_length=reactor.lsc.size[0], irradiated_width=reactor.lsc.size[1], distance=0.025)
         # lamp.set_lightsource(irradiated_area=(reactor.lsc.size[0], 0.15035), distance=0.025)
         # lamp.move_lightsource(vector=(0, 0.01735))
 

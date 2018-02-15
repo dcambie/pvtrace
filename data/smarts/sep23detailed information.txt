@@ -1,0 +1,823 @@
+
+******************   SMARTS, version 2.9.5   *******************
+
+ Simple Model of the Atmospheric Radiative Transfer of Sunshine
+     Chris A. Gueymard, Solar Consulting Services
+                    December 2005
+
+    This model is documented in FSEC Report PF-270-95
+ and in a Solar Energy paper, vol. 71, No.5, 325-346 (2001)
+
+ NOTE: These references describe v. 2.8 or earlier!!!
+ See the User's Manual for details on the considerable 
+ changes that followed...
+
+****************************************************************
+
+   Reference for this run: USSA_AOD=0.084_ASTM_G173                                        
+
+----------------------------------------------------------------
+
+* ATMOSPHERE : MLS         AEROSOL TYPE: S&F_URBAN                                                       
+
+* INPUTS:
+     Pressure (mb) = 1013.250   Ground Altitude (km) =   0.0000
+     Height above ground (km) =   0.0000
+     Relative Humidity (%) = 76.180   Precipitable Water (cm) =  2.9220
+     Ozone (atm-cm) = 0.3320 or 332.0 Dobson Units
+   AEROSOLS:  Optical Depth at 500 nm = 0.0840      Optical depth at 550 nm = 0.0738
+       Angstrom's Beta = 0.0329       Schuepp's B = 0.0365
+     Meteorological Range (km) =  130.2   Visibility (km) =   99.7
+     Alpha1 = 0.9104  Alpha2 = 1.3533   Mean Angstrom's Alpha = 1.1319
+     Season = SPRING/SUMMER           
+
+* TEMPERATURES:
+     Instantaneous at site's altitude = 294.1 K
+     Daily average (reference) at site's altitude = 294.1 K
+     Stratospheric Ozone and NO2 (effective) = 231.9 K
+
+
+The following spectral variables will be output to file: smarts295.ext.txt       
+
+ * Difuse_horizn_irradiance
+ * Direct_horizn_irradiance
+
+
+   ZONAL  ALBEDO (constant and Lambertian) = 0.000
+
+
+* GEOMETRY (half-angles) OF THE SIMULATED RADIOMETER (deg.):
+   Slope =  0.00      Aperture =  2.90   Limit =  0.00
+
+** WARNING #11*********
+\\ The radiometer's Slope and Limit angles are not provided.
+\\ Circumsolar calculations will therefore be performed for
+\\ an average geometry corresponding to the Aperture angle.
+
+
+
+   LOCAL  ALBEDO (constant and Lambertian) = 0.000
+
+
+
+====================================================================================================
+====================================================================================================
+
+* SOLAR POSITION (deg.):
+    Zenith Angle (apparent) = 85.353  Azimuth (from North) =   95.90
+
+      RELATIVE OPTICAL MASSES:
+  - Rayleigh = 10.940
+  - Water Vapor = 11.908
+  - Ozone =  8.880
+  - NO2 =  8.658
+  - Aerosols = 11.729
+
+  Results below are for this specific day:
+ Year = 2017   Month =  9  Day = 23   Hour (LST) =  7.000   Day of Year = 266
+   In Universal Time:
+   Day (UT) = 23   Hour (UT) =  6.000
+   Julian Day =  2458019.750  Declination =  -0.162 deg.  Radius vector = 1.00345   Equation of Time (min) =   7.653
+   Local Apparent Time (or Solar Time):   6.494
+
+
+
+ CO2 Mixing Ratio (ppmv):  400.0
+
+
+
+ Total column abundances (atm-cm) for all gases except H2O, and for normal/standard conditions:
+
+    BrO       CH2O        CH4      ClNO3         CO        CO2       HNO2       HNO3        NH3
+
+0.2500E-05 0.3000E-03 0.1276E+01 0.1200E-03 0.8757E-01 0.3211E+03 0.1000E-03 0.3840E-03 0.1711E-03
+
+
+     NO        NO2        NO3         N2        N2O         O2         O3         O4        SO2
+
+0.3231E-03 0.2184E-03 0.5000E-04 0.3708E+06 0.2397E+00 0.1678E+06 0.3320E+00 0.1678E+06 0.1085E-03
+
+
+
+
+* ANGLES (deg.) FOR TILTED SURFACE CALCULATIONS: 
+   Surface Tilt =  51.440   Surface Azimuth (from North) = 180.000
+   Incidence Angle =  82.495
+
+  Diffuse irradiance ratios (tilted plane/horizontal):
+      0.8117  (isotropic approximate conversion--for reference)
+      1.0702  (anisotropic conversion model--used here)
+
+
+
+*  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *
+
+** SPECTRUM:
+   Total (0-100 µm) Extraterrestrial Irradiance used here = 1356.73 W/m2
+  (i.e., 0.9931 times the selected solar constant, 1366.10 W/m2, due to the actual Sun-Earth distance.)
+   Source for selected solar spectrum: SMARTS_Gueymard                                                 
+
+ To account for the chosen Solar Constant value, the selected solar spectrum has been uniformly multiplied
+ by this scaling coefficient = 0.9993
+
+
+Wavelength Range =  350.0 to  700.0 nm;  Number of Wavelengths =   401
+
+*** BROADBAND IRRADIANCES (W/m2):
+
+* DIRECT BEAM AT NORMAL INCIDENCE:
+  Extraterrestrial =  579.81   Terrestrial =   54.72   Atmospheric Transmittance = 0.0944
+
+* FOR THE HORIZONTAL PLANE:
+  Direct Beam =    4.43   Diffuse =  16.65   Global =   21.08   Clearness index, KT = 0.0155
+  Diffuse irradiance origination details:
+   Sky diffuse =  16.65   Back-scattered diffuse =   0.00
+
+* FOR THE TILTED PLANE: 
+  Direct Beam =    7.15   Sky Diffuse =  13.93   Ground Reflected =   0.00   Global =   21.08
+
+* EXPERIMENTAL (WITH CIRCUMSOLAR CORRECTION):
+  Direct Beam, Normal Incidence =   55.84   Diffuse Horizontal =  16.56   Global Horizontal =   21.08
+
+
+====================================================================================================
+====================================================================================================
+
+* SOLAR POSITION (deg.):
+    Zenith Angle (apparent) = 80.820  Azimuth (from North) =  101.86
+
+      RELATIVE OPTICAL MASSES:
+  - Rayleigh =  6.050
+  - Water Vapor =  6.218
+  - Ozone =  5.647
+  - NO2 =  5.609
+  - Aerosols =  6.190
+
+  Results below are for this specific day:
+ Year = 2017   Month =  9  Day = 23   Hour (LST) =  7.500   Day of Year = 266
+   In Universal Time:
+   Day (UT) = 23   Hour (UT) =  6.500
+   Julian Day =  2458019.750  Declination =  -0.170 deg.  Radius vector = 1.00344   Equation of Time (min) =   7.660
+   Local Apparent Time (or Solar Time):   6.994
+
+
+
+* ANGLES (deg.) FOR TILTED SURFACE CALCULATIONS: 
+   Surface Tilt =  51.440   Surface Azimuth (from North) = 180.000
+   Incidence Angle =  75.044
+
+  Diffuse irradiance ratios (tilted plane/horizontal):
+      0.8117  (isotropic approximate conversion--for reference)
+      1.1611  (anisotropic conversion model--used here)
+
+
+
+*  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *
+
+** SPECTRUM:
+   Total (0-100 µm) Extraterrestrial Irradiance used here = 1356.75 W/m2
+  (i.e., 0.9932 times the selected solar constant, 1366.10 W/m2, due to the actual Sun-Earth distance.)
+   Source for selected solar spectrum: SMARTS_Gueymard                                                 
+
+ To account for the chosen Solar Constant value, the selected solar spectrum has been uniformly multiplied
+ by this scaling coefficient = 0.9993
+
+
+Wavelength Range =  350.0 to  700.0 nm;  Number of Wavelengths =   401
+
+*** BROADBAND IRRADIANCES (W/m2):
+
+* DIRECT BEAM AT NORMAL INCIDENCE:
+  Extraterrestrial =  579.82   Terrestrial =  141.32   Atmospheric Transmittance = 0.2437
+
+* FOR THE HORIZONTAL PLANE:
+  Direct Beam =   22.54   Diffuse =  27.65   Global =   50.20   Clearness index, KT = 0.0370
+  Diffuse irradiance origination details:
+   Sky diffuse =  27.65   Back-scattered diffuse =   0.00
+
+* FOR THE TILTED PLANE: 
+  Direct Beam =   36.47   Sky Diffuse =  23.27   Ground Reflected =   0.00   Global =   59.74
+
+* EXPERIMENTAL (WITH CIRCUMSOLAR CORRECTION):
+  Direct Beam, Normal Incidence =  143.02   Diffuse Horizontal =  27.38   Global Horizontal =   50.20
+
+
+====================================================================================================
+====================================================================================================
+
+* SOLAR POSITION (deg.):
+    Zenith Angle (apparent) = 76.340  Azimuth (from North) =  107.98
+
+      RELATIVE OPTICAL MASSES:
+  - Rayleigh =  4.169
+  - Water Vapor =  4.221
+  - Ozone =  4.047
+  - NO2 =  4.046
+  - Aerosols =  4.213
+
+  Results below are for this specific day:
+ Year = 2017   Month =  9  Day = 23   Hour (LST) =  8.000   Day of Year = 266
+   In Universal Time:
+   Day (UT) = 23   Hour (UT) =  7.000
+   Julian Day =  2458019.750  Declination =  -0.178 deg.  Radius vector = 1.00343   Equation of Time (min) =   7.668
+   Local Apparent Time (or Solar Time):   7.494
+
+
+
+* ANGLES (deg.) FOR TILTED SURFACE CALCULATIONS: 
+   Surface Tilt =  51.440   Surface Azimuth (from North) = 180.000
+   Incidence Angle =  67.561
+
+  Diffuse irradiance ratios (tilted plane/horizontal):
+      0.8117  (isotropic approximate conversion--for reference)
+      1.2086  (anisotropic conversion model--used here)
+
+
+
+*  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *
+
+** SPECTRUM:
+   Total (0-100 µm) Extraterrestrial Irradiance used here = 1356.77 W/m2
+  (i.e., 0.9932 times the selected solar constant, 1366.10 W/m2, due to the actual Sun-Earth distance.)
+   Source for selected solar spectrum: SMARTS_Gueymard                                                 
+
+ To account for the chosen Solar Constant value, the selected solar spectrum has been uniformly multiplied
+ by this scaling coefficient = 0.9993
+
+
+Wavelength Range =  350.0 to  700.0 nm;  Number of Wavelengths =   401
+
+*** BROADBAND IRRADIANCES (W/m2):
+
+* DIRECT BEAM AT NORMAL INCIDENCE:
+  Extraterrestrial =  579.83   Terrestrial =  210.94   Atmospheric Transmittance = 0.3638
+
+* FOR THE HORIZONTAL PLANE:
+  Direct Beam =   49.82   Diffuse =  35.69   Global =   85.51   Clearness index, KT = 0.0630
+  Diffuse irradiance origination details:
+   Sky diffuse =  35.69   Back-scattered diffuse =   0.00
+
+* FOR THE TILTED PLANE: 
+  Direct Beam =   80.52   Sky Diffuse =  30.09   Ground Reflected =   0.00   Global =  110.60
+
+* EXPERIMENTAL (WITH CIRCUMSOLAR CORRECTION):
+  Direct Beam, Normal Incidence =  212.76   Diffuse Horizontal =  35.26   Global Horizontal =   85.51
+
+
+====================================================================================================
+====================================================================================================
+
+* SOLAR POSITION (deg.):
+    Zenith Angle (apparent) = 72.002  Azimuth (from North) =  114.33
+
+      RELATIVE OPTICAL MASSES:
+  - Rayleigh =  3.209
+  - Water Vapor =  3.231
+  - Ozone =  3.161
+  - NO2 =  3.166
+  - Aerosols =  3.228
+
+  Results below are for this specific day:
+ Year = 2017   Month =  9  Day = 23   Hour (LST) =  8.500   Day of Year = 266
+   In Universal Time:
+   Day (UT) = 23   Hour (UT) =  7.500
+   Julian Day =  2458019.750  Declination =  -0.186 deg.  Radius vector = 1.00343   Equation of Time (min) =   7.675
+   Local Apparent Time (or Solar Time):   7.994
+
+
+
+* ANGLES (deg.) FOR TILTED SURFACE CALCULATIONS: 
+   Surface Tilt =  51.440   Surface Azimuth (from North) = 180.000
+   Incidence Angle =  60.069
+
+  Diffuse irradiance ratios (tilted plane/horizontal):
+      0.8117  (isotropic approximate conversion--for reference)
+      1.2302  (anisotropic conversion model--used here)
+
+
+
+*  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *
+
+** SPECTRUM:
+   Total (0-100 µm) Extraterrestrial Irradiance used here = 1356.78 W/m2
+  (i.e., 0.9932 times the selected solar constant, 1366.10 W/m2, due to the actual Sun-Earth distance.)
+   Source for selected solar spectrum: SMARTS_Gueymard                                                 
+
+ To account for the chosen Solar Constant value, the selected solar spectrum has been uniformly multiplied
+ by this scaling coefficient = 0.9993
+
+
+Wavelength Range =  350.0 to  700.0 nm;  Number of Wavelengths =   401
+
+*** BROADBAND IRRADIANCES (W/m2):
+
+* DIRECT BEAM AT NORMAL INCIDENCE:
+  Extraterrestrial =  579.83   Terrestrial =  261.64   Atmospheric Transmittance = 0.4512
+
+* FOR THE HORIZONTAL PLANE:
+  Direct Beam =   80.84   Diffuse =  41.30   Global =  122.15   Clearness index, KT = 0.0900
+  Diffuse irradiance origination details:
+   Sky diffuse =  41.30   Back-scattered diffuse =   0.00
+
+* FOR THE TILTED PLANE: 
+  Direct Beam =  130.54   Sky Diffuse =  34.83   Ground Reflected =   0.00   Global =  165.38
+
+* EXPERIMENTAL (WITH CIRCUMSOLAR CORRECTION):
+  Direct Beam, Normal Incidence =  263.42   Diffuse Horizontal =  40.75   Global Horizontal =  122.15
+
+
+====================================================================================================
+====================================================================================================
+
+* SOLAR POSITION (deg.):
+    Zenith Angle (apparent) = 67.877  Azimuth (from North) =  120.99
+
+      RELATIVE OPTICAL MASSES:
+  - Rayleigh =  2.641
+  - Water Vapor =  2.653
+  - Ozone =  2.619
+  - NO2 =  2.624
+  - Aerosols =  2.651
+
+  Results below are for this specific day:
+ Year = 2017   Month =  9  Day = 23   Hour (LST) =  9.000   Day of Year = 266
+   In Universal Time:
+   Day (UT) = 23   Hour (UT) =  8.000
+   Julian Day =  2458019.750  Declination =  -0.194 deg.  Radius vector = 1.00342   Equation of Time (min) =   7.682
+   Local Apparent Time (or Solar Time):   8.494
+
+
+
+* ANGLES (deg.) FOR TILTED SURFACE CALCULATIONS: 
+   Surface Tilt =  51.440   Surface Azimuth (from North) = 180.000
+   Incidence Angle =  52.574
+
+  Diffuse irradiance ratios (tilted plane/horizontal):
+      0.8117  (isotropic approximate conversion--for reference)
+      1.2414  (anisotropic conversion model--used here)
+
+
+
+*  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *
+
+** SPECTRUM:
+   Total (0-100 µm) Extraterrestrial Irradiance used here = 1356.80 W/m2
+  (i.e., 0.9932 times the selected solar constant, 1366.10 W/m2, due to the actual Sun-Earth distance.)
+   Source for selected solar spectrum: SMARTS_Gueymard                                                 
+
+ To account for the chosen Solar Constant value, the selected solar spectrum has been uniformly multiplied
+ by this scaling coefficient = 0.9993
+
+
+Wavelength Range =  350.0 to  700.0 nm;  Number of Wavelengths =   401
+
+*** BROADBAND IRRADIANCES (W/m2):
+
+* DIRECT BEAM AT NORMAL INCIDENCE:
+  Extraterrestrial =  579.84   Terrestrial =  298.41   Atmospheric Transmittance = 0.5146
+
+* FOR THE HORIZONTAL PLANE:
+  Direct Beam =  112.38   Diffuse =  45.45   Global =  157.83   Clearness index, KT = 0.1163
+  Diffuse irradiance origination details:
+   Sky diffuse =  45.45   Back-scattered diffuse =   0.00
+
+* FOR THE TILTED PLANE: 
+  Direct Beam =  181.36   Sky Diffuse =  38.33   Ground Reflected =   0.00   Global =  219.68
+
+* EXPERIMENTAL (WITH CIRCUMSOLAR CORRECTION):
+  Direct Beam, Normal Incidence =  300.11   Diffuse Horizontal =  44.81   Global Horizontal =  157.83
+
+
+====================================================================================================
+====================================================================================================
+
+* SOLAR POSITION (deg.):
+    Zenith Angle (apparent) = 64.039  Azimuth (from North) =  128.05
+
+      RELATIVE OPTICAL MASSES:
+  - Rayleigh =  2.276
+  - Water Vapor =  2.283
+  - Ozone =  2.264
+  - NO2 =  2.268
+  - Aerosols =  2.282
+
+  Results below are for this specific day:
+ Year = 2017   Month =  9  Day = 23   Hour (LST) =  9.500   Day of Year = 266
+   In Universal Time:
+   Day (UT) = 23   Hour (UT) =  8.500
+   Julian Day =  2458019.750  Declination =  -0.202 deg.  Radius vector = 1.00342   Equation of Time (min) =   7.689
+   Local Apparent Time (or Solar Time):   8.994
+
+
+
+* ANGLES (deg.) FOR TILTED SURFACE CALCULATIONS: 
+   Surface Tilt =  51.440   Surface Azimuth (from North) = 180.000
+   Incidence Angle =  45.077
+
+  Diffuse irradiance ratios (tilted plane/horizontal):
+      0.8117  (isotropic approximate conversion--for reference)
+      1.2504  (anisotropic conversion model--used here)
+
+
+
+*  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *
+
+** SPECTRUM:
+   Total (0-100 µm) Extraterrestrial Irradiance used here = 1356.81 W/m2
+  (i.e., 0.9932 times the selected solar constant, 1366.10 W/m2, due to the actual Sun-Earth distance.)
+   Source for selected solar spectrum: SMARTS_Gueymard                                                 
+
+ To account for the chosen Solar Constant value, the selected solar spectrum has been uniformly multiplied
+ by this scaling coefficient = 0.9993
+
+
+Wavelength Range =  350.0 to  700.0 nm;  Number of Wavelengths =   401
+
+*** BROADBAND IRRADIANCES (W/m2):
+
+* DIRECT BEAM AT NORMAL INCIDENCE:
+  Extraterrestrial =  579.85   Terrestrial =  325.37   Atmospheric Transmittance = 0.5611
+
+* FOR THE HORIZONTAL PLANE:
+  Direct Beam =  142.44   Diffuse =  48.54   Global =  190.98   Clearness index, KT = 0.1408
+  Diffuse irradiance origination details:
+   Sky diffuse =  48.54   Back-scattered diffuse =   0.00
+
+* FOR THE TILTED PLANE: 
+  Direct Beam =  229.76   Sky Diffuse =  40.94   Ground Reflected =   0.00   Global =  270.70
+
+* EXPERIMENTAL (WITH CIRCUMSOLAR CORRECTION):
+  Direct Beam, Normal Incidence =  326.98   Diffuse Horizontal =  47.84   Global Horizontal =  190.98
+
+
+====================================================================================================
+====================================================================================================
+
+* SOLAR POSITION (deg.):
+    Zenith Angle (apparent) = 60.565  Azimuth (from North) =  135.55
+
+      RELATIVE OPTICAL MASSES:
+  - Rayleigh =  2.029
+  - Water Vapor =  2.034
+  - Ozone =  2.022
+  - NO2 =  2.026
+  - Aerosols =  2.033
+
+  Results below are for this specific day:
+ Year = 2017   Month =  9  Day = 23   Hour (LST) = 10.000   Day of Year = 266
+   In Universal Time:
+   Day (UT) = 23   Hour (UT) =  9.000
+   Julian Day =  2458020.000  Declination =  -0.210 deg.  Radius vector = 1.00341   Equation of Time (min) =   7.697
+   Local Apparent Time (or Solar Time):   9.494
+
+
+
+* ANGLES (deg.) FOR TILTED SURFACE CALCULATIONS: 
+   Surface Tilt =  51.440   Surface Azimuth (from North) = 180.000
+   Incidence Angle =  37.579
+
+  Diffuse irradiance ratios (tilted plane/horizontal):
+      0.8117  (isotropic approximate conversion--for reference)
+      1.2600  (anisotropic conversion model--used here)
+
+
+
+*  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *
+
+** SPECTRUM:
+   Total (0-100 µm) Extraterrestrial Irradiance used here = 1356.83 W/m2
+  (i.e., 0.9932 times the selected solar constant, 1366.10 W/m2, due to the actual Sun-Earth distance.)
+   Source for selected solar spectrum: SMARTS_Gueymard                                                 
+
+ To account for the chosen Solar Constant value, the selected solar spectrum has been uniformly multiplied
+ by this scaling coefficient = 0.9993
+
+
+Wavelength Range =  350.0 to  700.0 nm;  Number of Wavelengths =   401
+
+*** BROADBAND IRRADIANCES (W/m2):
+
+* DIRECT BEAM AT NORMAL INCIDENCE:
+  Extraterrestrial =  579.85   Terrestrial =  345.23   Atmospheric Transmittance = 0.5954
+
+* FOR THE HORIZONTAL PLANE:
+  Direct Beam =  169.66   Diffuse =  50.85   Global =  220.51   Clearness index, KT = 0.1625
+  Diffuse irradiance origination details:
+   Sky diffuse =  50.85   Back-scattered diffuse =   0.00
+
+* FOR THE TILTED PLANE: 
+  Direct Beam =  273.60   Sky Diffuse =  42.90   Ground Reflected =   0.00   Global =  316.50
+
+* EXPERIMENTAL (WITH CIRCUMSOLAR CORRECTION):
+  Direct Beam, Normal Incidence =  346.76   Diffuse Horizontal =  50.10   Global Horizontal =  220.51
+
+
+====================================================================================================
+====================================================================================================
+
+* SOLAR POSITION (deg.):
+    Zenith Angle (apparent) = 57.541  Azimuth (from North) =  143.56
+
+      RELATIVE OPTICAL MASSES:
+  - Rayleigh =  1.859
+  - Water Vapor =  1.863
+  - Ozone =  1.854
+  - NO2 =  1.857
+  - Aerosols =  1.862
+
+  Results below are for this specific day:
+ Year = 2017   Month =  9  Day = 23   Hour (LST) = 10.500   Day of Year = 266
+   In Universal Time:
+   Day (UT) = 23   Hour (UT) =  9.500
+   Julian Day =  2458020.000  Declination =  -0.218 deg.  Radius vector = 1.00340   Equation of Time (min) =   7.704
+   Local Apparent Time (or Solar Time):   9.994
+
+
+
+* ANGLES (deg.) FOR TILTED SURFACE CALCULATIONS: 
+   Surface Tilt =  51.440   Surface Azimuth (from North) = 180.000
+   Incidence Angle =  30.080
+
+  Diffuse irradiance ratios (tilted plane/horizontal):
+      0.8117  (isotropic approximate conversion--for reference)
+      1.2697  (anisotropic conversion model--used here)
+
+
+
+*  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *
+
+** SPECTRUM:
+   Total (0-100 µm) Extraterrestrial Irradiance used here = 1356.85 W/m2
+  (i.e., 0.9932 times the selected solar constant, 1366.10 W/m2, due to the actual Sun-Earth distance.)
+   Source for selected solar spectrum: SMARTS_Gueymard                                                 
+
+ To account for the chosen Solar Constant value, the selected solar spectrum has been uniformly multiplied
+ by this scaling coefficient = 0.9993
+
+
+Wavelength Range =  350.0 to  700.0 nm;  Number of Wavelengths =   401
+
+*** BROADBAND IRRADIANCES (W/m2):
+
+* DIRECT BEAM AT NORMAL INCIDENCE:
+  Extraterrestrial =  579.86   Terrestrial =  359.78   Atmospheric Transmittance = 0.6205
+
+* FOR THE HORIZONTAL PLANE:
+  Direct Beam =  193.09   Diffuse =  52.56   Global =  245.65   Clearness index, KT = 0.1810
+  Diffuse irradiance origination details:
+   Sky diffuse =  52.56   Back-scattered diffuse =   0.00
+
+* FOR THE TILTED PLANE: 
+  Direct Beam =  311.32   Sky Diffuse =  44.37   Ground Reflected =   0.00   Global =  355.69
+
+* EXPERIMENTAL (WITH CIRCUMSOLAR CORRECTION):
+  Direct Beam, Normal Incidence =  361.25   Diffuse Horizontal =  51.77   Global Horizontal =  245.65
+
+
+====================================================================================================
+====================================================================================================
+
+* SOLAR POSITION (deg.):
+    Zenith Angle (apparent) = 55.060  Azimuth (from North) =  152.07
+
+      RELATIVE OPTICAL MASSES:
+  - Rayleigh =  1.743
+  - Water Vapor =  1.746
+  - Ozone =  1.739
+  - NO2 =  1.742
+  - Aerosols =  1.745
+
+  Results below are for this specific day:
+ Year = 2017   Month =  9  Day = 23   Hour (LST) = 11.000   Day of Year = 266
+   In Universal Time:
+   Day (UT) = 23   Hour (UT) = 10.000
+   Julian Day =  2458020.000  Declination =  -0.227 deg.  Radius vector = 1.00340   Equation of Time (min) =   7.711
+   Local Apparent Time (or Solar Time):  10.495
+
+
+
+* ANGLES (deg.) FOR TILTED SURFACE CALCULATIONS: 
+   Surface Tilt =  51.440   Surface Azimuth (from North) = 180.000
+   Incidence Angle =  22.581
+
+  Diffuse irradiance ratios (tilted plane/horizontal):
+      0.8117  (isotropic approximate conversion--for reference)
+      1.2783  (anisotropic conversion model--used here)
+
+
+
+*  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *
+
+** SPECTRUM:
+   Total (0-100 µm) Extraterrestrial Irradiance used here = 1356.86 W/m2
+  (i.e., 0.9932 times the selected solar constant, 1366.10 W/m2, due to the actual Sun-Earth distance.)
+   Source for selected solar spectrum: SMARTS_Gueymard                                                 
+
+ To account for the chosen Solar Constant value, the selected solar spectrum has been uniformly multiplied
+ by this scaling coefficient = 0.9993
+
+
+Wavelength Range =  350.0 to  700.0 nm;  Number of Wavelengths =   401
+
+*** BROADBAND IRRADIANCES (W/m2):
+
+* DIRECT BEAM AT NORMAL INCIDENCE:
+  Extraterrestrial =  579.87   Terrestrial =  370.16   Atmospheric Transmittance = 0.6384
+
+* FOR THE HORIZONTAL PLANE:
+  Direct Beam =  212.00   Diffuse =  53.79   Global =  265.78   Clearness index, KT = 0.1959
+  Diffuse irradiance origination details:
+   Sky diffuse =  53.79   Back-scattered diffuse =   0.00
+
+* FOR THE TILTED PLANE: 
+  Direct Beam =  341.78   Sky Diffuse =  45.42   Ground Reflected =   0.00   Global =  387.20
+
+* EXPERIMENTAL (WITH CIRCUMSOLAR CORRECTION):
+  Direct Beam, Normal Incidence =  371.58   Diffuse Horizontal =  52.97   Global Horizontal =  265.78
+
+
+====================================================================================================
+====================================================================================================
+
+* SOLAR POSITION (deg.):
+    Zenith Angle (apparent) = 53.208  Azimuth (from North) =  161.04
+
+      RELATIVE OPTICAL MASSES:
+  - Rayleigh =  1.667
+  - Water Vapor =  1.669
+  - Ozone =  1.664
+  - NO2 =  1.666
+  - Aerosols =  1.669
+
+  Results below are for this specific day:
+ Year = 2017   Month =  9  Day = 23   Hour (LST) = 11.500   Day of Year = 266
+   In Universal Time:
+   Day (UT) = 23   Hour (UT) = 10.500
+   Julian Day =  2458020.000  Declination =  -0.235 deg.  Radius vector = 1.00339   Equation of Time (min) =   7.719
+   Local Apparent Time (or Solar Time):  10.995
+
+
+
+* ANGLES (deg.) FOR TILTED SURFACE CALCULATIONS: 
+   Surface Tilt =  51.440   Surface Azimuth (from North) = 180.000
+   Incidence Angle =  15.082
+
+  Diffuse irradiance ratios (tilted plane/horizontal):
+      0.8117  (isotropic approximate conversion--for reference)
+      1.2846  (anisotropic conversion model--used here)
+
+
+
+*  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *
+
+** SPECTRUM:
+   Total (0-100 µm) Extraterrestrial Irradiance used here = 1356.88 W/m2
+  (i.e., 0.9932 times the selected solar constant, 1366.10 W/m2, due to the actual Sun-Earth distance.)
+   Source for selected solar spectrum: SMARTS_Gueymard                                                 
+
+ To account for the chosen Solar Constant value, the selected solar spectrum has been uniformly multiplied
+ by this scaling coefficient = 0.9993
+
+
+Wavelength Range =  350.0 to  700.0 nm;  Number of Wavelengths =   401
+
+*** BROADBAND IRRADIANCES (W/m2):
+
+* DIRECT BEAM AT NORMAL INCIDENCE:
+  Extraterrestrial =  579.87   Terrestrial =  377.12   Atmospheric Transmittance = 0.6504
+
+* FOR THE HORIZONTAL PLANE:
+  Direct Beam =  225.86   Diffuse =  54.61   Global =  280.48   Clearness index, KT = 0.2067
+  Diffuse irradiance origination details:
+   Sky diffuse =  54.61   Back-scattered diffuse =   0.00
+
+* FOR THE TILTED PLANE: 
+  Direct Beam =  364.13   Sky Diffuse =  46.14   Ground Reflected =   0.00   Global =  410.27
+
+* EXPERIMENTAL (WITH CIRCUMSOLAR CORRECTION):
+  Direct Beam, Normal Incidence =  378.51   Diffuse Horizontal =  53.78   Global Horizontal =  280.48
+
+
+====================================================================================================
+====================================================================================================
+
+* SOLAR POSITION (deg.):
+    Zenith Angle (apparent) = 52.062  Azimuth (from North) =  170.37
+
+      RELATIVE OPTICAL MASSES:
+  - Rayleigh =  1.624
+  - Water Vapor =  1.626
+  - Ozone =  1.622
+  - NO2 =  1.624
+  - Aerosols =  1.626
+
+  Results below are for this specific day:
+ Year = 2017   Month =  9  Day = 23   Hour (LST) = 12.000   Day of Year = 266
+   In Universal Time:
+   Day (UT) = 23   Hour (UT) = 11.000
+   Julian Day =  2458020.000  Declination =  -0.243 deg.  Radius vector = 1.00339   Equation of Time (min) =   7.726
+   Local Apparent Time (or Solar Time):  11.495
+
+
+
+* ANGLES (deg.) FOR TILTED SURFACE CALCULATIONS: 
+   Surface Tilt =  51.440   Surface Azimuth (from North) = 180.000
+   Incidence Angle =   7.584
+
+  Diffuse irradiance ratios (tilted plane/horizontal):
+      0.8117  (isotropic approximate conversion--for reference)
+      1.2884  (anisotropic conversion model--used here)
+
+
+
+*  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *
+
+** SPECTRUM:
+   Total (0-100 µm) Extraterrestrial Irradiance used here = 1356.89 W/m2
+  (i.e., 0.9933 times the selected solar constant, 1366.10 W/m2, due to the actual Sun-Earth distance.)
+   Source for selected solar spectrum: SMARTS_Gueymard                                                 
+
+ To account for the chosen Solar Constant value, the selected solar spectrum has been uniformly multiplied
+ by this scaling coefficient = 0.9993
+
+
+Wavelength Range =  350.0 to  700.0 nm;  Number of Wavelengths =   401
+
+*** BROADBAND IRRADIANCES (W/m2):
+
+* DIRECT BEAM AT NORMAL INCIDENCE:
+  Extraterrestrial =  579.88   Terrestrial =  381.14   Atmospheric Transmittance = 0.6573
+
+* FOR THE HORIZONTAL PLANE:
+  Direct Beam =  234.33   Diffuse =  55.09   Global =  289.42   Clearness index, KT = 0.2133
+  Diffuse irradiance origination details:
+   Sky diffuse =  55.09   Back-scattered diffuse =   0.00
+
+* FOR THE TILTED PLANE: 
+  Direct Beam =  377.80   Sky Diffuse =  46.55   Ground Reflected =   0.00   Global =  424.35
+
+* EXPERIMENTAL (WITH CIRCUMSOLAR CORRECTION):
+  Direct Beam, Normal Incidence =  382.51   Diffuse Horizontal =  54.25   Global Horizontal =  289.42
+
+
+====================================================================================================
+====================================================================================================
+
+* SOLAR POSITION (deg.):
+    Zenith Angle (apparent) = 51.673  Azimuth (from North) =  179.90
+
+      RELATIVE OPTICAL MASSES:
+  - Rayleigh =  1.610
+  - Water Vapor =  1.612
+  - Ozone =  1.608
+  - NO2 =  1.610
+  - Aerosols =  1.612
+
+  Results below are for this specific day:
+ Year = 2017   Month =  9  Day = 23   Hour (LST) = 12.500   Day of Year = 266
+   In Universal Time:
+   Day (UT) = 23   Hour (UT) = 11.500
+   Julian Day =  2458020.000  Declination =  -0.251 deg.  Radius vector = 1.00338   Equation of Time (min) =   7.733
+   Local Apparent Time (or Solar Time):  11.995
+
+
+
+* ANGLES (deg.) FOR TILTED SURFACE CALCULATIONS: 
+   Surface Tilt =  51.440   Surface Azimuth (from North) = 180.000
+   Incidence Angle =   0.246
+
+  Diffuse irradiance ratios (tilted plane/horizontal):
+      0.8117  (isotropic approximate conversion--for reference)
+      1.2897  (anisotropic conversion model--used here)
+
+
+
+*  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *  *
+
+** SPECTRUM:
+   Total (0-100 µm) Extraterrestrial Irradiance used here = 1356.91 W/m2
+  (i.e., 0.9933 times the selected solar constant, 1366.10 W/m2, due to the actual Sun-Earth distance.)
+   Source for selected solar spectrum: SMARTS_Gueymard                                                 
+
+ To account for the chosen Solar Constant value, the selected solar spectrum has been uniformly multiplied
+ by this scaling coefficient = 0.9993
+
+
+Wavelength Range =  350.0 to  700.0 nm;  Number of Wavelengths =   401
+
+*** BROADBAND IRRADIANCES (W/m2):
+
+* DIRECT BEAM AT NORMAL INCIDENCE:
+  Extraterrestrial =  579.89   Terrestrial =  382.45   Atmospheric Transmittance = 0.6595
+
+* FOR THE HORIZONTAL PLANE:
+  Direct Beam =  237.18   Diffuse =  55.24   Global =  292.42   Clearness index, KT = 0.2155
+  Diffuse irradiance origination details:
+   Sky diffuse =  55.24   Back-scattered diffuse =   0.00
+
+* FOR THE TILTED PLANE: 
+  Direct Beam =  382.45   Sky Diffuse =  46.69   Ground Reflected =   0.00   Global =  429.14
+
+* EXPERIMENTAL (WITH CIRCUMSOLAR CORRECTION):
+  Direct Beam, Normal Incidence =  383.82   Diffuse Horizontal =  54.40   Global Horizontal =  292.42
+

@@ -8,10 +8,10 @@ lr305 = LuminophoreMaterial('Red305', 200)
 solvent = 'ACN'
 pdms = Matrix('pdms')
 pmma = Matrix('pmma')
-file_path = os.path.join('D:/', 'pvtrace_chongRI_ACN1.38', 'pvtrace_chong_result.txt')
+file_path = os.path.join('D:/', 'pvtrace_chongRItry', 'pvtrace_chong_result.txt')
 
 # Loop 0 to 250ppm
-for mainloop_i in range(0, 16):
+for mainloop_i in range(12, 16):
     refractive_c = mainloop_i / 100 + 1.30
 
     # This implicitly restart logging on the new location
@@ -24,16 +24,14 @@ for mainloop_i in range(0, 16):
     scene.add_objects(reactor.scene_obj)
 
     lamp = LightSource(lamp_type='SolarSimulator')
-    lamp.set_lightsource()
+    lamp.set_lightsource(lamp_direction=(0, 0, -1),
+                         irradiated_length=reactor.lsc.size[0], irradiated_width=reactor.lsc.size[1], distance=0.025)
     trace = pvtrace.Tracer(scene=scene, source=lamp.source, throws=100000, use_visualiser=False,
                            show_axis=False, show_counter=False, db_split=True, preserve_db_tables=True)
 
     # Run simulation
-    tic = time.clock()
-    logger.info('Simulation Started (time: '+str(tic)+')')
+
     trace.start()
-    toc = time.clock()
-    logger.info('Simulation Ended (time: '+str(toc)+', elapsed: '+str(toc-tic)+' s)')
 
     scene.stats.print_detailed()
     if mainloop_i == 0:

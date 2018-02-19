@@ -192,12 +192,12 @@ class Analysis(object):
         """
         if additional is None:
             r_text = "Generated, Killed, Total, Losses, Luminescent - Left, Luminescent - Near, Luminescent - Far, " \
-                   "Luminescent - Right, Luminescent - Top, Luminescent - Bottom, Solar - Top, Solar - Bottom, " \
+                   "Luminescent - Right, Luminescent - Top, Luminescent - Bottom, Solar - Top, Solar - Bottom, Solar - edge," \
                    "Channels - Direct, Channels - Luminescent"
         else:
             r_text = additional+", Generated, Killed, Total, Losses, Luminescent - Left, Luminescent - Near," \
                               "Luminescent - Far, Luminescent - Right, Luminescent - Top, Luminescent - Bottom," \
-                              "Solar - Top, Solar - Bottom, Channels - Direct, Channels - Luminescent"
+                              "Solar - Top, Solar - Bottom, Solar - edge, Channels - Direct, Channels - Luminescent"
         self.log.info(r_text)
         return r_text
 
@@ -232,6 +232,8 @@ class Analysis(object):
         # SOLAR: top and bottom
         for surface in apertures:
             return_text += str(self.count['solar_' + surface]) + ", "
+
+        return_text += str(self.count['solar_edges']) + ", "
 
         # CHANNELS (lumi, direct)
         return_text += str(self.count['channels_direct']) + ", "

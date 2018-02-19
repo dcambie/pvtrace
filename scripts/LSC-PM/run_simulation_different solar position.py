@@ -7,11 +7,10 @@ from pvtrace.lscpm.SolarSimulators import *
 # blue red thickness: 3mm green: 4mm
 # blue not yet, green EY, red Methylene Blue,
 # set episilon to prevent the possibility of matching fate and generate
-
+file_path = os.path.join('D:/', 'pvtrace_smarts', 'WEtry', 'pvtrace_result.txt')
 
 # scene = pvtrace.Scene(level=logging.INFO, uuid="Fang_rebuttal2_6")
-scene = pvtrace.Scene(level=logging.INFO, uuid="overwrite_me")
-logger = logging.getLogger('pvtrace')
+
 
 # Create LSC-PM DYE material
 lr305 = LuminophoreMaterial('Red305', 200)#red
@@ -21,21 +20,23 @@ blue_evonik = LuminophoreMaterial('Evonik_Blue', 1)#blue
 pdms = Matrix('pdms')
 pmma = Matrix('PMMA')
 
-reactor = Reactor(reactor_name="10x10_chong_thickness0.3cm", luminophore=lr305, matrix=pmma, photocatalyst="MB",
-                  photocatalyst_concentration=0.004, solvent='ACN')
-scene.add_objects(reactor.scene_obj)
-
 solarposition_file = os.path.join(PVTDATA, 'smarts', 'june21_solarposition.txt')
 position_data = np.loadtxt(solarposition_file)
 position_x = np.array(position_data[:, 0], dtype=np.float32)
 position_y = np.array(position_data[:, 1], dtype=np.float32)
 position_z = np.array(position_data[:, 2], dtype=np.float32)
 
-for mainloop_i in range(0, 15):
+for mainloop_i in range(8, 12):
 
-    hour_june = 6 + mainloop_i*0.5
+    hour_june = 5 + mainloop_i*0.5
+    scene = pvtrace.Scene(level=logging.INFO, uuid=str(hour_june))
+    logger = logging.getLogger('pvtrace')
 
-    lamp = LightSource(lamp_type='SMARTSsolar_simulator', set_spectrumfile='june21_' + str(hour_june) + 'hr.txt')
+    reactor = Reactor(reactor_name="10x10_chong_thickness0.3cm_WE", luminophore=lr305, matrix=pmma, photocatalyst="MB",
+                      photocatalyst_concentration=0.004, solvent='ACN')
+    scene.add_objects(reactor.scene_obj)
+
+    lamp = LightSource(lamp_type='SMARTSsolar_simulator', set_spectrumfile = 'june21_' + str(hour_june) + 'hr.txt')
     x_i =round(position_x[mainloop_i], 3)
     y_i = round(position_y[mainloop_i], 3)
     z_i = position_z[mainloop_i]
@@ -47,10 +48,10 @@ for mainloop_i in range(0, 15):
                          irradiated_length=reactor.lsc.size[0], irradiated_width=reactor.lsc.size[1], distance=0.025, smarts=True)
     lamp.move_lightsource(vector=lampmove_vector)
 
-
-    trace = pvtrace.Tracer(scene=scene, source=lamp.source, throws=100, use_visualiser=True,
+    trace = pvtrace.Tracer(scene=scene, source=lamp.source, throws=100, use_visualiser=False,
                            show_axis=False, show_counter=False, db_split=True, preserve_db_tables=True)
     # set color on Trace.py while visualizing
+
 
     # Run simulation
     tic = time.clock()
@@ -59,39 +60,14 @@ for mainloop_i in range(0, 15):
     toc = time.clock()
     logger.info('Simulation Ended (time: ' + str(toc) + ', elapsed: ' + str(toc - tic) + ' s)')
 
-    label = subprocess.check_output(["git", "describe", "--always"], cwd=PVTDATA, shell=True)
-    logger.info('PvTrace ' + str(label) + ' simulation ended')
-
-    print(scene.stats.print_excel_header() + "\n")
-    print(scene.stats.print_excel() + "\n")
-
-    # keys = scene.stats.db.objects_with_records()
-    # print(keys)
-    # channels_with_photons = []
-    # max = 0
-    # for solid_object in keys:
-    #     if solid_object.startswith("Channel"):
-    #         channels_with_photons.append(solid_object)
-
-    photons_in_object = {}
-    photonsum = 0
-    for obj in scene.objects:
-        if type(obj) is pvtrace.Devices.Channel and len(obj.store)>0:
-            photon_loss = len(obj.store['loss'])
-            photons_in_object[obj.name] = photon_loss
-
-    logger.info("Photons in channels: "+str(photons_in_object))
-
-    print("Channel No, Photons")
-    for entry, value in photons_in_object.items():
-        print(str(entry)[7:]+", "+str(value))
-
-scene.stats.create_graphs()
-
-toc2 = time.clock()
-t_span = toc2-tic
-# print(photons_in_object)
-print("it takes %0.1f secs to complete the whole simulation" % t_span)
-# print("sum is "+str(photonsum))
+    scene.stats.print_detailed()
+    if mainloop_i == 0:
+        text = str(scene.stats.print_excel_header() + "\n")
+    else:
+        text = ""
+    text += str(scene.stats.print_excel() + "\n")
+    write_me = open(file_path, 'a')
+    write_me.write(text)
+    write_me.close()
 
 sys.exit(0)

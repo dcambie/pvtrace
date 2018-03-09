@@ -7,7 +7,7 @@ from pvtrace.lscpm.SolarSimulators import *
 # blue red thickness: 3mm green: 4mm
 # blue not yet, green EY, red Methylene Blue,
 # set episilon to prevent the possibility of matching fate and generate
-file_path = os.path.join('C:/', 'LSC_PM_simulation_results', 'pvtrace_smarts', 'WENS_PMMA_0621', 'WE', 'pvtrace_result.txt')
+file_path = os.path.join('D:/', 'LSC_PM_simulation_results', 'pvtrace_smarts', 'WENS_PMMA_0621_makevideo', 'WE', 'pvtrace_result.txt')
 
 # scene = pvtrace.Scene(level=logging.INFO, uuid="Fang_rebuttal2_6")
 
@@ -30,7 +30,7 @@ position_z = np.array(position_data[:, 2], dtype=np.float32)
 for mainloop_i in range(0, 16):
 
     hour_dec = 5 + mainloop_i*0.5
-    scene = pvtrace.Scene(level=logging.INFO, uuid=str(hour_dec))
+    scene = pvtrace.Scene(level=logging.INFO, uuid="overwrite_me")
     logger = logging.getLogger('pvtrace')
 # change the view in Visualizer.py
     reactor = Reactor(reactor_name="10x10_chong_thickness0.3cm_WE", luminophore=Ev_lr305, matrix=pmma, photocatalyst="MB",
@@ -49,7 +49,7 @@ for mainloop_i in range(0, 16):
                          irradiated_length=reactor.lsc.size[0], irradiated_width=reactor.lsc.size[1], distance=0.025, smarts=True)
     lamp.move_lightsource(vector=lampmove_vector)
 
-    trace = pvtrace.Tracer(scene=scene, source=lamp.source, throws=100000, use_visualiser=False,
+    trace = pvtrace.Tracer(scene=scene, source=lamp.source, throws=100, use_visualiser=True,
                            show_axis=False, show_counter=False, db_split=True, preserve_db_tables=True)
     # set color on Trace.py while visualizing
 

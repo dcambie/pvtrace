@@ -61,7 +61,7 @@ class Scene(object):
         else:
             try_uuid = uuid
 
-        working_dir = os.path.join('D:/','LSC_PM_simulation_results', 'backscatter', try_uuid)
+        working_dir = os.path.join('D:/', 'LSC_PM_simulation_results', 'pvtrace_smarts', 'WENS_PMMA_0621_makevideo', 'WE', try_uuid)
 
         if not os.path.exists(working_dir):
             os.makedirs(working_dir)

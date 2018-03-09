@@ -113,7 +113,7 @@ class Visualiser (object):
         self.display.exit = False
 
         self.display.autoscale = True
-        self.display.range = 0.2 # fix camera, so autozooming is forbidden
+        self.display.range = 0.1 # fix camera, so autozooming is forbidden
 
 
         self.display.center = (0.05, -0.01, 0.005)

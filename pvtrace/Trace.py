@@ -634,12 +634,17 @@ class Tracer(object):
                         elif isinstance(obj, LSC):
                             material = visual.materials.plastic
                             # FIXME LSC color set to red!
-                            colour = visual.color.green
+                            colour = visual.color.red
                             opacity = 0.4
                         # PlanarReflector
                         elif isinstance(obj, PlanarReflector):
                             colour = visual.color.white
-                            opacity = 1.
+                            opacity = 0.8
+                            material = visual.materials.plastic
+
+                        elif isinstance(obj, SimpleCell):
+                            colour = visual.color.blue
+                            opacity = 0.8
                             material = visual.materials.plastic
                         # Coating
                         elif isinstance(obj, Coating):

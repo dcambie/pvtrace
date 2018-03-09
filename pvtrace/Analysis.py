@@ -38,7 +38,7 @@ class Analysis(object):
 
         if uuid is not None:
             self.uuid = uuid
-            self.working_dir = os.path.join('D:/pvtrace_chongRI_ACN1.38', self.uuid)#changed by chong to fix my computer's problem
+            self.working_dir = os.path.join('C:/','LSC_PM_simulation_results', self.uuid)#changed by chong to fix my computer's problem
             self.graph_dir = os.path.join(self.working_dir, 'graphs')
             try_db_location = os.path.join(self.working_dir, "db.sqlite")
             if database is None and os.access(try_db_location, os.R_OK):
@@ -87,6 +87,9 @@ class Analysis(object):
             self.uids['solar_' + surface] = self.db.uids_out_bound_on_surface(surface, solar=True)
             self.uids['solar_apertures'] += self.uids['solar_' + surface]
 
+        # BACK SCATTER
+        self.uids['bounds_back_scatter'] = self.db.uids_out_backscatter()
+
         # SOLAR PHOTONS (edges)
         self.uids['solar_edges'] = []
         for surface in self.edges:
@@ -98,10 +101,9 @@ class Analysis(object):
         self.uids['channels_tot'] = self.db.uids_in_reactor()
         self.uids['channels_direct'] = diff(self.uids['channels_tot'], self.uids['luminescent_channel'])
 
+        # tubing only focus on uids
+        self.uids['tubing'] = self.db.uids_in_tubing()
 
-        #
-        self.uids['capillary_0react'] = self.db.reaction_capillary0()
-        self.uids['capillary_3react'] = self.db.reaction_capillary3()
 
         # Calculate sum (for loop iterates only the keys of the dictionary)
         for key in self.uids:
@@ -114,7 +116,7 @@ class Analysis(object):
         assert self.count['channels_direct'] == difference, "Difference of array failed"
 
         delta = abs(self.count['tot'] - (self.count['solar_faces'] + self.count['luminescent_faces'] +
-                self.count['losses'] + self.count['channels_tot']))
+                self.count['losses'] + self.count['channels_tot'] + self.count['bounds_back_scatter']))
 
         if delta == 0:
             self.log.info("[db_stats()] Results sanity check OK!")
@@ -186,22 +188,23 @@ class Analysis(object):
 
         return ret_str
 
-    def print_excel_header(self, additional=None):
+    def print_excel_header(self, additional=None, backscatter = False):
         """
         Column header for print_excel()
         """
-        if additional is None:
+        if backscatter:
             r_text = "Generated, Killed, Total, Losses, Luminescent - Left, Luminescent - Near, Luminescent - Far, " \
                    "Luminescent - Right, Luminescent - Top, Luminescent - Bottom, Solar - Top, Solar - Bottom, Solar - edge," \
-                   "Channels - Direct, Channels - Luminescent"
+                   "Channels - Direct, Channels - Luminescent, BoundsLoss - backscatter"
+
         else:
-            r_text = additional+", Generated, Killed, Total, Losses, Luminescent - Left, Luminescent - Near," \
-                              "Luminescent - Far, Luminescent - Right, Luminescent - Top, Luminescent - Bottom," \
-                              "Solar - Top, Solar - Bottom, Solar - edge, Channels - Direct, Channels - Luminescent"
+            r_text = "Generated, Killed, Total, Losses, Luminescent - Left, Luminescent - Near," \
+                     "Luminescent - Far, Luminescent - Right, Luminescent - Top, Luminescent - Bottom," \
+                     "Solar - Top, Solar - Bottom, Solar - edge, Channels - Direct, Channels - Luminescent"
         self.log.info(r_text)
         return r_text
 
-    def print_excel(self, additions=None):
+    def print_excel(self, additions=None, backscatter = False):
         """
         Prints an easy to import report on the fate of the photons stored in self.db
         """
@@ -235,9 +238,14 @@ class Analysis(object):
 
         return_text += str(self.count['solar_edges']) + ", "
 
+        if backscatter:
+            return_text += str(self.count['bounds_back_scatter'])+ ", "
+
         # CHANNELS (lumi, direct)
         return_text += str(self.count['channels_direct']) + ", "
-        return_text += str(self.count['luminescent_channel'])
+        return_text += str(self.count['luminescent_channel']) + ", "
+
+
 
         self.log.info(return_text)
         return return_text

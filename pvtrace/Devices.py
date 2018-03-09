@@ -264,7 +264,7 @@ class SimpleCell(Detector):
     A SimpleCell object is a solar cell with perfect AR coating.
     """
 
-    def __init__(self, finiteplane, origin=(0., 0., 0.,)):
+    def __init__(self,  finiteplane, origin=(0., 0., 0.,)):
         super(Detector, self).__init__()
         self.shape = finiteplane
         self.shape.append_transform(tf.translation_matrix(origin))
@@ -306,7 +306,9 @@ class Bounds(Register):
 
     def __init__(self):
         super(Bounds, self).__init__()
-        self.shape = Box(origin=(-0.1, -0.1, -0.1), extent=(2, 2, 2))
+        # self.shape = Box(origin=(-0.1, -0.1, -0.1), extent=(2, 2, 2))
+        # self.shape = Box(origin=(-1, -1, -1), extent=(20, 20, 20))
+        self.shape = Box(origin=(-1, -1, -1), extent=(3, 3, 3))
         self.material = Material()
         self.name = "BOUNDS"
 

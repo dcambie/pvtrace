@@ -35,9 +35,9 @@ from types import *
 import os
 
 
-def load_spectrum(filename, xbins=None, base10=True, smarts=True):
+def load_spectrum(filename, xbins=None, base10=True, smarts=True, diffuse=False):
     assert os.path.exists(filename), "File '%s' does not exist." % filename
-    spectrum = Spectrum(filename=filename, base10 = base10, smarts=smarts)
+    spectrum = Spectrum(filename=filename, base10 = base10, smarts=smarts, diffuse=diffuse)
 
     # Truncate the spectrum using the xbins
     return spectrum if xbins is None else Spectrum(x=xbins, y=spectrum(xbins), base10=False, smarts=False)
@@ -191,7 +191,7 @@ class Spectrum(object):
     e.g. absorption, emission or refractive index spectrum as a function of wavelength in nanometers.
     """
 
-    def __init__(self, x=None, y=None, filename=None, base10=True, smarts=False):
+    def __init__(self, x=None, y=None, filename=None, base10=True, smarts=False, diffuse=False):
         """
         Initialised with x and y which are array-like data of the same length. x must have units of wavelength
         (that is in nanometers), y can an arbitrary units. However, if the Spectrum is representing an
@@ -210,8 +210,14 @@ class Spectrum(object):
                     print(e)
                     exit(1)
 
-                self.x = np.array(data[:, 0], dtype=np.float32)
-                self.y = np.array(data[:, 1], dtype=np.float32)
+                # Get the data from two differet colomns
+                if diffuse:
+                    self.x = np.array(data[:, 0], dtype=np.float32)
+                    self.y = np.array(data[:, 1], dtype=np.float32)
+
+                else:
+                    self.x = np.array(data[:, 0], dtype=np.float32)
+                    self.y = np.array(data[:, 2], dtype=np.float32)
 
                 # Sort array based on ASC X if needed
                 arr1inds = self.x.argsort()

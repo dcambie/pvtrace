@@ -56,10 +56,10 @@ class LightSource(object):
         self.source.translate((cylinder_radius, 0, 0))
         self.source.rotate(3*math.pi/2, [1, 0, 0])
 
-    def set_sphericalight(self, centre=(0.05, 0.05, 0.0015), radius=0.5, smarts=True):
+    def set_sphericalight(self, centre=(0.05, 0.05, 0.0015), radius=0.5, smarts=True, diffuse=True):
         if self.spectrum_file is None:
             raise ValueError('LightSource spectrum is not set!')
-        self.spectrum = load_spectrum(self.spectrum_file, xbins=np.arange(350, 700), smarts=smarts)
+        self.spectrum = load_spectrum(self.spectrum_file, xbins=np.arange(350, 700), smarts=smarts, diffuse=diffuse)
         self.source = SphericalSource(spectrum=self.spectrum, centre=centre, radius=radius)
         self.source.name = self.lamp_name
         # self.source.material = SimpleMaterial(555)

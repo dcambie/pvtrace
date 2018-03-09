@@ -16,7 +16,7 @@ class Reactor(object):
     """
 
     def __init__(self, reactor_name, luminophore, matrix, photocatalyst, photocatalyst_concentration=0.001,
-                 solvent=None, refractive_index_cgchong=1.340):
+                 solvent=None, refractive_index_cgchong=1.340, exist_backscatter=False, exist_photovoltaic=False, blank=False):
 
         # 0. CONFIGURATION
         # 0.1 REACTOR TYPE
@@ -86,7 +86,6 @@ class Reactor(object):
                 self.scene_obj.append(capillary.tubing)
                 self.scene_obj.append(capillary.reaction)
                 self.reaction_volume += capillary.reaction.volume
-
         # 3. LSC-PM
         # 3.1 LSC-PM GEOMETRY
         thickness = config.getfloat('LSC', 'thickness')
@@ -98,9 +97,32 @@ class Reactor(object):
         # 3.2 LSC object creation
         self.lsc = LSC(origin=(0, 0, 0), size=(lsc_x, lsc_y, thickness))
         # CompositeMaterial made of matrix + luminophore
-        self.lsc.material = CompositeMaterial([matrix.material(), luminophore.material()],
-                                              refractive_index=matrix.refractive_index())
+        if blank:
+            self.lsc.material = CompositeMaterial([matrix.material()],
+                                                  refractive_index=matrix.refractive_index())
+        else:
+            self.lsc.material = CompositeMaterial([matrix.material(), luminophore.material()],
+                                                  refractive_index=matrix.refractive_index())
+
+        # 3.3 other accessories of LSC-PM
+        if exist_backscatter:
+
+            self.backscatter = PlanarReflector(reflectivity=1.0, origin=(0, 0, -0.0002), size=(lsc_x, lsc_y, 0.0001))
+            self.backscatter.name = 'white paper'
+            self.scene_obj.append(self.backscatter)
+
+        if exist_photovoltaic:
+            PV_box = Box(origin=(0, 0, -0.0001), extent=(lsc_x, lsc_y, 0.00001))
+            self.photovoltaic = SimpleCell(finiteplane=PV_box, origin=(0, 0, 0))
+            self.scene_obj.append(self.photovoltaic)
+
+
+        # simulating the blank LSC
+
         self.lsc.name = lsc_name
+
         self.scene_obj.append(self.lsc)
 
+
         self.log.info('Reactor volume (calculated): ' + str(self.reaction_volume * 1000000) + ' mL')
+

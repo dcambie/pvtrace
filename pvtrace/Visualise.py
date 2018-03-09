@@ -107,8 +107,8 @@ class Visualiser (object):
         self.display.bind('keydown', self.keyInput)
         self.display.exit = False
 
-        self.display.center = (0., 0., 0.)
-        self.display.forward = (0, 0, 1)
+        self.display.center = (0.05, -0.01, 0.005)
+        self.display.forward = (0, 1.5, -1)
 
         if show_axis:
             visual.curve(pos=[(0, 0, 0), (.08, 0, 0)], radius=0.0005, color=visual.color.red)

@@ -67,7 +67,10 @@ class PMMA(object):
         return self.name + ' (Limacryl)'
 
     def absorption(self):
+        return Spectrum([0, 1000], [0.98, 0.98]) #final absorption coefficient determined by experiments
         # PDMS absorption spectrum
 
         # 2/m based as in dfarrell code
-        return Spectrum([0, 1000], [2, 2])
+
+
+        # return Spectrum(filename='D:\PvTrace_git\pvtrace-fork\data\pmma18.75.txt')

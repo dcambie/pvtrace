@@ -381,6 +381,11 @@ class PhotonDatabase(object):
             print("Cannot return any uids for this question."
                   "Are you using the function uids_in_bound_on_surface correctly?")
             return []
+
+    def uids_out_backscatter(self):
+        return itemise(self.cursor.execute(
+                'SELECT MAX(uid) FROM photon GROUP BY pid HAVING uid IN ('
+                'SELECT uid FROM state WHERE on_surface_obj="white paper" GROUP BY uid);').fetchall())
     
     def uids_in_reactor(self):
         """ Returns the uids of all the photons in the reactor channels. """
@@ -393,6 +398,11 @@ class PhotonDatabase(object):
         return itemise(self.cursor.execute(
             "SELECT MAX(uid) FROM photon GROUP BY pid INTERSECT "
             "SELECT uid FROM state WHERE reaction = 1 AND absorption_counter > 1"))
+
+    def uids_in_tubing(self):
+        return itemise(self.cursor.execute(
+            "SELECT uid FROM state WHERE container_obj like '%tubing%' AND ray_direction_bound = 'In'"))
+
     
     def uids_luminescent(self):
         """ Returns luminescent photons. """
@@ -445,20 +455,12 @@ class PhotonDatabase(object):
             "SELECT COUNT(*) FROM (SELECT uid FROM state WHERE ray_direction_bound = 'Out' AND surface_id='top'"
             "AND intersection_counter = 1  GROUP BY uid)").fetchall())
 
-    def uids_nonradiative_losses(self):
+    def  uids_nonradiative_losses(self):
         return itemise(self.cursor.execute(
-            "SELECT uid FROM state WHERE reaction = 0 AND surface_id = 'None' AND absorption_counter > 0 AND killed = 0"
+            "SELECT uid FROM state WHERE reaction = 0 AND surface_id = 'None' AND active = 0 AND killed = 0"
             " GROUP BY uid HAVING uid IN (SELECT MAX(uid) FROM photon GROUP BY pid)").fetchall())
 
-    def reaction_capillary0(self):
-        return itemise(self.cursor.execute(
-            "SELECT MAX(uid) FROM photon GROUP BY pid INTERSECT "
-            "SELECT uid FROM state WHERE reaction = 1 AND container_obj = 'Capillary0_reaction'").fetchall())
 
-    def reaction_capillary3(self):
-        return itemise(self.cursor.execute(
-            "SELECT MAX(uid) FROM photon GROUP BY pid INTERSECT "
-            "SELECT uid FROM state WHERE reaction = 1 AND container_obj = 'Capillary3_reaction'").fetchall())
 
     def value_for_table_column_uid(self, table, column, uid):
         """

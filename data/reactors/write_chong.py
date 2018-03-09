@@ -3,13 +3,13 @@ import numpy as np
 
 config = ConfigParser.SafeConfigParser()
 config.add_section('Main')
-config.set('Main', 'name', '20x20_chong_thickness0.3cm_WE')
-config.set('Main', 'description', '20x20cm square LSC with apt tubing PFA high purity'
-                                  '(0.75 mm ID 1/16" OD) eight channels')
+config.set('Main', 'name', '5x5cm_thickness3mm')
+config.set('Main', 'description', 'only LSC to determine the absorption coefficient of PMMA')
 config.add_section('LSC')
 config.set('LSC', 'thickness', '0.003')
-config.set('LSC', 'width', '0.1')
-config.set('LSC', 'length', '0.1')
+config.set('LSC', 'width', '0.05')
+config.set('LSC', 'length', '0.05')
+'''
 config.add_section('Channels')
 
 # Simplified with axis and length in common among all the capillaries
@@ -37,7 +37,7 @@ for i in range(0, len(geometry)):
     capillary.append(((position[0], position[1], position[2]), axis, length, default_od, default_id, 'Capillary' + str(i)))
 
 config.set('Channels', 'capillaries', str(capillary))
-
+'''
 # Writing our configuration file to 'example.cfg'
-with open('10x10_chong_thickness0.3cm_WE.ini', 'wb') as configfile:
+with open('5x5cm_NOCHANNEL_thickness3mm.ini', 'wb') as configfile:
     config.write(configfile)

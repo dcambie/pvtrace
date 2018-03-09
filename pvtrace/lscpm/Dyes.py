@@ -17,6 +17,10 @@ class LuminophoreMaterial(object):
             self.dye = K160()
         elif dye_name == 'Evonik_Blue':
             self.dye = Blue_5C50()
+        elif dye_name == 'Evonik_lr305':
+            self.dye = Evonik_lr305()
+        elif dye_name == 'Limacryl_lr305':
+            self.dye = Limacryl_lr305()
         else:
             raise NotImplementedError('Unknown dye! (', self.dye, ')')
 
@@ -110,3 +114,49 @@ class Blue_5C50(LuminophoreMaterial):
 
     def emission(self):
         return Spectrum(filename=os.path.join(PVTDATA, "dyes", 'Evonik_blue_5C50_ems.txt'))
+
+
+class Evonik_lr305(LuminophoreMaterial):
+    """
+    Class to generate spectra for Evonik Blue 5C50-based LSC
+    """
+
+    def __init__(self):
+        self.name = 'Evonik_lr305 based on PMMA'
+        self.quantum_efficiency = 0.95  # FIXME Literature search for this needed
+        self.logger = logging.getLogger('pvtrace.red')
+        self.logger.info(self.description())
+
+    def description(self):
+        return self.name
+
+    def absorption(self):
+        # Blue LSC absorption spectrum
+        # absorption_data = np.loadtxt(os.path.join(PVTDATA, 'dyes', 'Evonik_blue_5C50_abs.txt'))
+        return Spectrum(filename=os.path.join(PVTDATA, 'dyes', 'Evonik_lr305_normalized_to_1m.txt'))
+
+    def emission(self):
+        return Spectrum(filename=os.path.join(PVTDATA, "dyes", 'Evonik_lr305_normalized_to_1m_ems.txt'))
+
+
+class Limacryl_lr305(LuminophoreMaterial):
+    """
+    Class to generate spectra for Evonik Blue 5C50-based LSC
+    """
+
+    def __init__(self):
+        self.name = 'Plexiglas Fluorescent Blue 5C50'
+        self.quantum_efficiency = 0.95  # FIXME Literature search for this needed
+        self.logger = logging.getLogger('pvtrace.blue')
+        self.logger.info(self.description())
+
+    def description(self):
+        return self.name
+
+    def absorption(self):
+        # Blue LSC absorption spectrum
+        # absorption_data = np.loadtxt(os.path.join(PVTDATA, 'dyes', 'Evonik_blue_5C50_abs.txt'))
+        return Spectrum(filename=os.path.join(PVTDATA, 'dyes', 'Limacryl_lr305_normalized_to_1m.txt'))
+
+    def emission(self):
+        return Spectrum(filename=os.path.join(PVTDATA, "dyes", 'Limacryl_lr305_normalized_to_1m_ems.txt'))

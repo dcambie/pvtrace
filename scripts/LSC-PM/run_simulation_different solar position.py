@@ -7,12 +7,13 @@ from pvtrace.lscpm.SolarSimulators import *
 # blue red thickness: 3mm green: 4mm
 # blue not yet, green EY, red Methylene Blue,
 # set episilon to prevent the possibility of matching fate and generate
-file_path = os.path.join('D:/', 'pvtrace_smarts', 'WEtry', 'pvtrace_result.txt')
+file_path = os.path.join('C:/', 'pvtrace_smarts', 'WENS_1222', 'NS', 'pvtrace_result.txt')
 
 # scene = pvtrace.Scene(level=logging.INFO, uuid="Fang_rebuttal2_6")
 
 
 # Create LSC-PM DYE material
+Ev_lr305 = LuminophoreMaterial('Evonik_lr305', 1)#red
 lr305 = LuminophoreMaterial('Red305', 200)#red
 k160 = LuminophoreMaterial('K160', 1)#green
 blue_evonik = LuminophoreMaterial('Evonik_Blue', 1)#blue
@@ -20,19 +21,19 @@ blue_evonik = LuminophoreMaterial('Evonik_Blue', 1)#blue
 pdms = Matrix('pdms')
 pmma = Matrix('PMMA')
 
-solarposition_file = os.path.join(PVTDATA, 'smarts', 'june21_solarposition.txt')
+solarposition_file = os.path.join(PVTDATA, 'smarts', 'dec22_solarposition.txt')
 position_data = np.loadtxt(solarposition_file)
 position_x = np.array(position_data[:, 0], dtype=np.float32)
 position_y = np.array(position_data[:, 1], dtype=np.float32)
 position_z = np.array(position_data[:, 2], dtype=np.float32)
 
-for mainloop_i in range(8, 12):
+for mainloop_i in range(0, 16):
 
     hour_june = 5 + mainloop_i*0.5
     scene = pvtrace.Scene(level=logging.INFO, uuid=str(hour_june))
     logger = logging.getLogger('pvtrace')
 
-    reactor = Reactor(reactor_name="10x10_chong_thickness0.3cm_WE", luminophore=lr305, matrix=pmma, photocatalyst="MB",
+    reactor = Reactor(reactor_name="10x10_chong_thickness0.3cm", luminophore=Ev_lr305, matrix=pmma, photocatalyst="MB",
                       photocatalyst_concentration=0.004, solvent='ACN')
     scene.add_objects(reactor.scene_obj)
 
@@ -48,17 +49,14 @@ for mainloop_i in range(8, 12):
                          irradiated_length=reactor.lsc.size[0], irradiated_width=reactor.lsc.size[1], distance=0.025, smarts=True)
     lamp.move_lightsource(vector=lampmove_vector)
 
-    trace = pvtrace.Tracer(scene=scene, source=lamp.source, throws=100, use_visualiser=False,
+    trace = pvtrace.Tracer(scene=scene, source=lamp.source, throws=100000, use_visualiser=False,
                            show_axis=False, show_counter=False, db_split=True, preserve_db_tables=True)
     # set color on Trace.py while visualizing
 
 
     # Run simulation
-    tic = time.clock()
-    logger.info('Simulation Started (time: ' + str(tic) + ')')
+
     trace.start()
-    toc = time.clock()
-    logger.info('Simulation Ended (time: ' + str(toc) + ', elapsed: ' + str(toc - tic) + ' s)')
 
     scene.stats.print_detailed()
     if mainloop_i == 0:

@@ -61,9 +61,14 @@ class Visualiser (object):
             if s == 'y':
                 self.display.center = (0, 0, 0)
                 self.display.forward = (0, 1, 0)
+
             if s == 'z':
                 self.display.center = (0, 0, 0)
                 self.display.forward = (0, 0, -1)
+
+            if s == 'v':
+                self.display.center = (0.05, -0.01, 0.005)
+                self.display.forward = (0, 1.5, -1)
 
             if s == 'q':
                 Visualiser.VISUALISER_ON = False
@@ -102,10 +107,14 @@ class Visualiser (object):
             background = (0.957, 0.957, 1)
         if ambient is None:
             ambient = 0.5
-        self.display = visual.display(title='PVTrace', x=0, y=0, width=800, height=600, background=background,
-                                      ambient=ambient)
+        self.display = visual.display(title='PVTrace', x=0, y=0, width=1000, height=800, background=background,
+                                      ambient=ambient, fillswindow=True)
         self.display.bind('keydown', self.keyInput)
         self.display.exit = False
+
+        self.display.autoscale = True
+        self.display.range = 0.2 # fix camera, so autozooming is forbidden
+
 
         self.display.center = (0.05, -0.01, 0.005)
         self.display.forward = (0, 1.5, -1)
@@ -327,6 +336,7 @@ class Visualiser (object):
         """
         Draws a smallSphere with direction arrow and polarisation (if data is available).
         """
+
         self.addSmallSphere(photon.position)
         visual.arrow(pos=photon.position, axis=photon.direction * 0.0005, shaftwidth=0.0003,
                      color=visual.color.magenta, opacity=0.8)

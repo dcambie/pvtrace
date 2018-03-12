@@ -10,13 +10,15 @@ from pvtrace.lscpm.Capillary import *
 import ast
 
 
+
 class Reactor(object):
     """
     Object to model the experimental device
     """
 
     def __init__(self, reactor_name, luminophore, matrix, photocatalyst, photocatalyst_concentration=0.001,
-                 solvent=None, refractive_index_cgchong=1.340, exist_backscatter=False, exist_photovoltaic=False, blank=False):
+                 solvent=None, refractive_index_cgchong=1.340, exist_backscatter=False, exist_photovoltaic_bottom=False,
+                 exist_photovoltaic_edge=False, blank=False):
 
         # 0. CONFIGURATION
         # 0.1 REACTOR TYPE
@@ -103,6 +105,11 @@ class Reactor(object):
         else:
             self.lsc.material = CompositeMaterial([matrix.material(), luminophore.material()],
                                                   refractive_index=matrix.refractive_index())
+            # simulating the blank LSC
+
+        self.lsc.name = lsc_name
+
+        self.scene_obj.append(self.lsc)
 
         # 3.3 other accessories of LSC-PM
         if exist_backscatter:
@@ -111,17 +118,32 @@ class Reactor(object):
             self.backscatter.name = 'white paper'
             self.scene_obj.append(self.backscatter)
 
-        if exist_photovoltaic:
-            PV_box = Box(origin=(0, 0, -0.0001), extent=(lsc_x, lsc_y, 0.00001))
-            self.photovoltaic = SimpleCell(finiteplane=PV_box, origin=(0, 0, 0))
-            self.scene_obj.append(self.photovoltaic)
+        if exist_photovoltaic_bottom:
+            PV_box = Box(origin=(0, 0, -0.001), extent=(lsc_x, lsc_y, -0.0001))
+            self.bottom_photovoltaic = SimpleCell(finiteplane=PV_box, origin=(0, 0, -0.001))
+            self.bottom_photovoltaic.name = "bottom_cell"
+            self.scene_obj.append(self.bottom_photovoltaic)
 
+        if exist_photovoltaic_edge:
+            PV_box_edge_near = Box(origin=(0, 0, 0), extent=(lsc_x, -0.001, thickness))
+            self.edge_photovoltaic_near = SimpleCell(finiteplane=PV_box_edge_near, origin=(0, -0.00001, 0))
+            self.edge_photovoltaic_near.name = "edge_cell_near"
+            self.scene_obj.append(self.edge_photovoltaic_near)
 
-        # simulating the blank LSC
+            PV_box_edge_far = Box(origin=(0, 0, 0), extent=(lsc_x, 0.001, thickness))
+            self.edge_photovoltaic_far = SimpleCell(finiteplane=PV_box_edge_far, origin=(0, lsc_y+0.00001, 0))
+            self.edge_photovoltaic_far.name = "edge_cell_far"
+            self.scene_obj.append(self.edge_photovoltaic_far)
 
-        self.lsc.name = lsc_name
+            PV_box_edge_right = Box(origin=(0, 0, 0), extent=(0.001, lsc_y, thickness))
+            self.edge_photovoltaic_right = SimpleCell(finiteplane=PV_box_edge_right, origin=(lsc_x+0.00001, 0, 0))
+            self.edge_photovoltaic_right.name = "edge_cell_right"
+            self.scene_obj.append(self.edge_photovoltaic_right)
 
-        self.scene_obj.append(self.lsc)
+            PV_box_edge_left = Box(origin=(0, 0, 0), extent=(-0.001, lsc_y, thickness))
+            self.edge_photovoltaic_left = SimpleCell(finiteplane=PV_box_edge_left, origin=(-0.00001, 0, 0))
+            self.edge_photovoltaic_left.name = "edge_cell_left"
+            self.scene_obj.append(self.edge_photovoltaic_left)
 
 
         self.log.info('Reactor volume (calculated): ' + str(self.reaction_volume * 1000000) + ' mL')

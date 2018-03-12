@@ -19,6 +19,8 @@ import math
 from pvtrace.external.transformations import rotation_matrix
 import pvtrace.external.transformations as tf
 
+
+
 from pvtrace.Materials import *
 
 
@@ -264,13 +266,30 @@ class SimpleCell(Detector):
     A SimpleCell object is a solar cell with perfect AR coating.
     """
 
-    def __init__(self,  finiteplane, origin=(0., 0., 0.,)):
+    def __init__(self, finiteplane, origin=(0., 0., 0.,)):
         super(Detector, self).__init__()
         self.shape = finiteplane
         self.shape.append_transform(tf.translation_matrix(origin))
         self.name = "cell"
         self.material = None
+        self.data = Cell_External_QE()
+        self.x, self.y = self.data.abs()
+        self.eqe = Interp1d(self.x, self.y, bounds_error=False, fill_value=0.0)
 
+    def external_QE(self, wavelength):
+        return self.eqe(wavelength)
+
+class Cell_External_QE(object):
+    @staticmethod
+    def abs():
+        data = np.loadtxt(os.path.join("D:/", "PvTrace_git", "pvtrace-fork", "data", "photovoltaic", 'External_quantum_efficiency.txt'))
+        x = np.array(data[:, 0], dtype=np.float32)
+        y = np.array(data[:, 1], dtype=np.float32)
+
+        arr1inds = x.argsort()
+        x = x[arr1inds[::1]]
+        y = y[arr1inds[::1]]
+        return x, y
 
 class Coating(Register):
     """
@@ -479,3 +498,4 @@ class Face(Register):
         self.shape = shape
         self.material = None
         self.name = "FACE"
+

@@ -124,6 +124,7 @@ class Photon(object):
         self.reaction = False
         self.previous_container = None
         self.visual_obj = []
+        self.electron = None
         self.log = logging.getLogger("pvtrace.Photon")
 
     def __copy__(self):
@@ -237,8 +238,12 @@ class Photon(object):
         # reached a SimpleCell - absorbs everything.
         if isinstance(intersection_object, SimpleCell):
             self.active = False
+            self.electron = 0
             self.previous_container = self.container
             self.container = intersection_object
+            external_QE = intersection_object.external_QE(self.wavelength)
+            if np.random.uniform() < external_QE:
+                self.electron = 1
             return self
 
         # Here we trace the ray through a Coating

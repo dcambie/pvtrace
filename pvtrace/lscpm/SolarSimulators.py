@@ -2,7 +2,6 @@ from pvtrace import *
 from pvtrace.Analysis import xyplot
 import math
 
-
 class LightSource(object):
     """
     Lightsources used by LSC-PM, are almost always implementation of PlanarSource
@@ -15,6 +14,7 @@ class LightSource(object):
         self.prefix = False
         self.spectrum = None
         self.source = None
+
 
         if lamp_type == 'SolarSimulator':
             self.spectrum_file = os.path.join(PVTDATA, 'sources', 'Oriel_solar_sim.txt')
@@ -34,15 +34,14 @@ class LightSource(object):
         else:
             raise Exception('Unknown light source')
 
-    def set_lightsource(self, lamp_direction=(0, 0, -1), irradiated_length=0.05, irradiated_width=0.05, distance=0.025, smarts=False):
+    def set_lightsource(self, lamp_direction=(0, 0, -1), irradiated_length=0.05, irradiated_width=0.05, distance=0.025,
+                        lamp_wavelength = (350, 700), smarts=False):
         if self.spectrum_file is None:
             raise ValueError('LightSource spectrum is not set!')
-        self.spectrum = load_spectrum(self.spectrum_file, xbins=np.arange(350, 700), smarts=smarts)
+        self.spectrum = load_spectrum(self.spectrum_file, xbins=np.arange(lamp_wavelength[0], lamp_wavelength[1]), smarts=smarts)
         self.source = PlanarSource(direction=lamp_direction, spectrum=self.spectrum, length=irradiated_length,
                                    width=irradiated_width)
         self.source.name = self.lamp_name
-
-
         # Distance from device (it matters only for Visualizer as PlanarSource is collimated)
         self.source.translate((0, 0, distance))
         self.ready = True

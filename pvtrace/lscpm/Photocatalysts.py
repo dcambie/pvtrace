@@ -72,3 +72,4 @@ class Air(object):
     def abs():
         # return Spectrum([0,1000], [0,0])
         return np.loadtxt(os.path.join(PVTDATA, "photocatalysts", 'Air.txt'))
+

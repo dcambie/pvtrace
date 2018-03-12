@@ -38,7 +38,7 @@ class Analysis(object):
 
         if uuid is not None:
             self.uuid = uuid
-            self.working_dir = os.path.join('C:/','LSC_PM_simulation_results', self.uuid)#changed by chong to fix my computer's problem
+            self.working_dir = os.path.join('D:/','LSC_PM_simulation_results', self.uuid)#changed by chong to fix my computer's problem
             self.graph_dir = os.path.join(self.working_dir, 'graphs')
             try_db_location = os.path.join(self.working_dir, "db.sqlite")
             if database is None and os.access(try_db_location, os.R_OK):
@@ -90,6 +90,10 @@ class Analysis(object):
         # BACK SCATTER
         self.uids['bounds_back_scatter'] = self.db.uids_out_backscatter()
 
+        # CELL & EXCITED ELECTRON
+        self.uids['photovoltaic'] = self.db.uids_in_photovoltaic()
+        self.uids['electron'] = self.db.uids_electron()
+
         # SOLAR PHOTONS (edges)
         self.uids['solar_edges'] = []
         for surface in self.edges:
@@ -110,13 +114,14 @@ class Analysis(object):
             self.count[key] = len(self.uids[key])
         self.count['luminescent_faces'] = self.count['luminescent_edges'] + self.count['luminescent_apertures']
         self.count['solar_faces'] = self.count['solar_edges'] + self.count['solar_apertures']
+        self.count['losses_total'] = self.count['losses'] + self.count['photovoltaic']
 
         # Controls
         difference = self.count['channels_tot'] - self.count['luminescent_channel']
         assert self.count['channels_direct'] == difference, "Difference of array failed"
 
         delta = abs(self.count['tot'] - (self.count['solar_faces'] + self.count['luminescent_faces'] +
-                self.count['losses'] + self.count['channels_tot'] + self.count['bounds_back_scatter']))
+                self.count['losses_total'] + self.count['channels_tot'] + self.count['bounds_back_scatter']))
 
         if delta == 0:
             self.log.info("[db_stats()] Results sanity check OK!")
@@ -188,7 +193,7 @@ class Analysis(object):
 
         return ret_str
 
-    def print_excel_header(self, additional=None, backscatter = False):
+    def print_excel_header(self, additional=None, backscatter = False, photovoltaic = False):
         """
         Column header for print_excel()
         """
@@ -197,6 +202,11 @@ class Analysis(object):
                    "Luminescent - Right, Luminescent - Top, Luminescent - Bottom, Solar - Top, Solar - Bottom, Solar - edge," \
                    "Channels - Direct, Channels - Luminescent, BoundsLoss - backscatter"
 
+        elif photovoltaic:
+            r_text = "Generated, Killed, Total, Losses, Luminescent - Left, Luminescent - Near, Luminescent - Far, " \
+                     "Luminescent - Right, Luminescent - Top, Luminescent - Bottom, Solar - Top, Solar - Bottom, Solar - edge," \
+                     "Channels - Direct, Channels - Luminescent, photovoltaic - absorb, electron - excited"
+
         else:
             r_text = "Generated, Killed, Total, Losses, Luminescent - Left, Luminescent - Near," \
                      "Luminescent - Far, Luminescent - Right, Luminescent - Top, Luminescent - Bottom," \
@@ -204,7 +214,7 @@ class Analysis(object):
         self.log.info(r_text)
         return r_text
 
-    def print_excel(self, additions=None, backscatter = False):
+    def print_excel(self, additions=None, backscatter = False, photovoltaic = False):
         """
         Prints an easy to import report on the fate of the photons stored in self.db
         """
@@ -244,8 +254,10 @@ class Analysis(object):
         # CHANNELS (lumi, direct)
         return_text += str(self.count['channels_direct']) + ", "
         return_text += str(self.count['luminescent_channel']) + ", "
+        if photovoltaic:
 
-
+            return_text += str(self.count['photovoltaic']) + ", "
+            return_text += str(self.count['electron'])
 
         self.log.info(return_text)
         return return_text

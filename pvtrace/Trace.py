@@ -125,6 +125,7 @@ class Photon(object):
         self.previous_container = None
         self.visual_obj = []
         self.electron = None
+        self.attached_Photovoltaic = False
         self.log = logging.getLogger("pvtrace.Photon")
 
     def __copy__(self):
@@ -381,6 +382,13 @@ class Photon(object):
                 # Catches the case when a Coating is touching an interface, forcing it to use the Coatings 
                 # reflectivity rather than standard Fresnel reflection
                 reflection = next_containing_object.reflectivity(self)
+
+            elif isinstance(next_containing_object, SimpleCell):
+                # Catched the case when a cell is touching an interface, forcing it not to reflect
+
+                self.attached_Photovoltaic = True
+
+
             else:
                 # Fresnel reflection
                 if self.polarisation is None:
@@ -424,143 +432,155 @@ class Photon(object):
         #
         # Does reflection or refraction occur?
         #
-
-        if np.random.uniform() < reflection:
-            # Reflection occurs
-
-            #            if isinstance(intersection_object, Channel):
-            #                super().reflected += 1
-            #                print "Photon was reflected by channel :("
-            #
-
-            # Cache old direction for later use by polarisation code
-            old_direction = copy(self.direction)
-
-            # Handle PlanarReflector
-            if isinstance(intersection_object, PlanarReflector):
-                self.direction = intersection_object.material.reflected_direction(self, normal)
-                self.propagate = False
-                self.exit_device = self.container
-                return self
-
-            if isinstance(intersection_object, Coating):
-                # Coating reflection (can be specular or Lambertian)
-                self.direction = intersection_object.reflectivity.reflected_direction(self, normal)
-            else:
-                # Specular reflection
-                self.direction = reflect_vector(normal, self.direction)
-
-                # Currently, polarisation code only runs with Fresnel reflection.
-                if self.polarisation is not None:
-
-                    ang = angle(old_direction, self.direction)
-                    if cmp_floats(ang, np.pi):
-                        # Anti-parallel
-                        self.polarisation = self.polarisation
-                    else:
-                        # Apply the rotation transformation to the photon polarisation
-                        # which aligns the before and after directions
-                        R = rotation_matrix_from_vector_alignment(old_direction, self.direction)
-                        self.polarisation = transform_direction(self.polarisation, R)
-
-                    assert cmp_floats(angle(self.direction, self.polarisation),
-                                      np.pi / 2), "Exit Pt. #1:Angle between photon direction and polarisation" \
-                                                  "must be 90 degrees: theta=%s" %\
-                                                  str(np.degrees(angle(self.direction, self.polarisation)))
-
-            self.propagate = False
-            self.exit_device = self.container
-
-            # invert polarisation if n1 < n2
-            if self.container.material.refractive_index < next_containing_object.material.refractive_index:
-
-                if self.polarisation is not None:
-
-                    if cmp_floats(ang, np.pi):
-                        # Anti-parallel
-                        self.polarisation *= -1.
-                    else:
-                        # Apply the rotation transformation to the photon polarisation
-                        # which aligns the before and after directions
-                        R = rotation_matrix_from_vector_alignment(old_direction, self.direction)
-                        self.polarisation = transform_direction(self.polarisation, R)
-
-                    assert cmp_floats(angle(self.direction, self.polarisation),
-                                      np.pi / 2), "Exit Pt. #2: Angle between photon direction and polarisation" \
-                                                  "must be 90 degrees: theta=%s"\
-                                                  % str(angle(self.direction, self.polarisation))
-
-            if self.exit_device == self.scene.bounds or self.exit_device is None:
-                self.exit_device = intersection_object
-            assert self.exit_device != self.scene.bounds, "The object the ray hit before hitting the bounds" \
-                                                          "is the bounds. This can't be right."
+        if self.attached_Photovoltaic:
+            self.active = False
+            self.electron = 0
+            external_QE = next_containing_object.external_QE(self.wavelength)
+            if np.random.uniform() < external_QE:
+                self.electron = 1
+            self.exit_device = next_containing_object
+            self.previous_container = self.container
+            self.container = next_containing_object
             return self
 
         else:
-            # photon is refracted through interface
-            # TODO WISH: count photons leaving channels without being absorbed
 
-            # Hackish way to account for LSC edge reflectors (0.95 hardcoded for now)
-            # todo: use a v SC outer surface, face: ",edge
-            #     return self
+            if np.random.uniform() < reflection:
+                # Reflection occurs
 
-            self.propagate = True
-            before = copy(self.direction)
-            ang = angle(before, self.direction)
+                #            if isinstance(intersection_object, Channel):
+                #                super().reflected += 1
+                #                print "Photon was reflected by channel :("
+                #
 
-            if initialised_internally:
-                # Is initialised internally
-                self.direction = fresnel_refraction(normal, self.direction, self.container.material.refractive_index,
-                                                    next_containing_object.material.refractive_index)
-                if self.polarisation is not None:
-                    if cmp_floats(ang, np.pi):
-                        # Anti-parallel
-                        self.polarisation = self.polarisation
-                    else:
-                        # Apply the rotation transformation to the photon polarisation
-                        # which aligns the before and after directions
-                        R = rotation_matrix_from_vector_alignment(before, self.direction)
-                        self.polarisation = transform_direction(self.polarisation, R)
-                    assert cmp_floats(angle(self.direction, self.polarisation),
-                                      np.pi / 2), "Exit Pt. #3: Angle between photon direction and polarisation" \
-                                                  "must be 90 degrees: theta=%s"\
-                                                  % str(angle(self.direction, self.polarisation))
+                # Cache old direction for later use by polarisation code
+                old_direction = copy(self.direction)
 
+                # Handle PlanarReflector
+                if isinstance(intersection_object, PlanarReflector):
+                    self.direction = intersection_object.material.reflected_direction(self, normal)
+                    self.propagate = False
+                    self.exit_device = self.container
+                    return self
+
+                if isinstance(intersection_object, Coating):
+                    # Coating reflection (can be specular or Lambertian)
+                    self.direction = intersection_object.reflectivity.reflected_direction(self, normal)
+                else:
+                    # Specular reflection
+                    self.direction = reflect_vector(normal, self.direction)
+
+                    # Currently, polarisation code only runs with Fresnel reflection.
+                    if self.polarisation is not None:
+
+                        ang = angle(old_direction, self.direction)
+                        if cmp_floats(ang, np.pi):
+                            # Anti-parallel
+                            self.polarisation = self.polarisation
+                        else:
+                            # Apply the rotation transformation to the photon polarisation
+                            # which aligns the before and after directions
+                            R = rotation_matrix_from_vector_alignment(old_direction, self.direction)
+                            self.polarisation = transform_direction(self.polarisation, R)
+
+                        assert cmp_floats(angle(self.direction, self.polarisation),
+                                          np.pi / 2), "Exit Pt. #1:Angle between photon direction and polarisation" \
+                                                      "must be 90 degrees: theta=%s" %\
+                                                      str(np.degrees(angle(self.direction, self.polarisation)))
+
+                self.propagate = False
                 self.exit_device = self.container
-                self.previous_container = self.container
-                self.container = next_containing_object
 
+                # invert polarisation if n1 < n2
+                if self.container.material.refractive_index < next_containing_object.material.refractive_index:
+
+                    if self.polarisation is not None:
+
+                        if cmp_floats(ang, np.pi):
+                            # Anti-parallel
+                            self.polarisation *= -1.
+                        else:
+                            # Apply the rotation transformation to the photon polarisation
+                            # which aligns the before and after directions
+                            R = rotation_matrix_from_vector_alignment(old_direction, self.direction)
+                            self.polarisation = transform_direction(self.polarisation, R)
+
+                        assert cmp_floats(angle(self.direction, self.polarisation),
+                                          np.pi / 2), "Exit Pt. #2: Angle between photon direction and polarisation" \
+                                                      "must be 90 degrees: theta=%s"\
+                                                      % str(angle(self.direction, self.polarisation))
+
+                if self.exit_device == self.scene.bounds or self.exit_device is None:
+                    self.exit_device = intersection_object
+                assert self.exit_device != self.scene.bounds, "The object the ray hit before hitting the bounds" \
+                                                              "is the bounds. This can't be right."
                 return self
 
             else:
-                # Initialised externally
-                self.direction = fresnel_refraction(normal, self.direction, self.container.material.refractive_index,
-                                                    intersection_object.material.refractive_index)
+                # photon is refracted through interface
+                # TODO WISH: count photons leaving channels without being absorbed
 
-                if self.polarisation is not None:
+                # Hackish way to account for LSC edge reflectors (0.95 hardcoded for now)
+                # todo: use a v SC outer surface, face: ",edge
+                #     return self
 
-                    if cmp_floats(ang, np.pi):
-                        # Anti-parallel
-                        self.polarisation = self.polarisation
-                    else:
-                        # Apply the rotation transformation to the photon polarisation
-                        # which aligns the before and after directions
-                        R = rotation_matrix_from_vector_alignment(before, self.direction)
-                        self.polarisation = transform_direction(self.polarisation, R)
-                        # Apply the rotation transformation to the photon polarisation
-                        # which aligns the before and after directions
-                    assert cmp_floats(angle(self.direction, self.polarisation),
-                                      np.pi / 2), "Exit Pt. #4: Angle between photon direction and polarisation" \
-                                                  "must be 90 degrees: theta=%s"\
-                                                  % str(angle(self.direction, self.polarisation))
+                self.propagate = True
+                before = copy(self.direction)
+                ang = angle(before, self.direction)
 
-            # DJF 13.5.2010: This was crashing the statistical collection because it meant that an incident ray,
-            # hitting and transmitted, then lost would have bounds as the exit_device.
-            # self.exit_device = self.container
-            self.exit_device = intersection_object
-            self.previous_container = self.container
-            self.container = intersection_object
-            return self
+                if initialised_internally:
+                    # Is initialised internally
+                    self.direction = fresnel_refraction(normal, self.direction, self.container.material.refractive_index,
+                                                        next_containing_object.material.refractive_index)
+                    if self.polarisation is not None:
+                        if cmp_floats(ang, np.pi):
+                            # Anti-parallel
+                            self.polarisation = self.polarisation
+                        else:
+                            # Apply the rotation transformation to the photon polarisation
+                            # which aligns the before and after directions
+                            R = rotation_matrix_from_vector_alignment(before, self.direction)
+                            self.polarisation = transform_direction(self.polarisation, R)
+                        assert cmp_floats(angle(self.direction, self.polarisation),
+                                          np.pi / 2), "Exit Pt. #3: Angle between photon direction and polarisation" \
+                                                      "must be 90 degrees: theta=%s"\
+                                                      % str(angle(self.direction, self.polarisation))
+
+                    self.exit_device = self.container
+                    self.previous_container = self.container
+                    self.container = next_containing_object
+
+                    return self
+
+                else:
+                    # Initialised externally
+                    self.direction = fresnel_refraction(normal, self.direction, self.container.material.refractive_index,
+                                                        intersection_object.material.refractive_index)
+
+                    if self.polarisation is not None:
+
+                        if cmp_floats(ang, np.pi):
+                            # Anti-parallel
+                            self.polarisation = self.polarisation
+                        else:
+                            # Apply the rotation transformation to the photon polarisation
+                            # which aligns the before and after directions
+                            R = rotation_matrix_from_vector_alignment(before, self.direction)
+                            self.polarisation = transform_direction(self.polarisation, R)
+                            # Apply the rotation transformation to the photon polarisation
+                            # which aligns the before and after directions
+                        assert cmp_floats(angle(self.direction, self.polarisation),
+                                          np.pi / 2), "Exit Pt. #4: Angle between photon direction and polarisation" \
+                                                      "must be 90 degrees: theta=%s"\
+                                                      % str(angle(self.direction, self.polarisation))
+
+                # DJF 13.5.2010: This was crashing the statistical collection because it meant that an incident ray,
+                # hitting and transmitted, then lost would have bounds as the exit_device.
+                # self.exit_device = self.container
+                self.exit_device = intersection_object
+                self.previous_container = self.container
+                self.container = intersection_object
+                return self
 
 
 class Tracer(object):

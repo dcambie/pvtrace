@@ -119,29 +119,29 @@ class Reactor(object):
             self.scene_obj.append(self.backscatter)
 
         if exist_photovoltaic_bottom:
-            PV_box = Box(origin=(0, 0, -0.001), extent=(lsc_x, lsc_y, -0.0001))
+            PV_box = Box(origin=(0, 0, 0), extent=(lsc_x, lsc_y, -0.0001))
             self.bottom_photovoltaic = SimpleCell(finiteplane=PV_box, origin=(0, 0, -0.001))
             self.bottom_photovoltaic.name = "bottom_cell"
             self.scene_obj.append(self.bottom_photovoltaic)
 
         if exist_photovoltaic_edge:
             PV_box_edge_near = Box(origin=(0, 0, 0), extent=(lsc_x, -0.001, thickness))
-            self.edge_photovoltaic_near = SimpleCell(finiteplane=PV_box_edge_near, origin=(0, -0.00001, 0))
+            self.edge_photovoltaic_near = SimpleCell(finiteplane=PV_box_edge_near, origin=(0, 0, 0))
             self.edge_photovoltaic_near.name = "edge_cell_near"
             self.scene_obj.append(self.edge_photovoltaic_near)
 
             PV_box_edge_far = Box(origin=(0, 0, 0), extent=(lsc_x, 0.001, thickness))
-            self.edge_photovoltaic_far = SimpleCell(finiteplane=PV_box_edge_far, origin=(0, lsc_y+0.00001, 0))
+            self.edge_photovoltaic_far = SimpleCell(finiteplane=PV_box_edge_far, origin=(0, lsc_y, 0))
             self.edge_photovoltaic_far.name = "edge_cell_far"
             self.scene_obj.append(self.edge_photovoltaic_far)
 
             PV_box_edge_right = Box(origin=(0, 0, 0), extent=(0.001, lsc_y, thickness))
-            self.edge_photovoltaic_right = SimpleCell(finiteplane=PV_box_edge_right, origin=(lsc_x+0.00001, 0, 0))
+            self.edge_photovoltaic_right = SimpleCell(finiteplane=PV_box_edge_right, origin=(lsc_x, 0, 0))
             self.edge_photovoltaic_right.name = "edge_cell_right"
             self.scene_obj.append(self.edge_photovoltaic_right)
 
             PV_box_edge_left = Box(origin=(0, 0, 0), extent=(-0.001, lsc_y, thickness))
-            self.edge_photovoltaic_left = SimpleCell(finiteplane=PV_box_edge_left, origin=(-0.00001, 0, 0))
+            self.edge_photovoltaic_left = SimpleCell(finiteplane=PV_box_edge_left, origin=(0, 0, 0))
             self.edge_photovoltaic_left.name = "edge_cell_left"
             self.scene_obj.append(self.edge_photovoltaic_left)
 

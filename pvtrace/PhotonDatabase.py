@@ -206,8 +206,8 @@ class PhotonDatabase(object):
         self.cursor.execute("DELETE FROM polarisation")
         self.cursor.execute("DELETE FROM position")
         self.cursor.execute("DELETE FROM surface_normal")
-        self.cursor.execute("DELETE FROM photon")
         self.cursor.execute("DELETE FROM electron")
+        self.cursor.execute("DELETE FROM photon")
         self.cursor.execute("VACUUM")
         self.connection.commit()
 

@@ -9,7 +9,7 @@ config.add_section('LSC')
 config.set('LSC', 'thickness', '0.003')
 config.set('LSC', 'width', '0.05')
 config.set('LSC', 'length', '0.05')
-'''
+
 config.add_section('Channels')
 
 # Simplified with axis and length in common among all the capillaries
@@ -37,7 +37,7 @@ for i in range(0, len(geometry)):
     capillary.append(((position[0], position[1], position[2]), axis, length, default_od, default_id, 'Capillary' + str(i)))
 
 config.set('Channels', 'capillaries', str(capillary))
-'''
+
 # Writing our configuration file to 'example.cfg'
 with open('5x5cm_NOCHANNEL_thickness3mm.ini', 'wb') as configfile:
     config.write(configfile)

@@ -327,7 +327,7 @@ class Bounds(Register):
         super(Bounds, self).__init__()
         # self.shape = Box(origin=(-0.1, -0.1, -0.1), extent=(2, 2, 2))
         # self.shape = Box(origin=(-1, -1, -1), extent=(20, 20, 20))
-        self.shape = Box(origin=(-1, -1, -1), extent=(3, 3, 3))
+        self.shape = Box(origin=(-15, -15, -15), extent=(30, 30, 30))
         self.material = Material()
         self.name = "BOUNDS"
 

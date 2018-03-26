@@ -854,6 +854,7 @@ class Tracer(object):
                 # Empty current DB
                 self.database.empty()
 
+
         # Commit DB
         self.database.connection.commit()
         # If DB split is active, split the remaining photons and then merge everything

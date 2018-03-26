@@ -56,4 +56,5 @@ else:
     sys.exit(1)
 
 PVTDATA = os.path.join(pvtrace_containing_directory, 'data')
+PVTSMART = os.path.join(pvtrace_containing_directory, 'SMARTS_295_PC')
 logger.info('PVTDATA set to '+PVTDATA)

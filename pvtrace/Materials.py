@@ -210,14 +210,14 @@ class Spectrum(object):
                     print(e)
                     exit(1)
 
-                # Get the data from two differet colomns
+                # Get the data from two different columns
                 if diffuse:
                     self.x = np.array(data[:, 0], dtype=np.float32)
                     self.y = np.array(data[:, 1], dtype=np.float32)
 
                 else:
                     self.x = np.array(data[:, 0], dtype=np.float32)
-                    self.y = np.array(data[:, 2], dtype=np.float32)
+                    self.y = np.array(data[:, 3], dtype=np.float32)
 
                 # Sort array based on ASC X if needed
                 arr1inds = self.x.argsort()

@@ -9,7 +9,7 @@ class Capillary(object):
         # fixed by chong to solve the bug of the same face on two objects
         epi = 10**-6
         axis_o = list(axis_origin)
-        axis_fixbug = [0, epi, 0]
+        axis_fixbug = [epi, 0, 0]
         axis_rea = []
         for x,y in zip(axis_o, axis_fixbug):
             axis_rea.append(x+y)

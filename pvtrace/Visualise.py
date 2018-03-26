@@ -79,7 +79,7 @@ class Visualiser (object):
             if s == '2':
                 self.display.forward = self.display.forward.rotate(angle=-0.1, axis=(0, 0, 1))
             if s == '3':
-                self.display.forward = self.display.forward.rotate(angle=0.1, axis=(1, 0, 0))
+                self.display.forward = self.display.forward.rotate(angle=0.01, axis=(1, 0, 0))
             if s == '4':
                 self.display.forward = self.display.forward.rotate(angle=-0.1, axis=(1, 0, 0))
             if s == '5':
@@ -113,10 +113,10 @@ class Visualiser (object):
         self.display.exit = False
 
         self.display.autoscale = True
-        self.display.range = 0.1 # fix camera, so autozooming is forbidden
+        self.display.range = 0.30 # fix camera, so autozooming is forbidden
 
 
-        self.display.center = (0.05, -0.01, 0.005)
+        self.display.center = (0.235, -0.01, 0.005)
         self.display.forward = (0, 1.5, -1)
 
         if show_axis:
@@ -142,11 +142,13 @@ class Visualiser (object):
             # print "Visualiser: box position=%s, box_size=%s" % (str(pos), str(box_size))
             angle, direction, point = tf.rotation_from_matrix(box_to_add.transform)
 
+
             if material is None:
                 material = visual.materials.plastic
 
             if np.allclose(np.array(colour), np.array([0, 0, 0])):
                 visual.box(pos=pos, size=box_size, material=material, opacity=opacity)
+
             else:
                 visual.box(pos=pos, size=box_size, color=colour, materials=material, opacity=opacity)
     

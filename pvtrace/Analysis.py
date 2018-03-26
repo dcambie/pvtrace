@@ -38,7 +38,7 @@ class Analysis(object):
 
         if uuid is not None:
             self.uuid = uuid
-            self.working_dir = os.path.join('D:/','LSC_PM_simulation_results', self.uuid)#changed by chong to fix my computer's problem
+            self.working_dir = os.path.join('D:/','LSC_PM_simulation_results', 'photovoltaic', self.uuid)#changed by chong to fix my computer's problem
             self.graph_dir = os.path.join(self.working_dir, 'graphs')
             try_db_location = os.path.join(self.working_dir, "db.sqlite")
             if database is None and os.access(try_db_location, os.R_OK):
@@ -92,7 +92,11 @@ class Analysis(object):
 
         # CELL & EXCITED ELECTRON
         self.uids['photovoltaic'] = self.db.uids_in_photovoltaic()
+        self.uids['edge_photovoltaic'] = self.db.uids_in_edge_photovoltaic()
+        self.uids['bottom_photovoltaic'] = self.db.uids_in_bottom_photovoltaic()
         self.uids['electron'] = self.db.uids_electron()
+        self.uids['edge_electron'] = self.db.uids_edge_electron()
+        self.uids['bottom_electron'] = self.db.uids_bottom_electron()
 
         # SOLAR PHOTONS (edges)
         self.uids['solar_edges'] = []
@@ -108,6 +112,10 @@ class Analysis(object):
         # tubing only focus on uids
         self.uids['tubing'] = self.db.uids_in_tubing()
 
+        # self.uids['debug'] = self.uids['luminescent_edges'] + self.uids['luminescent_apertures'] + \
+        #                      self.uids['solar_edges'] + self.uids['solar_apertures'] + self.uids['losses'] + \
+        #                      self.uids['photovoltaic'] + self.uids['channels_tot']
+        # self.uids['find_bug'] = diff(self.uids['debug'], self.uids['tot'])
 
         # Calculate sum (for loop iterates only the keys of the dictionary)
         for key in self.uids:
@@ -205,7 +213,7 @@ class Analysis(object):
         elif photovoltaic:
             r_text = "Generated, Killed, Total, Losses, Luminescent - Left, Luminescent - Near, Luminescent - Far, " \
                      "Luminescent - Right, Luminescent - Top, Luminescent - Bottom, Solar - Top, Solar - Bottom, Solar - edge," \
-                     "Channels - Direct, Channels - Luminescent, photovoltaic - absorb, electron - excited"
+                     "Channels - Direct, Channels - Luminescent, photovoltaic - absorb, edge, bottom, electron - excited, ele - edge, ele - bottom"
 
         else:
             r_text = "Generated, Killed, Total, Losses, Luminescent - Left, Luminescent - Near," \
@@ -257,7 +265,12 @@ class Analysis(object):
         if photovoltaic:
 
             return_text += str(self.count['photovoltaic']) + ", "
-            return_text += str(self.count['electron'])
+            return_text += str(self.count['edge_photovoltaic']) + ", "
+            return_text += str(self.count['bottom_photovoltaic']) + ", "
+
+            return_text += str(self.count['electron']) + ", "
+            return_text += str(self.count['edge_electron']) + ", "
+            return_text += str(self.count['bottom_electron']) + ", "
 
         self.log.info(return_text)
         return return_text

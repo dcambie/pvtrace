@@ -394,11 +394,29 @@ class PhotonDatabase(object):
     def uids_in_photovoltaic(self):
         return itemise(self.cursor.execute(
                 'SELECT MAX(uid) FROM photon GROUP BY pid HAVING uid IN ('
-                'SELECT uid FROM state WHERE container_obj like "%cell%" GROUP BY uid);').fetchall())
+                'SELECT uid FROM state WHERE container_obj like "%cell%" AND killed = 0 GROUP BY uid);').fetchall())
+
+    def uids_in_edge_photovoltaic(self):
+        return itemise(self.cursor.execute(
+                'SELECT MAX(uid) FROM photon GROUP BY pid HAVING uid IN ('
+                'SELECT uid FROM state WHERE container_obj like "%edge_cell%" AND killed = 0 GROUP BY uid);').fetchall())
+
+    def uids_in_bottom_photovoltaic(self):
+        return itemise(self.cursor.execute(
+                'SELECT MAX(uid) FROM photon GROUP BY pid HAVING uid IN ('
+                'SELECT uid FROM state WHERE container_obj like "%bottom_cell%" AND killed = 0 GROUP BY uid);').fetchall())
 
     def uids_electron(self):
         return itemise(self.cursor.execute(
-            'SELECT MAX(uid) FROM photon GROUP BY pid INTERSECT SELECT uid FROM state WHERE electron = 1'))
+            'SELECT MAX(uid) FROM photon GROUP BY pid INTERSECT SELECT uid FROM state WHERE electron = 1 AND killed = 0'))
+
+    def uids_edge_electron(self):
+        return itemise(self.cursor.execute(
+            'SELECT MAX(uid) FROM photon GROUP BY pid INTERSECT SELECT uid FROM state WHERE container_obj like "%edge_cell%" AND electron = 1 AND killed = 0'))
+
+    def uids_bottom_electron(self):
+        return itemise(self.cursor.execute(
+            'SELECT MAX(uid) FROM photon GROUP BY pid INTERSECT SELECT uid FROM state WHERE container_obj like "%bottom_cell%" AND electron = 1 AND killed = 0'))
 
     def uids_in_reactor(self):
         """ Returns the uids of all the photons in the reactor channels. """
@@ -470,7 +488,7 @@ class PhotonDatabase(object):
 
     def  uids_nonradiative_losses(self):
         return itemise(self.cursor.execute(
-            "SELECT uid FROM state WHERE reaction = 0 AND surface_id = 'None' AND active = 0 AND killed = 0 AND on_surface_obj='None'"
+            "SELECT uid FROM state WHERE reaction = 0 AND surface_id = 'None' AND active = 0 AND killed = 0 AND electron is null"# 
             " GROUP BY uid HAVING uid IN (SELECT MAX(uid) FROM photon GROUP BY pid)").fetchall())
 
     def value_for_table_column_uid(self, table, column, uid):

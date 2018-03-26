@@ -20,7 +20,7 @@ class LightSource(object):
             self.spectrum_file = os.path.join(PVTDATA, 'sources', 'Oriel_solar_sim.txt')
             self.lamp_name = 'Solar Simulator LS0110-100 L.O.T.-Oriel GmbH & Co.'
         elif lamp_type == 'SMARTSsolar_simulator':
-            self.spectrum_file = os.path.join(PVTDATA, 'smarts', set_spectrumfile)
+            self.spectrum_file = set_spectrumfile
             self.lamp_name = 'sun position and spectrum data from SMARTS'
         elif lamp_type == 'Sun':
             self.spectrum_file = os.path.join(PVTDATA, 'sources', 'AM1.5g-full.txt')

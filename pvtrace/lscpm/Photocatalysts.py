@@ -11,8 +11,8 @@ class Photocatalyst(object):
 
         MB_list = ('MB', 'Methylene Blue', 'methylene blue', 'methyleneblue', 'methylene blauw', 'mb')
         eosin_list = ('Eosin', 'eosin', 'EY', 'Eosin Y', 'eosin y')
-        rubpz_list = ('Ru(bpz)3', 'Rubpz', 'Ru(bpz)')
-        # rubpy_list = ('Ru(bpy)3', 'Rubpy', 'Ru(bpy)')
+        rubpz_list = ('Ru(bpz)3', 'Rubpz', 'Ru(bpz)', 'Rubpz3')
+        rubpy_list = ('Ru(bpy)3', 'Rubpy', 'Ru(bpy)', 'Rubpy3')
 
         if compound in MB_list:
             self.compound = MethyleneBlue()
@@ -20,8 +20,8 @@ class Photocatalyst(object):
             self.compound = EosinY()
         elif compound in rubpz_list:
             self.compound = Rubpz()
-        # elif compound == 'Ru(bpy)3':
-        #     self.compound = Rubpy()
+        elif compound in rubpy_list:
+            self.compound = Rubpy()
         elif compound == 'Air':
             self.compound = Air()
         else:
@@ -55,6 +55,11 @@ class EosinY(object):
         # return NotImplementedError
         return np.loadtxt(os.path.join(PVTDATA, "photocatalysts", 'EY_1M_1m_EtOH_+base.txt'))
 
+class Rubpy(object):
+    @staticmethod
+    def abs():
+        # Load 1M Abs spectrum of MB. Values from
+        return np.loadtxt(os.path.join(PVTDATA, "photocatalysts", 'Ru(bpy)3_1M_1m_ACN.txt'))
 
 class Rubpz(object):
     @staticmethod

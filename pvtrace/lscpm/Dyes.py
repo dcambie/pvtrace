@@ -16,7 +16,9 @@ class LuminophoreMaterial(object):
         elif dye_name == 'K160':
             self.dye = K160()
         elif dye_name == 'Evonik_Blue':
-            self.dye = Blue_5C50()
+            self.dye = Evonik_Blue()
+        elif dye_name == 'Perspex_Blue':
+            self.dye = Perspex_Blue()
         elif dye_name == 'Evonik_lr305':
             self.dye = Evonik_lr305()
         elif dye_name == 'Limacryl_lr305':
@@ -93,13 +95,13 @@ class K160(LuminophoreMaterial):
         return Spectrum(filename=os.path.join(PVTDATA, "dyes", 'K160_ems.txt'))
 
 
-class Blue_5C50(LuminophoreMaterial):
+class Evonik_Blue(LuminophoreMaterial):
     """
     Class to generate spectra for Evonik Blue 5C50-based LSC
     """
 
     def __init__(self):
-        self.name = 'Plexiglas Fluorescent Blue 5C50'
+        self.name = 'Evonik Blue'
         self.quantum_efficiency = 0.95  # FIXME Literature search for this needed
         self.logger = logging.getLogger('pvtrace.blue')
         self.logger.info(self.description())
@@ -110,10 +112,32 @@ class Blue_5C50(LuminophoreMaterial):
     def absorption(self):
         # Blue LSC absorption spectrum
         # absorption_data = np.loadtxt(os.path.join(PVTDATA, 'dyes', 'Evonik_blue_5C50_abs.txt'))
-        return Spectrum(filename=os.path.join(PVTDATA, 'dyes', 'Evonik_blue_5C50_abs.txt'))
+        return Spectrum(filename=os.path.join(PVTDATA, 'dyes', 'Evonik_blue_normalised_1m.txt'))
 
     def emission(self):
-        return Spectrum(filename=os.path.join(PVTDATA, "dyes", 'Evonik_blue_5C50_ems.txt'))
+        return Spectrum(filename=os.path.join(PVTDATA, "dyes", 'Evonik_blue_normalised_1m_ems.txt'))
+
+class Perspex_Blue(LuminophoreMaterial):
+    """
+    Class to generate spectra for Evonik Blue 5C50-based LSC
+    """
+
+    def __init__(self):
+        self.name = 'Perspex Blue'
+        self.quantum_efficiency = 0.95  # FIXME Literature search for this needed
+        self.logger = logging.getLogger('pvtrace.blue')
+        self.logger.info(self.description())
+
+    def description(self):
+        return self.name
+
+    def absorption(self):
+        # Blue LSC absorption spectrum
+        # absorption_data = np.loadtxt(os.path.join(PVTDATA, 'dyes', 'Evonik_blue_5C50_abs.txt'))
+        return Spectrum(filename=os.path.join(PVTDATA, 'dyes', 'Perspex_blue_normalised_1m.txt'))
+
+    def emission(self):
+        return Spectrum(filename=os.path.join(PVTDATA, "dyes", 'Perspex_blue_normalised_1m_ems.txt'))
 
 
 class Evonik_lr305(LuminophoreMaterial):

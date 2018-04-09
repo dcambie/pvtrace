@@ -660,7 +660,7 @@ class Tracer(object):
                             material = visual.materials.plastic
                             # FIXME LSC color set to red!
                             colour = visual.color.red
-                            opacity = 0.4
+                            opacity = 0.7
                         # PlanarReflector
                         elif isinstance(obj, PlanarReflector):
                             colour = visual.color.white
@@ -833,7 +833,8 @@ class Tracer(object):
 
                 step += 1
                 self.total_steps += 1
-                if step >= self.steps: # We need to kill the photon because it is bouncing around in a locked path
+                if step >= self.steps and photon.active: # We need to kill the photon because it is bouncing around in a locked path
+                    # fixed bug about photon that is aborbed by channel at the last step in the loop
                     self.killed += 1
                     photon.killed = True
                     self.database.log(photon)

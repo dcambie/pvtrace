@@ -6,7 +6,7 @@ import pvtrace.external as pve
 
 
 class Smartangle():
-    def __init__(self, year=2017, month=6, day=21, time=5.5, tilt_angle=0, longitude=5.49, latitude=51.44):
+    def __init__(self, year=2017, month=6, day=21, time=7, tilt_angle=28, longitude=5.49, latitude=51.44):
         self.exe_path = PVTSMART
         self.year = year
         self.month = month
@@ -26,9 +26,9 @@ class Smartangle():
     def write_input(self):
         file_path = os.path.join(PVTSMART, 'smarts295.inp.txt')
         text = ''
-        comments = "'simulation for" +str(self.day)+" ' \n"
+        comments = "'Simulation for" +str(self.day) + '/' + str(self.month) +" ' \n"
         NON_CHANGE = "1\n1013.25 0 0\n1\n'MLS'\n1\n1\n1\n400\n1\n'S&F_URBAN'\n0\n.084\n-1\n0\n1\n"
-        tilt_angle = "-1 " + str(self.tilt_angle) + " 0\n"
+        tilt_angle = "-1 " + str(self.tilt_angle) + " 180\n"
         NON_CHANGE2 = "0\n350 700 1.0 1366.1\n2\n350 700 1\n6\n3 4 5 6 7 8\n1\n0 2.9 0\n0\n0\n0\n3\n"
         date_str = [str(i) for i in self.date]
         date = "".join(date_str)
@@ -49,15 +49,16 @@ class Smartangle():
         exe_batch_path = os.path.join(self.exe_path, 'smarts295bat.exe')
         os.system(exe_batch_path)
         self.find_angle()
+        self.broadband_irradiance()
         self.copy_txt()
         vx, vy, vz = self.return_solarposition()
         self.delete_txt()
         return vx, vy, vz
 
     def copy_txt(self):
-        save_input_file = os.path.join(PVTDATA, 'autosmarts', 'input_file', str(self.year)+"_"+str(self.month)+"_"+str(self.day), str(self.time))
-        save_output_file = os.path.join(PVTDATA, 'autosmarts', 'output_file', str(self.year) + "_" + str(self.month) + "_" + str(self.day), str(self.time))
-        save_spect_file = os.path.join(PVTDATA, 'autosmarts', 'spectput_file', str(self.year) + "_" + str(self.month) + "_" + str(self.day), str(self.time))
+        save_input_file = os.path.join('D:/', 'autosmarts', str(self.tilt_angle), 'input_file', str(self.year)+"_"+str(self.month)+"_"+str(self.day), str(self.time))
+        save_output_file = os.path.join('D:/', 'autosmarts', str(self.tilt_angle), 'output_file', str(self.year) + "_" + str(self.month) + "_" + str(self.day), str(self.time))
+        save_spect_file = os.path.join('D:/', 'autosmarts', str(self.tilt_angle), 'spectput_file', str(self.year) + "_" + str(self.month) + "_" + str(self.day), str(self.time))
         if not os.path.exists(save_input_file):
             os.makedirs(save_input_file)
             shutil.move('smarts295.inp.txt', save_input_file)
@@ -87,6 +88,20 @@ class Smartangle():
                     azimuth_angle_str = list_find_line[-1]
                     self.zenith_angle = float(zenith_angle_str)/180*np.pi
                     self.azimuth_angle = float(azimuth_angle_str)/180*np.pi
+
+    def broadband_irradiance(self):
+        with open(self.output_file_path, 'r') as f:
+            for line in f:
+                if '  Direct Beam =  ' and ' Clearness index, KT =' in line:
+                    list_find_line = line.split(' ')
+                    list_find_line = [x for x in list_find_line if x != '']
+                    self.horizon_irra_direct = float(list_find_line[3])
+                    self.horizon_irra_diffuse = float(list_find_line[6])
+                if '  Direct Beam =  ' and 'Ground Reflected =' in line:
+                    list_find_line = line.split(' ')
+                    list_find_line = [x for x in list_find_line if x != '']
+                    self.tilted_irra_direct = float(list_find_line[3])
+                    self.tilted_irra_diffuse = float(list_find_line[7])
 
     def return_solarposition(self):
         vector_x = np.tan(self.zenith_angle)*np.sin(self.azimuth_angle)
@@ -121,4 +136,7 @@ class Smartangle():
     # copy_txt()
     #
     # sys.exit(0)
-
+if __name__ == '__main__':
+    a = Smartangle()
+    a.run_smarts()
+    print(a.tilted_irra_diffuse)

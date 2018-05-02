@@ -23,7 +23,7 @@ class Solvent(object):
                         # Alcohols
                         (('Methanol', 'Methyl alcohol', 'MeOH'), 1.3284),
                         (('Ethanol', 'Ethyl alcohol', 'EtOH'), 1.3614),
-                        (('Isopropanol', 'Isopropyl alcohol', 'EtOH'), 1.3772),
+                        (('Isopropanol', 'Isopropyl alcohol'), 1.3772),
 
                         # Ethers
                         (('Tetrahydrofuran', 'THF'), 1.4072),

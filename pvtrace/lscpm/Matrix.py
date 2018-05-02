@@ -68,6 +68,7 @@ class PMMA(object):
 
     def absorption(self):
         return Spectrum([0, 1100], [0.98, 0.98]) #final absorption coefficient determined by experiments
+        # FIXME PMMA absorption coefficient is not plausiable in the near infrared region
         # PDMS absorption spectrum
 
         # 2/m based as in dfarrell code

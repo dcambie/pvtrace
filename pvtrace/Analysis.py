@@ -137,6 +137,8 @@ class Analysis(object):
             if (delta / self.count['tot']) < 0.001:
                 self.log.warn("[db_stats()] Results FAILED sanity check!!!")
             else:
+
+
                 raise ArithmeticError('Sum of photons per fate and generate do not match!'
                                       '(Delta: '+str(delta)+'/'+str(self.count['tot'])+' [Error > 0.1%!]')
 
@@ -274,6 +276,10 @@ class Analysis(object):
 
         self.log.info(return_text)
         return return_text
+
+    def get_absorption(self):
+        absorbed_by_channel = self.count['channels_tot']/self.count['tot']
+        return absorbed_by_channel
 
     def get_bounces(self, photon_list=None):
         """

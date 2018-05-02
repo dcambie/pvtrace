@@ -40,7 +40,7 @@ class Capillary(object):
         if tubing == "PFA":  # high-purity PFA, "normal" PFA is 1.35
             absorbance = Spectrum([0, 1000], [0.1, 0])  # FIXME Polymer transmittance data needed!
             tubing_material = Material(absorption_data=absorbance, emission_data=emission, quantum_efficiency=0.0,
-                                       refractive_index=refractive_index_cg) # original version is 1.340
+                                       refractive_index=1.340) # original version is 1.340
         elif tubing == "HALAR":
             absorbance = Spectrum([0, 1000], [0.1, 0])  # FIXME Polymer transmittance data needed!
             tubing_material = Material(absorption_data=absorbance, emission_data=emission, quantum_efficiency=0.0,

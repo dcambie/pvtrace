@@ -7,23 +7,20 @@ from pvtrace.lscpm.SolarSimulators import *
 # blue red thickness: 3mm green: 4mm
 # blue not yet, green EY, red Methylene Blue,
 # set episilon to prevent the possibility of matching fate and generate
-file_path = os.path.join('D:/','LSC_PM_simulation_results', 'Green_PMMA_10x10x0.4', 'simulation_results_overwrite.txt')
+file_path = os.path.join('D:/','LSC_PM_simulation_results', 'Full_spectrum_47x47x0.4_PVcell_blank', 'simulation_result.txt')
 
 # scene = pvtrace.Scene(level=logging.INFO, uuid="Fang_rebuttal2_6")
-scene = pvtrace.Scene(level=logging.INFO, uuid='overwrite_me')
+scene = pvtrace.Scene(level=logging.INFO, uuid='Full_spectrum_47x47x0.4_PVcell_blank')
 logger = logging.getLogger('pvtrace')
 
 # Create LSC-PM DYE material
 Ev_lr305 = LuminophoreMaterial('Evonik_lr305', 1)#red
-k160 = LuminophoreMaterial('K160', 1)#green
-blue_evonik = LuminophoreMaterial('Evonik_Blue', 1)#blue
-# Create polymeric matrix
-pdms = Matrix('pdms')
+
 pmma = Matrix('PMMA')
 
 # !!Change the LSC material while simulating the blank LSC
-reactor = Reactor(reactor_name="30x30_chong_thickness0.4cm", luminophore=k160, matrix=pmma, photocatalyst="EY",
-                  photocatalyst_concentration=0.001, solvent='DMF')
+reactor = Reactor(reactor_name="47x47_chong_thickness0.8cm", luminophore=Ev_lr305, matrix=pmma, photocatalyst="MB",
+                  photocatalyst_concentration=0, solvent='air', blank=True, exist_photovoltaic_bottom=True, exist_photovoltaic_edge=True)
 scene.add_objects(reactor.scene_obj)
 
 # lamp = LightSource(lamp_type='White LEDs')
@@ -35,7 +32,7 @@ lamp.set_lightsource(irradiated_length=reactor.lsc.size[0], irradiated_width=rea
 # lamp.set_lightsource(irradiated_area=(reactor.lsc.size[0], 0.15035), distance=0.025)
 # lamp.move_lightsource(vector=(0, 0.01735))
 
-trace = pvtrace.Tracer(scene=scene, source=lamp.source, throws=100, use_visualiser=True,
+trace = pvtrace.Tracer(scene=scene, source=lamp.source, throws=100000, use_visualiser=False,
                        show_axis=False, show_counter=False, db_split=True, preserve_db_tables=True)
 # set color on Trace.py while visualizing
 
@@ -44,7 +41,7 @@ trace = pvtrace.Tracer(scene=scene, source=lamp.source, throws=100, use_visualis
 trace.start()
 
 scene.stats.print_detailed()
-text = str(scene.stats.print_excel() + "\n")
+text = str(scene.stats.print_excel(photovoltaic=True) + "\n")
 write_me = open(file_path, 'a')
 write_me.write(text)
 write_me.close()

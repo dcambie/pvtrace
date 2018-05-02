@@ -7,10 +7,10 @@ from pvtrace.lscpm.SolarSimulators import *
 # blue red thickness: 3mm green: 4mm
 # blue not yet, green EY, red Methylene Blue,
 # set episilon to prevent the possibility of matching fate and generate
-file_path = os.path.join('D:/','LSC_PM_simulation_results', '10x10x0.3_Evonik_blue', 'simulation_results_overwrite.txt')
+file_path = os.path.join('D:/','LSC_PM_simulation_results', '10x10x0.3_Evonik_blue_1M', 'simulation_results_overwrite.txt')
 
 # scene = pvtrace.Scene(level=logging.INFO, uuid="Fang_rebuttal2_6")
-scene = pvtrace.Scene(level=logging.INFO, uuid='10x10x0.3_Evonik_blue')
+scene = pvtrace.Scene(level=logging.INFO, uuid='10x10x0.3_Evonik_blue_1M')
 logger = logging.getLogger('pvtrace')
 
 # Create LSC-PM DYE material
@@ -32,7 +32,7 @@ lamp.set_lightsource(irradiated_length=reactor.lsc.size[0], irradiated_width=rea
 # lamp.set_lightsource(irradiated_area=(reactor.lsc.size[0], 0.15035), distance=0.025)
 # lamp.move_lightsource(vector=(0, 0.01735))
 
-trace = pvtrace.Tracer(scene=scene, source=lamp.source, throws=100000, use_visualiser=False,
+trace = pvtrace.Tracer(scene=scene, source=lamp.source, throws=100, use_visualiser=False,
                        show_axis=False, show_counter=False, db_split=True, preserve_db_tables=True)
 # set color on Trace.py while visualizing
 

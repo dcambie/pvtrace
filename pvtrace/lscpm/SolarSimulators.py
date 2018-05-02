@@ -35,10 +35,10 @@ class LightSource(object):
             raise Exception('Unknown light source')
 
     def set_lightsource(self, lamp_direction=(0, 0, -1), irradiated_length=0.05, irradiated_width=0.05, distance=0.025,
-                        lamp_wavelength = (350, 700), smarts=False):
+                        lamp_wavelength = (350, 700), smarts=False, tilt=False):
         if self.spectrum_file is None:
             raise ValueError('LightSource spectrum is not set!')
-        self.spectrum = load_spectrum(self.spectrum_file, xbins=np.arange(lamp_wavelength[0], lamp_wavelength[1]), smarts=smarts)
+        self.spectrum = load_spectrum(self.spectrum_file, xbins=np.arange(lamp_wavelength[0], lamp_wavelength[1]), smarts=smarts, tilt=tilt)
         self.source = PlanarSource(direction=lamp_direction, spectrum=self.spectrum, length=irradiated_length,
                                    width=irradiated_width)
         self.source.name = self.lamp_name

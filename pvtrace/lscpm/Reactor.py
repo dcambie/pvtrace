@@ -124,8 +124,8 @@ class Reactor(object):
             self.scene_obj.append(self.backscatter)
 
         if exist_photovoltaic_bottom:
-            PV_box = Box(origin=(0, 0, 0), extent=(lsc_x, lsc_y, 0.0001))
-            self.bottom_photovoltaic = SimpleCell(finiteplane=PV_box, origin=(0, 0, -0.001))
+            PV_box = Box(origin=(0, 0, 0), extent=(lsc_x, lsc_y, 0.001))
+            self.bottom_photovoltaic = SimpleCell(finiteplane=PV_box, origin=(0, 0, -0.05))
             self.bottom_photovoltaic.name = "bottom_cell"
             self.scene_obj.append(self.bottom_photovoltaic)
 

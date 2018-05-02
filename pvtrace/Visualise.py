@@ -113,11 +113,11 @@ class Visualiser (object):
         self.display.exit = False
 
         self.display.autoscale = True
-        self.display.range = 0.30 # fix camera, so autozooming is forbidden
+        self.display.range = 0.2 # fix camera, so autozooming is forbidden
 
 
-        self.display.center = (0.235, -0.01, 0.005)
-        self.display.forward = (0, 1.5, -1)
+        self.display.center = (0.05, 0.05, 0.005)
+        self.display.forward = (0, 0, -0.388)
 
         if show_axis:
             visual.curve(pos=[(0, 0, 0), (.08, 0, 0)], radius=0.0005, color=visual.color.red)
@@ -224,7 +224,7 @@ class Visualiser (object):
                 colour = visual.color.white
             pos = ray.position
             axis = ray.direction * 5
-            visual.cylinder(pos=pos, axis=axis, radius=0.0001, color=Geo.norm(colour),
+            visual.cylinder(pos=pos, axis=axis, radius=0.00001, color=Geo.norm(colour),
                             opacity=opacity, material=material)
     
     def addSmallSphere(self, point, colour=None, opacity=1., material=None):
@@ -242,7 +242,7 @@ class Visualiser (object):
         if colour is None:
             colour = visual.color.white
         axis = np.array(stop) - np.array(start)
-        return visual.cylinder(pos=start, axis=axis, radius=0.000055, color=Geo.norm(colour),
+        return visual.cylinder(pos=start, axis=axis, radius=0.00008, color=Geo.norm(colour),
                                opacity=opacity, material=material)
     
     def addCylinder(self, cylinder, colour=None, opacity=1., material=None):

@@ -3,13 +3,25 @@ import numpy as np
 import os
 from pvtrace import *
 
+
 class Photocatalyst(object):
     def __init__(self, compound, concentration):
         self.logger = logging.getLogger('pvtrace.photocat')
         self.logger.info('Photocat: "' + str(compound) + '", conc: ' + str(concentration))
 
-        if compound == 'MB':
+        MB_list = ('MB', 'Methylene Blue', 'methylene blue', 'methyleneblue', 'methylene blauw', 'mb')
+        eosin_list = ('Eosin', 'eosin', 'EY', 'Eosin Y', 'eosin y')
+        rubpz_list = ('Ru(bpz)3', 'Rubpz', 'Ru(bpz)', 'Rubpz3')
+        rubpy_list = ('Ru(bpy)3', 'Rubpy', 'Ru(bpy)', 'Rubpy3')
+
+        if compound in MB_list:
             self.compound = MethyleneBlue()
+        elif compound in eosin_list:
+            self.compound = EosinY()
+        elif compound in rubpz_list:
+            self.compound = Rubpz()
+        elif compound in rubpy_list:
+            self.compound = Rubpy()
         elif compound == 'Air':
             self.compound = Air()
         else:
@@ -36,6 +48,26 @@ class MethyleneBlue(object):
         return np.loadtxt(os.path.join(PVTDATA, "photocatalysts", 'MB_1M_1m_ACN.txt'))
 
 
+class EosinY(object):
+    @staticmethod
+    def abs():
+        # Load 1M Abs spectrum of MB. Values from
+        # return NotImplementedError
+        return np.loadtxt(os.path.join(PVTDATA, "photocatalysts", 'EY_1M_1m_EtOH_+base.txt'))
+
+class Rubpy(object):
+    @staticmethod
+    def abs():
+        # Load 1M Abs spectrum of MB. Values from
+        return np.loadtxt(os.path.join(PVTDATA, "photocatalysts", 'Ru(bpy)3_1M_1m_ACN.txt'))
+
+class Rubpz(object):
+    @staticmethod
+    def abs():
+        # Load 1M Abs spectrum of MB. Values from
+        return np.loadtxt(os.path.join(PVTDATA, "photocatalysts", 'Ru(bpz)3_1M_1m_ACN.txt'))
+
+
 class Air(object):
     """
     Air as photocatalyst: abs=0 for all wavelength.
@@ -45,3 +77,4 @@ class Air(object):
     def abs():
         # return Spectrum([0,1000], [0,0])
         return np.loadtxt(os.path.join(PVTDATA, "photocatalysts", 'Air.txt'))
+

@@ -13,8 +13,18 @@ class LuminophoreMaterial(object):
     def __init__(self, dye_name, concentration):
         if dye_name == 'Red305':
             self.dye = Red305(concentration/1000)
+        elif dye_name == 'K160':
+            self.dye = K160()
+        elif dye_name == 'Evonik_Blue':
+            self.dye = Evonik_Blue()
+        elif dye_name == 'Perspex_Blue':
+            self.dye = Perspex_Blue()
+        elif dye_name == 'Evonik_lr305':
+            self.dye = Evonik_lr305()
+        elif dye_name == 'Limacryl_lr305':
+            self.dye = Limacryl_lr305()
         else:
-            raise Exception('Unknown dye! (', self.dye, ')')
+            raise NotImplementedError('Unknown dye! (', self.dye, ')')
 
     def name(self):
         return self.dye.name
@@ -28,7 +38,7 @@ class LuminophoreMaterial(object):
                         quantum_efficiency=self.dye.quantum_efficiency, refractive_index=1)
 
 
-class Red305(object):
+class Red305(LuminophoreMaterial):
     """
     Class to generate spectra for Red305-based devices
     """
@@ -38,7 +48,7 @@ class Red305(object):
         self.quantum_efficiency = 0.95
         self.concentration = concentration
         self.logger = logging.getLogger('pvtrace.red305')
-        self.logger.info('concentration at red305 is  ' + str(concentration*1000) + ' ppm')
+        self.logger.info('concentration of red305 is  ' + str(concentration*1000) + ' ppm')
 
     def description(self):
         return self.name + ' (Concentration : ' + str(self.concentration) + 'mg/g)'
@@ -60,6 +70,117 @@ class Red305(object):
 
     @staticmethod
     def emission():
-        # fixme Add experimental data from pdms low concentration samples (not re-absorption red-shifted)
-        emission_data = np.loadtxt(os.path.join(PVTDATA, "dyes", 'Red305_ems_spectrum.txt'))
-        return Spectrum(x=emission_data[:, 0], y=emission_data[:, 1])
+        return Spectrum(filename=os.path.join(PVTDATA, "dyes", 'Red305_ems_spectrum.txt'))
+
+
+class K160(LuminophoreMaterial):
+    """
+    Class to generate spectra for K160-based devices
+    """
+
+    def __init__(self):
+        self.name = 'Yellow Risk Reactor DFSB-K160'
+        self.quantum_efficiency = 0.95  # FIXME Literature search for this needed
+        self.logger = logging.getLogger('pvtrace.k160')
+        self.logger.info(self.description)
+
+    def description(self):
+        return self.name
+
+    def absorption(self):
+        # K160 absorption spectrum (from Limacryl custom-made PMMA sample)
+        return Spectrum(filename=os.path.join(PVTDATA, 'dyes', 'K160_Limacryl_4mm_normalized_to_1m.txt'))
+
+    def emission(self):
+        return Spectrum(filename=os.path.join(PVTDATA, "dyes", 'K160_ems.txt'))
+
+
+class Evonik_Blue(LuminophoreMaterial):
+    """
+    Class to generate spectra for Evonik Blue 5C50-based LSC
+    """
+
+    def __init__(self):
+        self.name = 'Evonik Blue'
+        self.quantum_efficiency = 0.95  # FIXME Literature search for this needed
+        self.logger = logging.getLogger('pvtrace.blue')
+        self.logger.info(self.description())
+
+    def description(self):
+        return self.name
+
+    def absorption(self):
+        # Blue LSC absorption spectrum
+        # absorption_data = np.loadtxt(os.path.join(PVTDATA, 'dyes', 'Evonik_blue_5C50_abs.txt'))
+        return Spectrum(filename=os.path.join(PVTDATA, 'dyes', 'Evonik_blue_normalised_1m.txt'))
+
+    def emission(self):
+        return Spectrum(filename=os.path.join(PVTDATA, "dyes", 'Evonik_blue_normalised_1m_ems.txt'))
+
+class Perspex_Blue(LuminophoreMaterial):
+    """
+    Class to generate spectra for Evonik Blue 5C50-based LSC
+    """
+
+    def __init__(self):
+        self.name = 'Perspex Blue'
+        self.quantum_efficiency = 0.95  # FIXME Literature search for this needed
+        self.logger = logging.getLogger('pvtrace.blue')
+        self.logger.info(self.description())
+
+    def description(self):
+        return self.name
+
+    def absorption(self):
+        # Blue LSC absorption spectrum
+        # absorption_data = np.loadtxt(os.path.join(PVTDATA, 'dyes', 'Evonik_blue_5C50_abs.txt'))
+        return Spectrum(filename=os.path.join(PVTDATA, 'dyes', 'Perspex_blue_normalised_1m.txt'))
+
+    def emission(self):
+        return Spectrum(filename=os.path.join(PVTDATA, "dyes", 'Perspex_blue_normalised_1m_ems.txt'))
+
+
+class Evonik_lr305(LuminophoreMaterial):
+    """
+    Class to generate spectra for Evonik Blue 5C50-based LSC
+    """
+
+    def __init__(self):
+        self.name = 'Evonik_lr305 based on PMMA'
+        self.quantum_efficiency = 0.95  # FIXME Literature search for this needed
+        self.logger = logging.getLogger('pvtrace.red')
+        self.logger.info(self.description())
+
+    def description(self):
+        return self.name
+
+    def absorption(self):
+        # Blue LSC absorption spectrum
+        # absorption_data = np.loadtxt(os.path.join(PVTDATA, 'dyes', 'Evonik_blue_5C50_abs.txt'))
+        return Spectrum(filename=os.path.join(PVTDATA, 'dyes', 'Evonik_lr305_normalized_to_1m.txt'))
+
+    def emission(self):
+        return Spectrum(filename=os.path.join(PVTDATA, "dyes", 'Evonik_lr305_normalized_to_1m_ems.txt'))
+
+
+class Limacryl_lr305(LuminophoreMaterial):
+    """
+    Class to generate spectra for Evonik Blue 5C50-based LSC
+    """
+
+    def __init__(self):
+        self.name = 'Plexiglas Fluorescent Blue 5C50'
+        self.quantum_efficiency = 0.95  # FIXME Literature search for this needed
+        self.logger = logging.getLogger('pvtrace.blue')
+        self.logger.info(self.description())
+
+    def description(self):
+        return self.name
+
+    def absorption(self):
+        # Blue LSC absorption spectrum
+        # absorption_data = np.loadtxt(os.path.join(PVTDATA, 'dyes', 'Evonik_blue_5C50_abs.txt'))
+        return Spectrum(filename=os.path.join(PVTDATA, 'dyes', 'Limacryl_lr305_normalized_to_1m.txt'))
+
+    def emission(self):
+        return Spectrum(filename=os.path.join(PVTDATA, "dyes", 'Limacryl_lr305_normalized_to_1m_ems.txt'))

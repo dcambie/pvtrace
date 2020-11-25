@@ -19,6 +19,8 @@ import math
 from pvtrace.external.transformations import rotation_matrix
 import pvtrace.external.transformations as tf
 
+
+
 from pvtrace.Materials import *
 
 
@@ -71,7 +73,7 @@ class Register(object):
 
         # If the angle between ray direction and normal is less than pi/2 than outbond, inbound otherwise
         bound = "outbound" if rads < (np.pi / 2) else "inbound"
-        self.logger.debug("Photon logged as" + bound)
+        self.logger.debug("Photon logged as " + bound)
 
         key = photon.exit_device.shape.surface_identifier(photon.position)
         if key not in self.store:
@@ -270,7 +272,24 @@ class SimpleCell(Detector):
         self.shape.append_transform(tf.translation_matrix(origin))
         self.name = "cell"
         self.material = None
+        self.data = Cell_External_QE()
+        self.x, self.y = self.data.abs()
+        self.eqe = Interp1d(self.x, self.y, bounds_error=False, fill_value=0.0)
 
+    def external_QE(self, wavelength):
+        return self.eqe(wavelength)
+
+class Cell_External_QE(object):
+    @staticmethod
+    def abs():
+        data = np.loadtxt(os.path.join("D:/", "PvTrace_git", "pvtrace-fork", "data", "photovoltaic", 'External_quantum_efficiency.txt'))
+        x = np.array(data[:, 0], dtype=np.float32)
+        y = np.array(data[:, 1], dtype=np.float32)
+
+        arr1inds = x.argsort()
+        x = x[arr1inds[::1]]
+        y = y[arr1inds[::1]]
+        return x, y
 
 class Coating(Register):
     """
@@ -306,7 +325,9 @@ class Bounds(Register):
 
     def __init__(self):
         super(Bounds, self).__init__()
-        self.shape = Box(origin=(-0.1, -0.1, -0.1), extent=(2, 2, 2))
+        # self.shape = Box(origin=(-0.1, -0.1, -0.1), extent=(2, 2, 2))
+        # self.shape = Box(origin=(-1, -1, -1), extent=(20, 20, 20))
+        self.shape = Box(origin=(-1.5, -1.5, -1.5), extent=(3, 3, 3))
         self.material = Material()
         self.name = "BOUNDS"
 
@@ -356,6 +377,29 @@ class LSC(Register):
         self.index_matched_surfaces = []
 
 
+# class Tubing(Register):
+#     """Tubing of a capillary, e.g. PFA, or FEP, usually 1/16" OD, hosts a Channel object"""
+#
+#     def __init__(self, bandgap=555, origin=(0, 0, 0), size=(1, 1, 1)):
+#         self.origin = np.array(origin)
+#         self.size = np.array(size)
+#         # The following is a little workaround to convert origin, size into cylinder (radius, length) descriptors
+#         # Axis is based on the longest direction among the size (x,y,z)
+#         axis = np.argmax(size)
+#         # Length is the value of the longest axis of size
+#         length = np.amax(size)
+#         # Radius is the average of the other two coordinates
+#         radius = np.average(np.delete(size, axis))
+#         self.shape = Cylinder(radius=radius, length=length)
+#
+#         # For CSG first rotation then translation (assuming scaling is not needed)
+#         if axis == 0:  # Z to X Rotation needed
+#             self.shape.append_transform(tf.rotation_matrix(math.pi / 2.0, [0, 1, 0]))
+#         elif axis == 1:  # Z to Y Rotation needed
+#             self.shape.append_transform(tf.rotation_matrix(-math.pi / 2.0, [1, 0, 0]))
+#
+#         self.shape.append_transform(tf.translation_matrix(origin))
+
 class Channel(Register):
     """Liquid in reactor's channel simulation"""
 
@@ -374,8 +418,8 @@ class Channel(Register):
             axis = np.argmax(size)
             # Length is the value of the longest axis of size
             length = np.amax(size)
-            # Radius is the average of the other two coordinates divided by two (radius, not diameter!)
-            radius = np.average(np.delete(size, axis)) / 2  # Div. by 2 cause what's given it's the diameter
+            # Radius is the average of the other two coordinates
+            radius = np.average(np.delete(size, axis))
 
             # Cylinder volume formula
             self.volume = math.pi * radius ** 2 * length
@@ -454,3 +498,4 @@ class Face(Register):
         self.shape = shape
         self.material = None
         self.name = "FACE"
+

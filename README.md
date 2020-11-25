@@ -1,11 +1,6 @@
 pvtrace - Optical ray tracing for photovoltaic devices and luminescent materials
 -------
 
-The master branch of this repo will be kept frozen as it is referenced in the Electronic Supporting Information of "Every photon counts: understanding and optimizing photon paths in luminescent solar concentrator-based photomicroreactors (LSC-PMs)" DOI: [10.1039/C7RE00077D](https://doi.org/10.1039/C7RE00077D) Reaction Chemistry & Engineering 4, 2017.
-
-Thanks to Federica De Chiara for highlighting this issue.
- 
-
 pvtrace was originally written to simulate luminescent solar concentrators during my PhD studies. However it has grown into a much more powerful tool, capable of optical ray tracing complicated structures, and the collection of statistical data to enable characterisation of optics useful for photovoltaics and solar energy conversion.
 
 If you use pvtrace please use the following citation,

@@ -1319,6 +1319,10 @@ class Sphere(object):
         super(Sphere, self).__init__()
         self.centre = np.array(centre)
         self.radius = radius
+        # self.transform = tf.identity_matrix()
+
+    # def append_transform(self, new_transform):
+    #     self.transform = tf.concatenate_matrices(new_transform, self.transform)
 
     def on_surface(self, point):
         """

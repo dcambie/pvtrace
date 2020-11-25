@@ -11,6 +11,8 @@ class Matrix(object):
     def __init__(self, matrix_name):
         if matrix_name == 'PDMS' or matrix_name == 'pdms':
             self.polymer = PDMS()
+        elif matrix_name == 'PMMA' or matrix_name == 'pmma':
+            self.polymer = PMMA()
         else:
             raise Exception('Unknown dye! (', self.dye, ')')
 
@@ -32,7 +34,7 @@ class Matrix(object):
 
 class PDMS(object):
     """
-    Class to generate spectra for Red305-based devices
+    Class to generate spectra for PDMS-based devices
     """
 
     def __init__(self):
@@ -48,3 +50,28 @@ class PDMS(object):
         # PDMS absorption spectrum
         # 0.5/m based on SI@ DOI: 10.1039/C0LC00707B
         return Spectrum([0, 1000], [0.5, 0.5])
+
+
+class PMMA(object):
+    """
+    Class to generate spectra for PMMA-based devices
+    """
+
+    def __init__(self):
+        self.name = 'Polymethylmethacrylate (PMMA)'
+        self.logger = logging.getLogger('pvtrace.pmma')
+        self.refractive_index = 1.4895
+
+    @property
+    def description(self):
+        return self.name + ' (Limacryl)'
+
+    def absorption(self):
+        return Spectrum([0, 1100], [0.98, 0.98]) #final absorption coefficient determined by experiments
+        # FIXME PMMA absorption coefficient is not plausiable in the near infrared region
+        # PDMS absorption spectrum
+
+        # 2/m based as in dfarrell code
+
+
+        # return Spectrum(filename='D:\PvTrace_git\pvtrace-fork\data\pmma18.75.txt')

@@ -122,7 +122,7 @@ class PhotonDatabase(object):
             self.cursor.execute('INSERT INTO polarisation VALUES (?, ?, ?, ?)', values)
         except:
             pass
-        
+
         if surface_normal is not None:
             values = (float(surface_normal[0]), float(surface_normal[1]), float(surface_normal[2]), self.uid)
             self.cursor.execute('INSERT INTO surface_normal VALUES (?, ?, ?, ?)', values)
@@ -140,9 +140,12 @@ class PhotonDatabase(object):
         
         values = (photon.absorption_counter, photon.intersection_counter, photon.active, photon.killed, photon.source,
                   emitter_material, absorber_material, container_obj, str(on_surface_obj), str(surface_id),
-                  str(ray_direction_bound), photon.reaction, self.uid)
-        self.cursor.execute('INSERT INTO state VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)', values)
-        
+                  str(ray_direction_bound), photon.reaction, photon.electron, self.uid)
+        self.cursor.execute('INSERT INTO state VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)', values)
+        #
+        values = (photon.electron, photon.id, float(photon.wavelength), self.uid)
+        self.cursor.execute('INSERT INTO electron VALUES (?,?,?,?)', values)
+
         # Every 100 times write data to dbfile
         if self.uid % 100 == 0:
             self.connection.commit()
@@ -185,7 +188,7 @@ class PhotonDatabase(object):
         :param tables: Tables to be added
         """
         if tables is None:
-            tables = ("photon", "state", "direction", "position", "surface_normal", "polarisation")
+            tables = ("photon", "state", "direction", "position", "surface_normal", "polarisation", "electron")
         self.cursor.execute("ATTACH DATABASE ? AS  toMerge", [filename])
 
         # self.cursor.execute("BEGIN TRANSACTION")
@@ -203,6 +206,7 @@ class PhotonDatabase(object):
         self.cursor.execute("DELETE FROM polarisation")
         self.cursor.execute("DELETE FROM position")
         self.cursor.execute("DELETE FROM surface_normal")
+        self.cursor.execute("DELETE FROM electron")
         self.cursor.execute("DELETE FROM photon")
         self.cursor.execute("VACUUM")
         self.connection.commit()
@@ -381,7 +385,39 @@ class PhotonDatabase(object):
             print("Cannot return any uids for this question."
                   "Are you using the function uids_in_bound_on_surface correctly?")
             return []
-    
+
+    def uids_out_backscatter(self):
+        return itemise(self.cursor.execute(
+                'SELECT MAX(uid) FROM photon GROUP BY pid HAVING uid IN ('
+                'SELECT uid FROM state WHERE on_surface_obj="white paper" GROUP BY uid);').fetchall())
+
+    def uids_in_photovoltaic(self):
+        return itemise(self.cursor.execute(
+                'SELECT MAX(uid) FROM photon GROUP BY pid HAVING uid IN ('
+                'SELECT uid FROM state WHERE container_obj like "%cell%" AND killed = 0 GROUP BY uid);').fetchall())
+
+    def uids_in_edge_photovoltaic(self):
+        return itemise(self.cursor.execute(
+                'SELECT MAX(uid) FROM photon GROUP BY pid HAVING uid IN ('
+                'SELECT uid FROM state WHERE container_obj like "%edge_cell%" AND killed = 0 GROUP BY uid);').fetchall())
+
+    def uids_in_bottom_photovoltaic(self):
+        return itemise(self.cursor.execute(
+                'SELECT MAX(uid) FROM photon GROUP BY pid HAVING uid IN ('
+                'SELECT uid FROM state WHERE container_obj like "%bottom_cell%" AND killed = 0 GROUP BY uid);').fetchall())
+
+    def uids_electron(self):
+        return itemise(self.cursor.execute(
+            'SELECT MAX(uid) FROM photon GROUP BY pid INTERSECT SELECT uid FROM state WHERE electron = 1 AND killed = 0'))
+
+    def uids_edge_electron(self):
+        return itemise(self.cursor.execute(
+            'SELECT MAX(uid) FROM photon GROUP BY pid INTERSECT SELECT uid FROM state WHERE container_obj like "%edge_cell%" AND electron = 1 AND killed = 0'))
+
+    def uids_bottom_electron(self):
+        return itemise(self.cursor.execute(
+            'SELECT MAX(uid) FROM photon GROUP BY pid INTERSECT SELECT uid FROM state WHERE container_obj like "%bottom_cell%" AND electron = 1 AND killed = 0'))
+
     def uids_in_reactor(self):
         """ Returns the uids of all the photons in the reactor channels. """
         return itemise(self.cursor.execute(
@@ -393,6 +429,11 @@ class PhotonDatabase(object):
         return itemise(self.cursor.execute(
             "SELECT MAX(uid) FROM photon GROUP BY pid INTERSECT "
             "SELECT uid FROM state WHERE reaction = 1 AND absorption_counter > 1"))
+
+    def uids_in_tubing(self):
+        return itemise(self.cursor.execute(
+            "SELECT uid FROM state WHERE container_obj like '%tubing%' AND ray_direction_bound = 'In'"))
+
     
     def uids_luminescent(self):
         """ Returns luminescent photons. """
@@ -445,11 +486,11 @@ class PhotonDatabase(object):
             "SELECT COUNT(*) FROM (SELECT uid FROM state WHERE ray_direction_bound = 'Out' AND surface_id='top'"
             "AND intersection_counter = 1  GROUP BY uid)").fetchall())
 
-    def uids_nonradiative_losses(self):
+    def  uids_nonradiative_losses(self):
         return itemise(self.cursor.execute(
-            "SELECT uid FROM state WHERE reaction = 0 AND surface_id = 'None' AND absorption_counter > 0 AND killed = 0"
+            "SELECT uid FROM state WHERE reaction = 0 AND surface_id = 'None' AND active = 0 AND killed = 0 AND electron is null"# 
             " GROUP BY uid HAVING uid IN (SELECT MAX(uid) FROM photon GROUP BY pid)").fetchall())
-    
+
     def value_for_table_column_uid(self, table, column, uid):
         """
         Returns values from the database index my table, column and row, where the row is uniquely defined using

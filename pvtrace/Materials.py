@@ -13,6 +13,7 @@
 
 from __future__ import division, print_function
 
+import logging
 # try:
 # import scipy as sp
 # from scipy import interpolate
@@ -34,12 +35,12 @@ from types import *
 import os
 
 
-def load_spectrum(filename, xbins=None, base10=True):
+def load_spectrum(filename, xbins=None, base10=True, smarts=True, diffuse=False, tilt=False):
     assert os.path.exists(filename), "File '%s' does not exist." % filename
-    spectrum = Spectrum(filename=filename, base10=base10)
+    spectrum = Spectrum(filename=filename, base10 = base10, smarts=smarts, diffuse=diffuse, tilt=tilt)
 
     # Truncate the spectrum using the xbins
-    return spectrum if xbins is None else Spectrum(x=xbins, y=spectrum(xbins), base10=base10)
+    return spectrum if xbins is None else Spectrum(x=xbins, y=spectrum(xbins), base10=False, smarts=False)
     # Note: Spectrum instances are callable thanks to the __call__ decorator of the Spectrum class ;)
 
 
@@ -190,7 +191,7 @@ class Spectrum(object):
     e.g. absorption, emission or refractive index spectrum as a function of wavelength in nanometers.
     """
 
-    def __init__(self, x=None, y=None, filename=None, base10=True):
+    def __init__(self, x=None, y=None, filename=None, base10=True, smarts=False, tilt=False, diffuse=False):
         """
         Initialised with x and y which are array-like data of the same length. x must have units of wavelength
         (that is in nanometers), y can an arbitrary units. However, if the Spectrum is representing an
@@ -201,15 +202,56 @@ class Spectrum(object):
 
         if filename is not None:
 
-            try:
-                data = np.loadtxt(filename)
-            except Exception as e:
-                print("Failed to load data from file, %s", str(filename))
-                print(e)
-                exit(1)
+            if smarts:
+                try:
+                    data = np.loadtxt(filename, skiprows=1)
+                except Exception as e:
+                    print("Failed to load data from file, %s", str(filename))
+                    print(e)
+                    exit(1)
 
-            self.x = np.array(data[:, 0], dtype=np.float32)
-            self.y = np.array(data[:, 1], dtype=np.float32)
+                if tilt:
+                    if diffuse:
+                        self.x = np.array(data[:, 0], dtype=np.float32)
+                        self.y = np.array(data[:, 5], dtype=np.float32)
+                    else:
+                        self.x = np.array(data[:, 0], dtype=np.float32)
+                        self.y = np.array(data[:, 4], dtype=np.float32)
+
+                else:
+                # Get the data from two different columns
+                    if diffuse:
+                        self.x = np.array(data[:, 0], dtype=np.float32)
+                        self.y = np.array(data[:, 1], dtype=np.float32)
+
+                    else:
+                        self.x = np.array(data[:, 0], dtype=np.float32)
+                        self.y = np.array(data[:, 3], dtype=np.float32)
+
+                # Sort array based on ASC X if needed
+                arr1inds = self.x.argsort()
+                self.x = self.x[arr1inds[::1]]
+                self.y = self.y[arr1inds[::1]]
+                self.y = 10 ** self.y
+
+            else:
+                try:
+                    data = np.loadtxt(filename, skiprows=0)
+                except Exception as e:
+                    print("Failed to load data from file, %s", str(filename))
+                    print(e)
+                    exit(1)
+
+                self.x = np.array(data[:, 0], dtype=np.float32)
+                self.y = np.array(data[:, 1], dtype=np.float32)
+
+                # Sort array based on ASC X if needed
+                arr1inds = self.x.argsort()
+                self.x = self.x[arr1inds[::1]]
+                self.y = self.y[arr1inds[::1]]
+
+
+
 
         elif x is not None and y is not None:
             self.x = np.array(x, dtype=np.float32)
@@ -237,7 +279,8 @@ class Spectrum(object):
 
         # Check for negative values
         for y in self.y:
-            assert float(y) >= 0, "Spectrum has negative values!"
+            assert float(y) >= -0.00001, "Spectrum has negative values!"
+            # fixed by chong; float number never equal to zero, so if the original spectrum has zero value, there is a bug
 
         if base10:
             self.y *= 1/np.log10(math.e)
@@ -570,7 +613,7 @@ class CompositeMaterial(Material):
     well as the absorption and emission properties of the dyes.
     """
 
-    def __init__(self, materials, refractive_index=None, silent=False):
+    def __init__(self, materials, refractive_index=None):
         """Initialised by a list or array of material objects."""
         super(CompositeMaterial, self).__init__()
         self.materials = materials
@@ -582,11 +625,11 @@ class CompositeMaterial(Material):
             print("For example try using, CompositeMaterial([pmma, dye1, dye2], refractive_index=1.5]).\n")
             raise ValueError
         self.refractive_index = refractive_index
-        self.silent = silent
         # These parameters are dynamically set to those of the relative material within self.trace()
         self.emission = None
         self.absorption = None
         self.quantum_efficiency = None
+        self.log = logging.getLogger('pvtrace.compositeMaterial')
 
     def all_absorption_coefficients(self, nanometers):
         """Returns and array of all the the materials absorption coefficients at the specified wavelength."""
@@ -620,6 +663,7 @@ class CompositeMaterial(Material):
         absorptions = self.all_absorption_coefficients(photon.wavelength)
         # print 'At ',photon.wavelength,' nm the absorption of the materials are:',absorptions
         absorption_coefficient = absorptions.sum()
+        assert absorption_coefficient > 0, "Sum of absorption at "+str(photon.wavelength)+" nm is 0! Check emission!"
         # See WolframAlpha "-ln(1-x)/y from x=0 to 1 from y=0 to 2"
         sampled_pathlength = -np.log(1 - np.random.uniform()) / absorption_coefficient
         # print "sampled is: ",sampled_pathlength
@@ -649,8 +693,7 @@ class CompositeMaterial(Material):
 
             # Emission occurs.
             if np.random.uniform() < material.quantum_efficiency:
-                if not self.silent:
-                    print("   * Re-emitted *")
+                self.log.debug("   *  Photon re-emitted!")
                 photon.reabs += 1
                 photon.emitter_material = material
                 # Generates a new photon with red-shifted wavelength, new direction and polarisation
@@ -658,8 +701,7 @@ class CompositeMaterial(Material):
                 return photon
 
             else:
-                if not self.silent:
-                    print("   * Photon Lost *")
+                self.log.debug("   *  Photon lost!")
                 # Emission does not occur. Now set active = False ans return
                 photon.active = False
                 return photon

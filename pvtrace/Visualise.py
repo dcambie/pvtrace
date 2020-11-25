@@ -41,41 +41,53 @@ class Visualiser (object):
         s = evt.key
 
         if len(s) == 1:
-            if s == 'x':
-                print(self.display.center)
-                print(self.display.forward)
-                
             if s == 'd':
-                self.display.center = (self.display.center[0]+0.005, self.display.center[1], self.display.center[2])
+                self.display.center = (self.display.center[0]+0.05, self.display.center[1], self.display.center[2])
             if s == 's':
                 self.display.center = (self.display.center[0], self.display.center[1]-0.005, self.display.center[2])
             if s == 'a':
-                self.display.center = (self.display.center[0]-0.005, self.display.center[1], self.display.center[2])
+                self.display.center = (self.display.center[0]-0.05, self.display.center[1], self.display.center[2])
             if s == 'w':
                 self.display.center = (self.display.center[0], self.display.center[1]+0.005, self.display.center[2])
             if s == 'r':
-                self.display.center = (self.display.center[0], self.display.center[1] + 0.0005, self.display.center[2])
-            if s == '0':
-                self.display.center = (0.035, 0.03, 0)
-                self.display.center = (1.6, 1.611, 0)
-                self.display.forward = (0, 0.75, -0.5)
+                self.display.center = (self.display.center[0], self.display.center[1] , self.display.center[2]+ 0.005)
+            if s == 'e':
+                self.display.center = (self.display.center[0], self.display.center[1] , self.display.center[2]- 0.005)
+
+            # seen from the origin, the direction is either from x-axis, y-axis or z-axis
+            if s == 'x':
+                self.display.center = (0, 0, 0)
+                self.display.forward = (1, 0, 0)
+            if s == 'y':
+                self.display.center = (0, 0, 0)
+                self.display.forward = (0, 1, 0)
+
             if s == 'z':
-                self.display.center = (0.025, 0.025, 0.0015)
-                self.display.forward = (0.5, 0, 0)
+                self.display.center = (0, 0, 0)
+                self.display.forward = (0, 0, -1)
+
+            if s == 'v':
+                self.display.center = (0.05, -0.01, 0.005)
+                self.display.forward = (0, 1.5, -1)
+
             if s == 'q':
                 Visualiser.VISUALISER_ON = False
+
+            # rotate
             if s == '1':
                 self.display.forward = self.display.forward.rotate(angle=0.1, axis=(0, 0, 1))
             if s == '2':
                 self.display.forward = self.display.forward.rotate(angle=-0.1, axis=(0, 0, 1))
             if s == '3':
-                self.display.forward = self.display.forward.rotate(angle=0.1, axis=(1, 0, 0))
+                self.display.forward = self.display.forward.rotate(angle=0.01, axis=(1, 0, 0))
             if s == '4':
                 self.display.forward = self.display.forward.rotate(angle=-0.1, axis=(1, 0, 0))
             if s == '5':
                 self.display.forward = self.display.forward.rotate(angle=0.1, axis=(0, 1, 0))
             if s == '6':
                 self.display.forward = self.display.forward.rotate(angle=-0.1, axis=(0, 1, 0))
+
+            #print in the windows
             if s == 'p':
                 print("Forward: " + str(self.display.forward))
                 print("Center: " + str(self.display.center))
@@ -95,15 +107,18 @@ class Visualiser (object):
             background = (0.957, 0.957, 1)
         if ambient is None:
             ambient = 0.5
-        self.display = visual.display(title='PVTrace', x=0, y=0, width=800, height=600, background=background,
-                                      ambient=ambient)
+        self.display = visual.display(title='PVTrace', x=0, y=0, width=1000, height=800, background=background,
+                                      ambient=ambient, fillswindow=True)
         self.display.bind('keydown', self.keyInput)
         self.display.exit = False
 
-        self.display.center = (0.025, 0.015, 0)
-        self.display.forward = (0, 0.83205, -0.5547)
-        
-        show_axis = False
+        self.display.autoscale = True
+        self.display.range = 0.2 # fix camera, so autozooming is forbidden
+
+
+        self.display.center = (0.05, 0.05, 0.005)
+        self.display.forward = (0, 0, -0.388)
+
         if show_axis:
             visual.curve(pos=[(0, 0, 0), (.08, 0, 0)], radius=0.0005, color=visual.color.red)
             visual.curve(pos=[(0, 0, 0), (0, .07, 0)], radius=0.0005, color=visual.color.green)
@@ -127,11 +142,13 @@ class Visualiser (object):
             # print "Visualiser: box position=%s, box_size=%s" % (str(pos), str(box_size))
             angle, direction, point = tf.rotation_from_matrix(box_to_add.transform)
 
+
             if material is None:
                 material = visual.materials.plastic
 
             if np.allclose(np.array(colour), np.array([0, 0, 0])):
                 visual.box(pos=pos, size=box_size, material=material, opacity=opacity)
+
             else:
                 visual.box(pos=pos, size=box_size, color=colour, materials=material, opacity=opacity)
     
@@ -207,7 +224,7 @@ class Visualiser (object):
                 colour = visual.color.white
             pos = ray.position
             axis = ray.direction * 5
-            visual.cylinder(pos=pos, axis=axis, radius=0.0001, color=Geo.norm(colour),
+            visual.cylinder(pos=pos, axis=axis, radius=0.00001, color=Geo.norm(colour),
                             opacity=opacity, material=material)
     
     def addSmallSphere(self, point, colour=None, opacity=1., material=None):
@@ -225,7 +242,7 @@ class Visualiser (object):
         if colour is None:
             colour = visual.color.white
         axis = np.array(stop) - np.array(start)
-        return visual.cylinder(pos=start, axis=axis, radius=0.000055, color=Geo.norm(colour),
+        return visual.cylinder(pos=start, axis=axis, radius=0.00008, color=Geo.norm(colour),
                                opacity=opacity, material=material)
     
     def addCylinder(self, cylinder, colour=None, opacity=1., material=None):
@@ -321,6 +338,7 @@ class Visualiser (object):
         """
         Draws a smallSphere with direction arrow and polarisation (if data is available).
         """
+
         self.addSmallSphere(photon.position)
         visual.arrow(pos=photon.position, axis=photon.direction * 0.0005, shaftwidth=0.0003,
                      color=visual.color.magenta, opacity=0.8)

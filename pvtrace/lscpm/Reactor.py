@@ -6,7 +6,9 @@ import os
 import ConfigParser
 from pvtrace.lscpm.Photocatalysts import *
 from pvtrace.lscpm.Solvents import *
+from pvtrace.lscpm.Capillary import *
 import ast
+
 
 
 class Reactor(object):
@@ -15,7 +17,8 @@ class Reactor(object):
     """
 
     def __init__(self, reactor_name, luminophore, matrix, photocatalyst, photocatalyst_concentration=0.001,
-                 solvent=None):
+                 solvent=None, refractive_index_cgchong=1.340, exist_backscatter=False, exist_photovoltaic_bottom=False,
+                 exist_photovoltaic_edge=False, blank=False, tilt_LSC=False):
 
         # 0. CONFIGURATION
         # 0.1 REACTOR TYPE
@@ -51,7 +54,11 @@ class Reactor(object):
 
         # 2. CHANNELS
         # Create the channels described in reactor_type with the given reaction_mixture and adds them to the scene
-        channels_raw = config.get('Channels', 'channels')
+        try:
+            channels_raw = config.get('Channels', 'channels')
+        except ConfigParser.NoOptionError:
+            channels_raw = ''
+
         if channels_raw is not '':
             channels = ast.literal_eval(channels_raw)
 
@@ -63,6 +70,27 @@ class Reactor(object):
                 self.scene_obj.append(channel)
                 self.reaction_volume += channel.volume
 
+        try:
+            capillaries_raw = config.get('Channels', 'capillaries')
+        except ConfigParser.NoOptionError:
+            capillaries_raw = ''
+
+        if capillaries_raw is not '':
+            capillaries = ast.literal_eval(capillaries_raw)
+
+            for capillary_data in capillaries:
+                self.capillary = Capillary(axis_origin=capillary_data[0], axis=capillary_data[1],
+                                      length=capillary_data[2], outer_diameter=capillary_data[3],
+                                      inner_diameter=capillary_data[4], tubing="PFA", reaction_material=reaction_mixture,
+                                      refractive_index_cg=refractive_index_cgchong)
+                # if tilt_LSC:
+                #     self.capillary.tubing.shape.append_transform(tf.rotation_matrix(28/180 * np.pi, norm([1, 0, 0])))
+                #     self.capillary.reaction.shape.append_transform(tf.rotation_matrix(28/180* np.pi, norm([1, 0, 0])))
+                self.capillary.tubing.name = capillary_data[5]+'_tubing'
+                self.capillary.reaction.name = capillary_data[5] + '_reaction'
+                self.scene_obj.append(self.capillary.tubing)
+                self.scene_obj.append(self.capillary.reaction)
+                self.reaction_volume += self.capillary.reaction.volume
         # 3. LSC-PM
         # 3.1 LSC-PM GEOMETRY
         thickness = config.getfloat('LSC', 'thickness')
@@ -74,9 +102,54 @@ class Reactor(object):
         # 3.2 LSC object creation
         self.lsc = LSC(origin=(0, 0, 0), size=(lsc_x, lsc_y, thickness))
         # CompositeMaterial made of matrix + luminophore
-        self.lsc.material = CompositeMaterial([matrix.material(), luminophore.material()],
-                                         refractive_index=matrix.refractive_index(), silent=True)
+        if blank:
+            self.lsc.material = CompositeMaterial([matrix.material()],
+                                                  refractive_index=matrix.refractive_index())
+        else:
+            self.lsc.material = CompositeMaterial([matrix.material(), luminophore.material()],
+                                                  refractive_index=matrix.refractive_index())
+
+            # simulating the blank LSC
+
         self.lsc.name = lsc_name
+        # self.lsc.shape.append_transform(tf.rotation_matrix(28/180*np.pi, [1, 0, 0]))
+
         self.scene_obj.append(self.lsc)
 
+        # 3.3 other accessories of LSC-PM
+        if exist_backscatter:
+
+            self.backscatter = PlanarReflector(reflectivity=1.0, origin=(0, 0, -0.0002), size=(lsc_x, lsc_y, 0.0001))
+            self.backscatter.name = 'white paper'
+            self.scene_obj.append(self.backscatter)
+
+        if exist_photovoltaic_bottom:
+            PV_box = Box(origin=(0, 0, 0), extent=(lsc_x, lsc_y, 0.001))
+            self.bottom_photovoltaic = SimpleCell(finiteplane=PV_box, origin=(0, 0, -0.05))
+            self.bottom_photovoltaic.name = "bottom_cell"
+            self.scene_obj.append(self.bottom_photovoltaic)
+
+        if exist_photovoltaic_edge:
+            # alarm!! be careful about the cell geometry [origin(near left minus)]
+            PV_box_edge_near = Box(origin=(0, 0, 0), extent=(lsc_x, 0.001, thickness))
+            self.edge_photovoltaic_near = SimpleCell(finiteplane=PV_box_edge_near, origin=(0, -0.001, 0))
+            self.edge_photovoltaic_near.name = "edge_cell_near"
+            self.scene_obj.append(self.edge_photovoltaic_near)
+
+            PV_box_edge_far = Box(origin=(0, 0, 0), extent=(lsc_x, 0.001, thickness))
+            self.edge_photovoltaic_far = SimpleCell(finiteplane=PV_box_edge_far, origin=(0, lsc_y, 0))
+            self.edge_photovoltaic_far.name = "edge_cell_far"
+            self.scene_obj.append(self.edge_photovoltaic_far)
+
+            PV_box_edge_right = Box(origin=(0, 0, 0), extent=(0.001, lsc_y, thickness))
+            self.edge_photovoltaic_right = SimpleCell(finiteplane=PV_box_edge_right, origin=(lsc_x, 0, 0))
+            self.edge_photovoltaic_right.name = "edge_cell_right"
+            self.scene_obj.append(self.edge_photovoltaic_right)
+
+            PV_box_edge_left = Box(origin=(0, 0, 0), extent=(0.001, lsc_y, thickness))
+            self.edge_photovoltaic_left = SimpleCell(finiteplane=PV_box_edge_left, origin=(-0.001, 0, 0))
+            self.edge_photovoltaic_left.name = "edge_cell_left"
+            self.scene_obj.append(self.edge_photovoltaic_left)
+
         self.log.info('Reactor volume (calculated): ' + str(self.reaction_volume * 1000000) + ' mL')
+

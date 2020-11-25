@@ -38,7 +38,7 @@ class Analysis(object):
 
         if uuid is not None:
             self.uuid = uuid
-            self.working_dir = os.path.join(os.path.expanduser('~'), 'pvtrace_data', self.uuid)
+            self.working_dir = os.path.join('D:/','LSC_PM_simulation_results', 'photovoltaic', self.uuid)#changed by chong to fix my computer's problem
             self.graph_dir = os.path.join(self.working_dir, 'graphs')
             try_db_location = os.path.join(self.working_dir, "db.sqlite")
             if database is None and os.access(try_db_location, os.R_OK):
@@ -86,22 +86,50 @@ class Analysis(object):
         for surface in self.apertures:
             self.uids['solar_' + surface] = self.db.uids_out_bound_on_surface(surface, solar=True)
             self.uids['solar_apertures'] += self.uids['solar_' + surface]
+
+        # BACK SCATTER
+        self.uids['bounds_back_scatter'] = self.db.uids_out_backscatter()
+
+        # CELL & EXCITED ELECTRON
+        self.uids['photovoltaic'] = self.db.uids_in_photovoltaic()
+        self.uids['edge_photovoltaic'] = self.db.uids_in_edge_photovoltaic()
+        self.uids['bottom_photovoltaic'] = self.db.uids_in_bottom_photovoltaic()
+        self.uids['electron'] = self.db.uids_electron()
+        self.uids['edge_electron'] = self.db.uids_edge_electron()
+        self.uids['bottom_electron'] = self.db.uids_bottom_electron()
+
+        # SOLAR PHOTONS (edges)
+        self.uids['solar_edges'] = []
+        for surface in self.edges:
+            self.uids['solar_'+surface] = self.db.uids_out_bound_on_surface(surface, solar=True)
+            self.uids['solar_edges'] += self.uids['solar_'+surface]
+
         # CHANNELS
         self.uids['luminescent_channel'] = self.db.uids_in_reactor_and_luminescent()
         self.uids['channels_tot'] = self.db.uids_in_reactor()
         self.uids['channels_direct'] = diff(self.uids['channels_tot'], self.uids['luminescent_channel'])
 
+        # tubing only focus on uids
+        self.uids['tubing'] = self.db.uids_in_tubing()
+
+        # self.uids['debug'] = self.uids['luminescent_edges'] + self.uids['luminescent_apertures'] + \
+        #                      self.uids['solar_edges'] + self.uids['solar_apertures'] + self.uids['losses'] + \
+        #                      self.uids['photovoltaic'] + self.uids['channels_tot']
+        # self.uids['find_bug'] = diff(self.uids['debug'], self.uids['tot'])
+
         # Calculate sum (for loop iterates only the keys of the dictionary)
         for key in self.uids:
             self.count[key] = len(self.uids[key])
         self.count['luminescent_faces'] = self.count['luminescent_edges'] + self.count['luminescent_apertures']
+        self.count['solar_faces'] = self.count['solar_edges'] + self.count['solar_apertures']
+        self.count['losses_total'] = self.count['losses'] + self.count['photovoltaic']
 
         # Controls
         difference = self.count['channels_tot'] - self.count['luminescent_channel']
         assert self.count['channels_direct'] == difference, "Difference of array failed"
 
-        delta = abs(self.count['tot'] - (self.count['solar_apertures'] + self.count['luminescent_faces'] +\
-                self.count['losses'] + self.count['channels_tot']))
+        delta = abs(self.count['tot'] - (self.count['solar_faces'] + self.count['luminescent_faces'] +
+                self.count['losses_total'] + self.count['channels_tot'] + self.count['bounds_back_scatter']))
 
         if delta == 0:
             self.log.info("[db_stats()] Results sanity check OK!")
@@ -109,8 +137,10 @@ class Analysis(object):
             if (delta / self.count['tot']) < 0.001:
                 self.log.warn("[db_stats()] Results FAILED sanity check!!!")
             else:
+
+
                 raise ArithmeticError('Sum of photons per fate and generate do not match!'
-                                      '(Delta: '+delta+'/'+str(self.count['tot'])+' [Error > 0.1%!]')
+                                      '(Delta: '+str(delta)+'/'+str(self.count['tot'])+' [Error > 0.1%!]')
 
     def percent(self, num_photons):
         """
@@ -173,22 +203,28 @@ class Analysis(object):
 
         return ret_str
 
-    def print_excel_header(self, additional=None):
+    def print_excel_header(self, additional=None, backscatter = False, photovoltaic = False):
         """
         Column header for print_excel()
         """
-        if additional is None:
+        if backscatter:
             r_text = "Generated, Killed, Total, Losses, Luminescent - Left, Luminescent - Near, Luminescent - Far, " \
-                   "Luminescent - Right, Luminescent - Top, Luminescent - Bottom, Solar - Top, Solar - Bottom, " \
-                   "Channels - Direct, Channels - Luminescent"
+                   "Luminescent - Right, Luminescent - Top, Luminescent - Bottom, Solar - Top, Solar - Bottom, Solar - edge," \
+                   "Channels - Direct, Channels - Luminescent, BoundsLoss - backscatter"
+
+        elif photovoltaic:
+            r_text = "Generated, Killed, Total, Losses, Luminescent - Left, Luminescent - Near, Luminescent - Far, " \
+                     "Luminescent - Right, Luminescent - Top, Luminescent - Bottom, Solar - Top, Solar - Bottom, Solar - edge," \
+                     "Channels - Direct, Channels - Luminescent, photovoltaic - absorb, edge, bottom, electron - excited, ele - edge, ele - bottom"
+
         else:
-            r_text = additional+", Generated, Killed, Total, Losses, Luminescent - Left, Luminescent - Near," \
-                              "Luminescent - Far, Luminescent - Right, Luminescent - Top, Luminescent - Bottom," \
-                              "Solar - Top, Solar - Bottom, Channels - Direct, Channels - Luminescent"
+            r_text = "Generated, Killed, Total, Losses, Luminescent - Left, Luminescent - Near," \
+                     "Luminescent - Far, Luminescent - Right, Luminescent - Top, Luminescent - Bottom," \
+                     "Solar - Top, Solar - Bottom, Solar - edge, Channels - Direct, Channels - Luminescent"
         self.log.info(r_text)
         return r_text
 
-    def print_excel(self, additions=None):
+    def print_excel(self, additions=None, backscatter = False, photovoltaic = False):
         """
         Prints an easy to import report on the fate of the photons stored in self.db
         """
@@ -220,12 +256,30 @@ class Analysis(object):
         for surface in apertures:
             return_text += str(self.count['solar_' + surface]) + ", "
 
+        return_text += str(self.count['solar_edges']) + ", "
+
+        if backscatter:
+            return_text += str(self.count['bounds_back_scatter'])+ ", "
+
         # CHANNELS (lumi, direct)
         return_text += str(self.count['channels_direct']) + ", "
-        return_text += str(self.count['luminescent_channel'])
+        return_text += str(self.count['luminescent_channel']) + ", "
+        if photovoltaic:
+
+            return_text += str(self.count['photovoltaic']) + ", "
+            return_text += str(self.count['edge_photovoltaic']) + ", "
+            return_text += str(self.count['bottom_photovoltaic']) + ", "
+
+            return_text += str(self.count['electron']) + ", "
+            return_text += str(self.count['edge_electron']) + ", "
+            return_text += str(self.count['bottom_electron']) + ", "
 
         self.log.info(return_text)
         return return_text
+
+    def get_absorption(self):
+        absorbed_by_channel = self.count['channels_tot']/self.count['tot']
+        return absorbed_by_channel
 
     def get_bounces(self, photon_list=None):
         """
@@ -334,7 +388,8 @@ class Analysis(object):
             'lsc-edges': self.uids['luminescent_edges'],
             'lsc-apertures': self.uids['luminescent_apertures'],
             'lsc-reflected': self.uids['solar_top'],
-            'lsc-transmitted': self.uids['solar_bottom']}
+            'lsc-transmitted': self.uids['solar_bottom'],
+            'losses': self.uids['losses']}
 
         # noinspection PyCompatibility
         for plot, uid in six.iteritems(graphs):
@@ -345,7 +400,7 @@ class Analysis(object):
                 file_path = os.path.join(prefix, plot)
                 self.save_histogram(data=wavelengths, filename=file_path)
 
-        return True
+        # return True
         self.log.info("Plotting bounces luminescent to channels")
         uids = self.db.uids_in_reactor_and_luminescent()
         if len(uids) < 10:

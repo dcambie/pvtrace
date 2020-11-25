@@ -3,7 +3,7 @@ PRAGMA foreign_keys = ON;
 
 CREATE TABLE photon(  uid INTEGER PRIMARY KEY,  /*unique id : different for every row*/  pid INTEGER,  /* photon id : constant from throw to escape/loss */ wavelength DOUBLE);
 
-CREATE TABLE state( absorption_counter INTEGER, intersection_counter INTEGER,  active BOOL,  killed BOOL,  source TEXT,  emitter_material TEXT,  absorber_material TEXT,  container_obj TEXT,  on_surface_obj TEXT,  surface_id TEXT, ray_direction_bound TEXT, reaction BOOL, uid INTEGER,  FOREIGN KEY(uid) REFERENCES photon(uid));
+CREATE TABLE state( absorption_counter INTEGER, intersection_counter INTEGER,  active BOOL,  killed BOOL,  source TEXT,  emitter_material TEXT,  absorber_material TEXT,  container_obj TEXT,  on_surface_obj TEXT,  surface_id TEXT, ray_direction_bound TEXT, reaction BOOL, electron BOOL, uid INTEGER,  FOREIGN KEY(uid) REFERENCES photon(uid));
 
 CREATE TABLE position(  x   DOUBLE,  y   DOUBLE,  z   DOUBLE,  uid  INTEGER,  FOREIGN KEY(uid) REFERENCES photon(uid));
 
@@ -12,6 +12,8 @@ CREATE TABLE direction(  x   DOUBLE,  y   DOUBLE,  z   DOUBLE,  uid  INTEGER,  F
 CREATE TABLE polarisation(  x   DOUBLE,  y   DOUBLE,  z   DOUBLE,  uid  INTEGER,  FOREIGN KEY(uid) REFERENCES photon(uid));
 
 CREATE TABLE surface_normal(  x   DOUBLE,  y   DOUBLE,  z   DOUBLE,  uid  INTEGER,  FOREIGN KEY(uid) REFERENCES photon(uid));
+
+CREATE TABLE electron(  electron   INTEGER,  pid   INTEGER,  wavelength   DOUBLE,  uid  INTEGER,  FOREIGN KEY(uid) REFERENCES photon(uid));
 
 --  DATA 
 -- INSERT INTO position VALUES (0,0,0,0);

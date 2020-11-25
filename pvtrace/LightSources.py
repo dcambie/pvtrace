@@ -17,7 +17,7 @@ import numpy as np
 
 import pvtrace.external.transformations as tf
 from pvtrace.Geometry import Cylinder, FinitePlane, transform_point, transform_direction, norm, \
-    rotation_matrix_from_vector_alignment
+    rotation_matrix_from_vector_alignment, Sphere
 from pvtrace.Trace import Photon
 
 
@@ -149,6 +149,8 @@ class PlanarSource(object):
         # Transform the direction
         photon.position = transform_point(local_point, self.plane.transform)
         photon.direction = self.direction
+
+        # try to let photons focus on the centre of reactor
         photon.active = True
         if self.spectrum is not None:
             photon.wavelength = self.spectrum.wavelength_at_probability(np.random.uniform())
@@ -294,7 +296,7 @@ class CylindricalSource(object):
         photon.source = self.source_id
 
         # Position of emission
-        phi = np.random.uniform(0., 2 * np.pi)
+        phi = np.random.uniform(0., 2*np.pi)
         r = np.random.uniform(0., self.radius)
 
         x = r * np.cos(phi)
@@ -312,6 +314,62 @@ class CylindricalSource(object):
         y = np.sin(phi) * np.sin(theta)
         z = np.cos(theta)
         local_direction = (x, y, z)
+
+        photon.direction = local_direction
+
+        # Set wavelength of photon
+        if self.spectrum is not None:
+            photon.wavelength = self.spectrum.wavelength_at_probability(np.random.uniform())
+        else:
+            photon.wavelength = self.wavelength
+
+        # Further initialisation
+        photon.active = True
+
+        photon.id = self.throw
+        self.log.debug('Emitted photon (pid: ' + str(self.throw)+')')
+        self.throw += 1
+        return photon
+
+class SphericalSource(object):
+    def __init__(self, spectrum=None, wavelength=555, centre=(0., 0., 0.), radius=1):
+        super(SphericalSource, self).__init__()
+        self.spectrum = spectrum
+        self.wavelength = wavelength
+        self.shape = Sphere(centre=centre, radius=radius)
+        self.radius = radius
+        self.centre = centre
+        self.throw = 0
+        self.source_id = "SphericalSource_" + str(id(self))
+        self.log = logging.getLogger('pvtrace.spherical_source')
+
+
+    def photon(self):
+        photon = Photon()
+        photon.source = self.source_id
+
+        # Position of emission
+        alpha_c = np.random.uniform(0., np.pi/2)
+        phi = np.random.uniform(0., 2*np.pi)
+        random_x = np.random.uniform(0, 0.1)
+        random_y = np.random.uniform(0, 0.1)
+
+        x = self.radius * np.cos(alpha_c) * np.cos(phi) + self.centre[0]
+        y = self.radius * np.cos(alpha_c) * np.sin(phi) + self.centre[1]
+        z = self.radius * np.sin(alpha_c) +self.centre[2]
+        local_center = (x, y, z)
+
+        photon.position = local_center
+
+        # Direction of emission (no need to transform if meant to be isotropic)
+        # phi = np.random.uniform(0., 2 * np.pi)
+        # theta = np.random.uniform(0., np.pi)
+        #
+        # x = np.cos(phi) * np.sin(theta)
+        # y = np.sin(phi) * np.sin(theta)
+        # z = np.cos(theta)
+        # local_direction = (x, y, z)
+        local_direction = (-x + random_x, -y + random_y, -z + self.centre[2])
 
         photon.direction = local_direction
 

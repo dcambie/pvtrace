@@ -1,5 +1,5 @@
 from __future__ import annotations
-import multiprocessing
+import pathos
 import os
 from typing import Optional, Sequence, Tuple
 from anytree import PostOrderIter, LevelOrderIter
@@ -200,7 +200,7 @@ class Scene(object):
         num_rays: int,
         workers: Optional[int] = None,
         seed: Optional[int] = None,
-        queue: Optional[multiprocessing.Queue] = None,
+        queue: Optional[pathos.helpers.mp.Queue] = None,
         end_rays: Optional[bool] = False,
     ):
         """Concurrently emit rays from light sources and return results.
@@ -213,7 +213,7 @@ class Scene(object):
             The number of sub-processes to use for raytracing. None will set to maximum value.
         seed: (Optional) int
             Only to be used for debugging to get reproducible ray sequence.
-        queue: (Optional) multiprocessing.Queue
+        queue: (Optional) pathos.helpers.mp.Queue
             If queue is specified results are delivered to the queue _instead_ of returning
             results at the end of the simulation. This helps with reducing memory usage.
         end_rays: (Optional) bool
@@ -237,7 +237,7 @@ class Scene(object):
         You must also set workers to one during debugging.
         """
         if workers is None:
-            workers = multiprocessing.cpu_count()
+            workers = pathos.helpers.cpu_count()
 
         if workers == 1:
             if queue:
@@ -265,7 +265,7 @@ class Scene(object):
                 "Seed must be None to ensure different quasi-random sequences in each process"
             )
 
-        pool = multiprocessing.Pool(processes=workers)
+        pool = pathos.pools._ThreadPool(processes=workers)
 
         # Results are send to queue
         if queue:

@@ -1,4 +1,4 @@
-import multiprocessing
+import pathos
 import threading
 from numpy.lib.function_base import append
 import typer
@@ -206,7 +206,7 @@ def simulate(
     prepare_database(dbfilepath)
 
     # Prepare for multiprocessing
-    manager = multiprocessing.Manager()
+    manager = pathos.helpers.mp.Manager()
     queue = manager.Queue(maxsize=10000)
     stop = threading.Event()
     with typer.progressbar(length=rays) as progress:

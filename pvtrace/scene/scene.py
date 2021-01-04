@@ -265,14 +265,14 @@ class Scene(object):
                 "Seed must be None to ensure different quasi-random sequences in each process"
             )
 
-        pool = pathos.pools._ThreadPool(processes=workers)
+        pool = pathos.pools.ProcessPool(nodes=workers)
 
         # Results are send to queue
         if queue:
             results_proxy = [
-                pool.apply_async(
+                pool.apipe(
                     do_simulation_add_to_queue,
-                    (self, rays[idx], seeds[idx], queue, end_rays),
+                    self, rays[idx], seeds[idx], queue, end_rays,
                 )
                 for idx in range(workers)
             ]
@@ -281,7 +281,7 @@ class Scene(object):
 
         # Results are processed directly and returned
         results_proxy = [
-            pool.apply_async(do_simulation, (self, num_rays_per_worker, seeds[idx]))
+            pool.apipe(do_simulation, self, num_rays_per_worker, seeds[idx])
             for idx in range(workers)
         ]
         results = []

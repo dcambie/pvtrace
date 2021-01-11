@@ -25,7 +25,7 @@ setup(
     python_requires=">=3.7.2,<3.8",
     packages=find_packages(),
     keywords=["optics", "raytracing", "photovoltaics", "energy"],
-    install_requires=["numpy", "pandas", "anytree", "meshcat>=0.0.16", "trimesh[easy]"],
+    install_requires=["numpy", "pandas", "anytree", "meshcat>=0.0.16", "trimesh[easy]", "pathos"],
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Science/Research",

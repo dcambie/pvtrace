@@ -104,7 +104,7 @@ def test_full_example_by_tracing():
 def test_full_example_by_rendering(meshcat_zmq_url1):
     scene = parse(FULL_EXAMPLE_YML)
     history = do_simulation(scene, 300, 42)
-    r = MeshcatRenderer(zmq_url=meshcat_zmq_url1, open_browser=True, wireframe=True)
+    r = MeshcatRenderer(zmq_url=meshcat_zmq_url1, open_browser=False, wireframe=True)
     r.render(scene)
     [r.add_history(x) for x in history]
     time.sleep(2.0)

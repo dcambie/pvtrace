@@ -7,6 +7,7 @@ from meshcat.servers.zmqserver import start_zmq_server_as_subprocess
 import pytest
 import os
 import time
+import sys
 import functools
 import copy
 import numpy as np
@@ -101,10 +102,11 @@ def test_full_example_by_tracing():
     assert len(do_simulation(scene, num, 42)) == num
 
 
+@pytest.mark.skipif(sys.platform.startswith("win"), reason="Test hangs CI on Win")
 def test_full_example_by_rendering(meshcat_zmq_url1):
     scene = parse(FULL_EXAMPLE_YML)
     history = do_simulation(scene, 300, 42)
-    r = MeshcatRenderer(zmq_url=meshcat_zmq_url1, open_browser=False, wireframe=True)
+    r = MeshcatRenderer(zmq_url=meshcat_zmq_url1, open_browser=True, wireframe=True)
     r.render(scene)
     [r.add_history(x) for x in history]
     time.sleep(2.0)
